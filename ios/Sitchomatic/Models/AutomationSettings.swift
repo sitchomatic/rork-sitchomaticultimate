@@ -112,7 +112,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var screenshotOnSuccess: Bool = true
     var maxScreenshotRetention: Int = 500
     var screenshotsPerAttempt: ScreenshotsPerAttempt = .three
-    var unifiedScreenshotsPerAttempt: UnifiedScreenshotCount = .three
+    var unifiedScreenshotsPerAttempt: UnifiedScreenshotCount = .ten
     var unifiedScreenshotPostClickDelayMs: Int = 1500
     var unifiedScreenshotDisabledOverride: Bool = true
 
@@ -343,8 +343,16 @@ nonisolated struct AutomationSettings: Codable, Sendable {
         case two = 2
         case three = 3
         case four = 4
+        case five = 5
+        case six = 6
+        case eight = 8
+        case ten = 10
 
         var limit: Int { rawValue }
+
+        var perSiteLimit: Int { max(rawValue / 2, 1) }
+
+        var clearResultLimit: Int { 2 }
 
         var label: String {
             switch self {
@@ -352,6 +360,10 @@ nonisolated struct AutomationSettings: Codable, Sendable {
             case .two: "2"
             case .three: "3"
             case .four: "4"
+            case .five: "5"
+            case .six: "6"
+            case .eight: "8"
+            case .ten: "10 (5/site)"
             }
         }
 

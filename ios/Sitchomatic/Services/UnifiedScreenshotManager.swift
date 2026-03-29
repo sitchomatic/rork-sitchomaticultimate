@@ -120,6 +120,28 @@ class UnifiedScreenshotManager {
         screenshots.removeAll { $0.sessionId == sessionId }
     }
 
+    func smartReduceForClearResult(sessionId: String) {
+        let sessionShots = screenshots.filter { $0.sessionId == sessionId }
+        guard sessionShots.count > 2 else { return }
+
+        let terminalSteps: Set<ScreenshotStep> = [.terminalState, .successDetected, .crucialResponse, .errorBanner, .smsDetected, .finalState]
+        let terminalShots = sessionShots.filter { terminalSteps.contains($0.step) }
+
+        var kept: [UnifiedScreenshot] = []
+        let joeFinal = terminalShots.first(where: { $0.site == "joe" }) ?? sessionShots.filter({ $0.site == "joe" }).last
+        let ignFinal = terminalShots.first(where: { $0.site == "ignition" }) ?? sessionShots.filter({ $0.site == "ignition" }).last
+        if let j = joeFinal { kept.append(j) }
+        if let i = ignFinal { kept.append(i) }
+
+        let keepIds = Set(kept.map(\.id))
+        let before = screenshots.count
+        screenshots.removeAll { $0.sessionId == sessionId && !keepIds.contains($0.id) }
+        let removed = before - screenshots.count
+        if removed > 0 {
+            logger.log("UnifiedScreenshots: smart-reduced to \(kept.count) screenshots (1/site) for clear result — purged \(removed)", category: .screenshot, level: .info)
+        }
+    }
+
     func clearNonDisabledForSession(_ sessionId: String) {
         let disabledSteps: Set<ScreenshotStep> = [.terminalState, .crucialResponse]
         let hasDisabled = screenshots.contains { $0.sessionId == sessionId && disabledSteps.contains($0.step) }

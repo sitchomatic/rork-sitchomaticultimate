@@ -99,6 +99,17 @@ class DualSiteWorkerService {
         }()
         _ = await (joeStable, ignStable)
 
+        async let joeCookieDismiss: Void = {
+            guard joeLoaded else { return }
+            await joeSession.dismissCookieNotices()
+        }()
+        async let ignCookieDismiss: Void = {
+            guard ignLoaded else { return }
+            await ignSession.dismissCookieNotices()
+        }()
+        _ = await (joeCookieDismiss, ignCookieDismiss)
+        onLog("V4.2: Cookie notices auto-dismissed on both sites", .info)
+
         try? await Task.sleep(for: .milliseconds(Int.random(in: 400...700)))
 
         var lastJoeOutcome: LoginOutcome?
@@ -337,6 +348,8 @@ class DualSiteWorkerService {
                 onLog("V4.2: SUCCESS on \(trigSite) — burning identity", .success)
                 notifications.sendBatchComplete(working: 1, dead: 0, requeued: 0)
                 await captureTerminalScreenshots(joeSession: joeSession, ignSession: ignSession, sessionId: session.id, email: session.credential.email, attemptNum: attemptNum, step: .successDetected, session: &session)
+                screenshotManager.smartReduceForClearResult(sessionId: session.id)
+                onLog("V4.2: Smart-reduced screenshots to 2 (1/site) for clear SUCCESS result", .info)
                 break
             }
 
@@ -352,10 +365,8 @@ class DualSiteWorkerService {
                 onLog("V4.2: PERM BAN on \(trigSite) — burning identity", .error)
                 blacklistService.addToBlacklist(session.credential.email, reason: "V4.2: perm disabled")
                 await captureTerminalScreenshots(joeSession: joeSession, ignSession: ignSession, sessionId: session.id, email: session.credential.email, attemptNum: attemptNum, step: .terminalState, session: &session)
-                if automationSettings.unifiedScreenshotDisabledOverride {
-                    screenshotManager.clearNonDisabledForSession(session.id)
-                    onLog("V4.2: Disabled override — purged non-critical screenshots", .warning)
-                }
+                screenshotManager.smartReduceForClearResult(sessionId: session.id)
+                onLog("V4.2: Smart-reduced screenshots to 2 (1/site) for clear PERM BAN result", .info)
                 break
             }
 
@@ -370,10 +381,8 @@ class DualSiteWorkerService {
                 session.endTime = Date()
                 onLog("V4.2: TEMP LOCK on \(trigSite) — keeping identity", .warning)
                 await captureTerminalScreenshots(joeSession: joeSession, ignSession: ignSession, sessionId: session.id, email: session.credential.email, attemptNum: attemptNum, step: .terminalState, session: &session)
-                if automationSettings.unifiedScreenshotDisabledOverride {
-                    screenshotManager.clearNonDisabledForSession(session.id)
-                    onLog("V4.2: Disabled override — purged non-critical screenshots", .warning)
-                }
+                screenshotManager.smartReduceForClearResult(sessionId: session.id)
+                onLog("V4.2: Smart-reduced screenshots to 2 (1/site) for clear TEMP LOCK result", .info)
                 break
             }
 

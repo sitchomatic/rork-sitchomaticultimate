@@ -397,8 +397,13 @@ struct UnifiedSessionSettingsView: View {
                 .tint(accentColor)
             Stepper("Field Focus Delay: \(vm.automationSettings.fieldFocusDelayMs)ms", value: $vm.automationSettings.fieldFocusDelayMs, in: 50...2000, step: 50)
             Stepper("Inter-Field Delay: \(vm.automationSettings.interFieldDelayMs)ms", value: $vm.automationSettings.interFieldDelayMs, in: 100...3000, step: 50)
-            Toggle("Dismiss Cookie Notices", isOn: $vm.automationSettings.dismissCookieNotices)
-                .tint(accentColor)
+            HStack {
+                Text("Dismiss Cookie Notices")
+                Spacer()
+                Text("Always On")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.green)
+            }
         } header: {
             Label("Credential Entry", systemImage: "keyboard")
         }
@@ -624,15 +629,13 @@ struct UnifiedSessionSettingsView: View {
             }
             if vm.automationSettings.unifiedScreenshotsPerAttempt != .zero {
                 Stepper("Post-Click Delay: \(vm.automationSettings.unifiedScreenshotPostClickDelayMs)ms", value: $vm.automationSettings.unifiedScreenshotPostClickDelayMs, in: 500...5000, step: 250)
-                Toggle("Disabled Override", isOn: $vm.automationSettings.unifiedScreenshotDisabledOverride)
-                    .tint(.red)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Priority: 1st click → Last click → 2nd → 3rd")
+                    Text("10 = 5 per site · Auto-reduces to 2 (1/site) on clear result")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    Text("\"Disabled\" detection overrides all — purges other screenshots")
+                    Text("Clear results: success, perm disabled, temp disabled")
                         .font(.caption2)
-                        .foregroundStyle(.red.opacity(0.8))
+                        .foregroundStyle(.orange.opacity(0.8))
                 }
             }
             Stepper("Max Retention: \(vm.automationSettings.maxScreenshotRetention)", value: $vm.automationSettings.maxScreenshotRetention, in: 50...2000, step: 50)
