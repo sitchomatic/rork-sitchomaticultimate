@@ -1,30 +1,41 @@
-# Unified Sessions: 10 screenshots per credential + auto cookie dismissal
+# Refactor performLoginTest into separate phase methods
 
-## Changes
+## What changes
 
-### 1. Screenshot limit — 10 per credential (5 per site)
+Break the ~685-line `performLoginTest` method into **6 clearly named phase methods**, each handling one logical step of the login test flow. The main method becomes a short orchestrator that calls each phase in sequence and handles early returns.
 
-- Update the screenshot options in Unified Sessions to support up to **10 screenshots per credential** (5 per site)
-- Add new options: `five` (5 total), `six` (6 total), `eight` (8 total), `ten` (10 total) to the picker
-- Default changes from 3 to **10**
-- The priority pruning will keep 5 screenshots per site maximum
+### Phase methods
 
-### 2. Smart reduction — 2 screenshots on clear result
+1. `**phaseLoadPage**` — Handles 3 page load retries, crash recovery, and blank page detection. Returns the loaded state or a failure outcome.
+2. `**phaseHandleChallenges**` — Runs the challenge classifier and executes the AI-recommended bypass strategy (abort, waitAndRetry, rotateProxy, rotateFingerprint, fullSessionReset, etc.). Returns whether to continue or abort.
+3. `**phaseValidatePageReadiness**` — Injects settlement monitor, waits for full page readiness, dismisses cookie notices, verifies login fields exist, checks for dead sessions and interactive elements. Returns success or a failure outcome.
+4. `**phaseCalibrate**` — Runs auto-calibration or Vision ML calibration if no saved calibration exists. Returns the calibration result.
+5. `**phasePatternCycleLoop**` — The main login attempt loop: pattern selection, field filling, submit strategies (debug button replay → calibrated → legacy → OCR → Vision ML), response polling, page evaluation, screenshot capture. Returns the final outcome from all cycles.
+6. `**phaseResolveFinalOutcome**` — Takes the last evaluation result and final outcome from the loop and maps it to the correct return value with appropriate logging.
 
-- When a **clear/definitive result** is detected (success, perm disabled, temp disabled), the system automatically reduces to **2 screenshots total** (1 per site) — keeping only the terminal/crucial screenshot for each site
-- All intermediate post-click screenshots for that credential get purged when a clear result is found
-- This saves memory while keeping proof of the decisive outcome
+### The refactored `performLoginTest` becomes:
 
-### 3. Auto-dismiss cookie notices app-wide
+A ~40-line orchestrator that:
 
-- Cookie notices will be **automatically dismissed** on both Joe and Ignition sites right after page load in the Unified Sessions worker — before typing begins
-- The cookie dismiss toggle in settings will be **forced to ON** and the toggle will show as always enabled (non-interactive) in the Unified Sessions settings
-- Cookie dismissal runs in parallel on both sites for speed
+- Calls `phaseLoadPage` → early return on failure
+- Calls `phaseHandleChallenges` → early return on abort
+- Calls `phaseValidatePageReadiness` → early return on failure
+- Calls `phaseCalibrate` → gets calibration
+- Calls `phasePatternCycleLoop` → gets outcome
+- Returns `phaseResolveFinalOutcome`
 
-### Files Changed
+### What stays the same
 
-- **AutomationSettings** — New enum cases for `UnifiedScreenshotCount` (5, 6, 8, 10), default to 10
-- **DualSiteWorkerService** — Add cookie dismissal after page load, update screenshot pruning logic to smart-reduce to 2 on clear results
-- **UnifiedScreenshotManager** — Add `smartReduceForClearResult()` method that keeps only 1 screenshot per site
-- **UnifiedSessionSettingsView** — Updated picker options, cookie toggle shown as always-on
+- **Zero logic changes** — every line of existing logic is preserved exactly as-is, just moved into the appropriate phase method
+- All existing helper methods (`retryFill`, `advanceTo`, `failAttempt`, `captureAlwaysScreenshot`, etc.) remain untouched
+- All callbacks, logging, and replay logger calls remain in place
+- The `runLoginTest` wrapper method is not modified
+- All other files in the project are untouched
+
+### Benefits
+
+- Each phase is independently readable and debuggable
+- Future changes to one phase (e.g. adding a new challenge handler) won't risk breaking others
+- Error sources are immediately identifiable by which phase method they originate from
+- Xcode jump-to-definition and call hierarchy work much better with smaller methods
 

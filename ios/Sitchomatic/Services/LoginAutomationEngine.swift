@@ -489,13 +489,42 @@ class LoginAutomationEngine {
         return pruned
     }
 
+    // MARK: - performLoginTest Orchestrator
+
     private func performLoginTest(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String = "") async -> LoginOutcome {
         advanceTo(.loadingPage, attempt: attempt, message: "Loading login page: \(session.targetURL.absoluteString)")
         logger.log("Phase: LOAD PAGE → \(session.targetURL.absoluteString)", category: .automation, level: .info, sessionId: sessionId)
         replayLogger.log(sessionId: sessionId, action: "page_load", detail: session.targetURL.absoluteString)
 
         let preLoginURL = session.targetURL.absoluteString.lowercased()
+        let pageHost = session.targetURL.host ?? ""
 
+        let loadResult = await phaseLoadPage(session: session, attempt: attempt, sessionId: sessionId)
+        if let earlyReturn = loadResult { return earlyReturn }
+
+        let challengeResult = await phaseHandleChallenges(session: session, attempt: attempt, sessionId: sessionId)
+        if let earlyReturn = challengeResult { return earlyReturn }
+
+        let readinessResult = await phaseValidatePageReadiness(session: session, attempt: attempt, sessionId: sessionId, pageHost: pageHost)
+        if let earlyReturn = readinessResult { return earlyReturn }
+
+        let calibration = await phaseCalibrate(session: session, attempt: attempt, sessionId: sessionId)
+
+        let (finalOutcome, lastEvaluation, maxSubmitCycles) = await phasePatternCycleLoop(
+            session: session,
+            attempt: attempt,
+            sessionId: sessionId,
+            pageHost: pageHost,
+            preLoginURL: preLoginURL,
+            calibration: calibration
+        )
+
+        return phaseResolveFinalOutcome(finalOutcome: finalOutcome, lastEvaluation: lastEvaluation, maxSubmitCycles: maxSubmitCycles, attempt: attempt)
+    }
+
+    // MARK: - Phase 1: Load Page
+
+    private func phaseLoadPage(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginOutcome? {
         var loaded = false
         for attemptNum in 1...3 {
             logger.startTimer(key: "\(sessionId)_pageload_\(attemptNum)")
@@ -546,7 +575,12 @@ class LoginAutomationEngine {
             return .connectionFailure
         }
         replayLogger.log(sessionId: sessionId, action: "page_loaded", detail: "loaded after retries")
+        return nil
+    }
 
+    // MARK: - Phase 2: Handle Challenges
+
+    private func phaseHandleChallenges(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginOutcome? {
         let challengeStart = Date()
         let challengeHost = session.targetURL.host ?? session.targetURL.absoluteString
         let challengeResult = await challengeClassifier.classify(session: session)
@@ -620,8 +654,12 @@ class LoginAutomationEngine {
             let latencyMs = Int(Date().timeIntervalSince(challengeStart) * 1000)
             aiChallengeSolver.recordEncounter(host: challengeHost, challengeType: challengeResult.type, signals: challengeResult.signals, bypassUsed: resolvedStrategy, success: challengeBypassed, latencyMs: latencyMs)
         }
+        return nil
+    }
 
-        let pageHost = session.targetURL.host ?? ""
+    // MARK: - Phase 3: Validate Page Readiness
+
+    private func phaseValidatePageReadiness(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String, pageHost: String) async -> LoginOutcome? {
         let _ = await hostFingerprint.captureSignature(from: session, host: pageHost)
 
         await session.injectSettlementMonitor()
@@ -739,8 +777,12 @@ class LoginAutomationEngine {
             attempt.logs.append(PPSRLogEntry(message: "Interactive elements appeared after wait: \(retryInteractive.detail)", level: .success))
         }
 
-        let humanEngine = HumanInteractionEngine.shared
-        let patternLearning = LoginPatternLearning.shared
+        return nil
+    }
+
+    // MARK: - Phase 4: Calibrate
+
+    private func phaseCalibrate(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginCalibrationService.URLCalibration? {
         let calibrationService = LoginCalibrationService.shared
         let targetURLString = session.targetURL.absoluteString
 
@@ -766,6 +808,22 @@ class LoginAutomationEngine {
         } else {
             attempt.logs.append(PPSRLogEntry(message: "Using saved calibration (confidence: \(String(format: "%.0f%%", (calibration?.confidence ?? 0) * 100)))", level: .info))
         }
+        return calibration
+    }
+
+    // MARK: - Phase 5: Pattern Cycle Loop
+
+    private func phasePatternCycleLoop(
+        session: LoginSiteWebSession,
+        attempt: LoginAttempt,
+        sessionId: String,
+        pageHost: String,
+        preLoginURL: String,
+        calibration: LoginCalibrationService.URLCalibration?
+    ) async -> (finalOutcome: LoginOutcome, lastEvaluation: EvaluationResult?, maxSubmitCycles: Int) {
+        let humanEngine = HumanInteractionEngine.shared
+        let patternLearning = LoginPatternLearning.shared
+        let targetURLString = session.targetURL.absoluteString
 
         let maxSubmitCycles = max(3, automationSettings.maxSubmitCycles)
         var finalOutcome: LoginOutcome = .noAcc
@@ -777,7 +835,6 @@ class LoginAutomationEngine {
 
         let priorityPatterns: [LoginFormPattern]
         if automationSettings.trueDetectionEnabled && automationSettings.trueDetectionPriority {
-            // OCR Vision ML coordinate click is the primary method for undetectable automation
             priorityPatterns = [.visionMLCoordinate, .trueDetection, .calibratedTyping, .calibratedDirect, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
         } else if calibration?.isCalibrated == true {
             priorityPatterns = [.visionMLCoordinate, .calibratedTyping, .calibratedDirect, .trueDetection, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
@@ -796,11 +853,9 @@ class LoginAutomationEngine {
 
                 let learnedBest = humanEngine.selectBestPattern(for: targetURLString)
                 if learnedBest == .visionMLCoordinate {
-                    // OCR-based coordinate click is already the best learned pattern
                     selectedPattern = .visionMLCoordinate
                     attempt.logs.append(PPSRLogEntry(message: "PatternML confirmed visionMLCoordinate as best for this site", level: .info))
                 } else if learnedBest != .trueDetection && learnedBest != .visionMLCoordinate {
-                    // A non-default pattern won via learning — still try visionML first
                     selectedPattern = .visionMLCoordinate
                     attempt.logs.append(PPSRLogEntry(message: "OCR Vision first: overriding learned '\(learnedBest.rawValue)' — visionMLCoordinate is primary for undetectable automation", level: .info))
                 } else {
@@ -833,7 +888,7 @@ class LoginAutomationEngine {
                         attempt.errorMessage = "Login button hung in loading state — requeued"
                         attempt.completedAt = Date()
                         await captureDebugScreenshot(session: session, attempt: attempt, step: "button_hung", note: "Login button stuck in translucent/loading state", autoResult: .unknown)
-                        return .unsure
+                        return (.unsure, lastEvaluation, maxSubmitCycles)
                     }
                 }
                 logger.log("Cycle \(cycle) button readiness: \(buttonReadyResult.ready ? "ready" : "timeout") in \(buttonReadyResult.durationMs)ms fp:\(buttonReadyResult.recoveredFromFingerprint)", category: .automation, level: buttonReadyResult.ready ? .success : .warning, sessionId: sessionId, durationMs: buttonReadyResult.durationMs)
@@ -945,7 +1000,7 @@ class LoginAutomationEngine {
                     patternLearning.recordAttempt(url: targetURLString, pattern: selectedPattern, fillSuccess: patternResult.usernameFilled && patternResult.passwordFilled, submitSuccess: false, loginOutcome: "submit_failed", responseTimeMs: patternMs ?? 0, submitMethod: "pattern")
                     failAttempt(attempt, message: "LOGIN SUBMIT FAILED after pattern + legacy attempts")
                     await captureDebugScreenshot(session: session, attempt: attempt, step: "submit_failed", note: "All submit strategies failed", autoResult: .unsure)
-                    return .connectionFailure
+                    return (.connectionFailure, lastEvaluation, maxSubmitCycles)
                 }
                 if !legacySubmitOK {
                     patternLearning.recordAttempt(url: targetURLString, pattern: selectedPattern, fillSuccess: patternResult.usernameFilled && patternResult.passwordFilled, submitSuccess: false, loginOutcome: "submit_failed", responseTimeMs: patternMs ?? 0, submitMethod: "pattern")
@@ -986,7 +1041,7 @@ class LoginAutomationEngine {
                     attempt.logs.append(PPSRLogEntry(message: "Cycle \(cycle): 6+ duplicate pages — skipping re-evaluation, treating as stuck", level: .error))
                     failAttempt(attempt, message: "Page stuck — same content after \(duplicateContentCount) consecutive cycles")
                     await captureDebugScreenshot(session: session, attempt: attempt, step: "stuck_page", note: "Same content hash after \(duplicateContentCount) cycles", autoResult: .unknown)
-                    return .connectionFailure
+                    return (.connectionFailure, lastEvaluation, maxSubmitCycles)
                 }
             } else {
                 duplicateContentCount = 0
@@ -1018,7 +1073,7 @@ class LoginAutomationEngine {
                     attempt.completedAt = Date()
                     onBlankScreenshot?(session.targetURL.absoluteString)
                     onUnusualFailure?("Blank screenshot for \(attempt.credential.username) — recovery failed")
-                    return .connectionFailure
+                    return (.connectionFailure, lastEvaluation, maxSubmitCycles)
                 }
                 attempt.logs.append(PPSRLogEntry(message: "BLANK PAGE RECOVERED on cycle \(cycle) via \(postSubmitRecovery.stepUsed?.rawValue ?? "unknown")", level: .success))
             }
@@ -1044,7 +1099,7 @@ class LoginAutomationEngine {
                 attempt.status = .failed
                 attempt.errorMessage = "Red banner error detected — requeuing to bottom"
                 attempt.completedAt = Date()
-                return .redBannerError
+                return (.redBannerError, lastEvaluation, maxSubmitCycles)
             }
 
             if pollResult.smsNotificationDetected {
@@ -1056,7 +1111,7 @@ class LoginAutomationEngine {
                 attempt.status = .failed
                 attempt.errorMessage = "SMS notification detected — burning session, requeuing for retry with different IP/webview"
                 attempt.completedAt = Date()
-                return .smsDetected
+                return (.smsDetected, lastEvaluation, maxSubmitCycles)
             }
 
             logger.startTimer(key: "\(sessionId)_eval_\(cycle)")
@@ -1117,19 +1172,19 @@ class LoginAutomationEngine {
             case .success:
                 advanceTo(.completed, attempt: attempt, message: "LOGIN SUCCESS on cycle \(cycle) via pattern '\(selectedPattern.rawValue)' — \(evaluation.reason)")
                 attempt.completedAt = Date()
-                return .success
+                return (.success, lastEvaluation, maxSubmitCycles)
 
             case .tempDisabled:
                 attempt.logs.append(PPSRLogEntry(message: "TEMP DISABLED on cycle \(cycle): \(evaluation.reason) — FINAL RESULT", level: .warning))
                 failAttempt(attempt, message: "Account temporarily disabled: \(evaluation.reason)")
                 await captureTerminalScreenshot(session: session, attempt: attempt, step: "temp_disabled", note: "TEMP DISABLED: \(evaluation.reason)", autoResult: .tempDisabled, terminalType: .temporarilyDisabled)
-                return .tempDisabled
+                return (.tempDisabled, lastEvaluation, maxSubmitCycles)
 
             case .permDisabled:
                 attempt.logs.append(PPSRLogEntry(message: "PERM DISABLED on cycle \(cycle): \(evaluation.reason) — FINAL RESULT (immediate)", level: .error))
                 failAttempt(attempt, message: "Account permanently disabled/blacklisted: \(evaluation.reason)")
                 await captureTerminalScreenshot(session: session, attempt: attempt, step: "perm_disabled", note: "PERM DISABLED: \(evaluation.reason)", autoResult: .permDisabled, terminalType: .accountDisabled)
-                return .permDisabled
+                return (.permDisabled, lastEvaluation, maxSubmitCycles)
 
             case .noAcc:
                 if cycle < maxSubmitCycles {
@@ -1147,6 +1202,12 @@ class LoginAutomationEngine {
             }
         }
 
+        return (finalOutcome, lastEvaluation, maxSubmitCycles)
+    }
+
+    // MARK: - Phase 6: Resolve Final Outcome
+
+    private func phaseResolveFinalOutcome(finalOutcome: LoginOutcome, lastEvaluation: EvaluationResult?, maxSubmitCycles: Int, attempt: LoginAttempt) -> LoginOutcome {
         let eval = lastEvaluation
         switch finalOutcome {
         case .success:
