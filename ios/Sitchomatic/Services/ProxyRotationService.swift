@@ -97,11 +97,11 @@ class ProxyRotationService {
     var rotateAfterDisabled: Bool = true
     var lastImportReport: ImportReport?
 
-    var joeConnectionMode: ConnectionMode = .wireguard
-    var ignitionConnectionMode: ConnectionMode = .wireguard
-    var ppsrConnectionMode: ConnectionMode = .wireguard
+    var joeConnectionMode: ConnectionMode = .direct
+    var ignitionConnectionMode: ConnectionMode = .direct
+    var ppsrConnectionMode: ConnectionMode = .direct
 
-    var unifiedConnectionMode: ConnectionMode = .wireguard {
+    var unifiedConnectionMode: ConnectionMode = .direct {
         didSet { syncUnifiedConnectionMode() }
     }
     var networkRegion: NetworkRegion = .au {
