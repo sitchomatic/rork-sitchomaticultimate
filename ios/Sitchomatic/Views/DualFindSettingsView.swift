@@ -565,6 +565,8 @@ struct DualFindSettingsView: View {
                 .tint(accentColor)
             Toggle("Pattern Learning", isOn: $vm.automationSettings.patternLearningEnabled)
                 .tint(accentColor)
+            Toggle("AI Telemetry", isOn: $vm.automationSettings.aiTelemetryEnabled)
+                .tint(accentColor)
             Button { showPatternReorder = true } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {

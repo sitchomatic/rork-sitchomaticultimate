@@ -1,33 +1,66 @@
-# Make Direct the default network mode
+# Implement improvements 1, 2, 3, and 5 from deep analysis
 
-## Change
+## Improvement 1: Add retry cycle to `evaluatePostSubmit()`
 
-Set the default network connection mode to **Direct** instead of WireGuard across all targets.
+**Problem:** `evaluatePostSubmit()` returns "unsure" after a single DOM + OCR check. It never re-submits and re-checks (Step 8 from your spec). Only `runStandardLoginDetection()` has the retry.
 
-This affects:
-- The initial default when no saved preference exists (fresh install / first launch)
-- The fallback when no persisted mode is found
-- All three target defaults (Joe, Ignition, PPSR) and the unified mode
+**Fix:**
 
-Users who already have a saved preference will **not** be affected — their persisted choice loads on startup as before.
+- Add the Step 8 retry cycle to `evaluatePostSubmit()` — after the first DOM scan and OCR scan both miss "incorrect", perform exactly ONE full retry:
+  - Wait 3.5s again for DOM to settle
+  - Re-scan DOM for "incorrect"
+  - If still not found, re-run OCR verification
+  - Only return `.unsure` after this complete second cycle fails
+- Accept the `session` parameter (already there) to re-capture content after the retry wait
+- Mark `retryPerformed: true` in the result when the retry path is taken
 
 ---
 
-## Top 5 Suggested Improvements (for your review)
+## Improvement 2: Implement "incorrect" count-based categorization
 
-Based on deep logical analysis of the entire codebase:
+**Problem:** The helper methods `categorizeByIncorrectCount`, `shouldRequeue`, and `isFinalNoAccount` exist but are never called. Every "incorrect" detection immediately returns `.noAcc` — no counting, no 1incorrect/2incorrect differentiation.
 
-### 1. 🔴 Post-submit evaluation skips the retry cycle
-The `evaluatePostSubmit` method returns "unsure" after a single DOM+OCR check. It never re-submits and re-checks (Step 8 from your spec). Only `runStandardLoginDetection` has the retry. This means some code paths get premature "unsure" results.
+**Fix:**
 
-### 2. 🔴 "Incorrect" count-based categorization missing
-Your spec defines 1incorrect / 2incorrect / noAcc(3+) statuses based on how many times "incorrect" is detected across cycles. The current code returns `noAcc` immediately on the **first** detection — no counting at all.
+- Update `categorizeByIncorrectCount` to return proper graduated statuses:
+  - 0 completed incorrect cycles → `.unsure`
+  - 1 → `.noAcc` (but flagged as `1incorrect` in the reason, eligible for requeue)
+  - 2 → `.noAcc` (flagged as `2incorrect`, eligible for requeue)
+  - 3+ → `.noAcc` (final — `isFinalNoAccount` confirmed)
+- Update the callers in `evaluateStrict()` and `evaluatePostSubmit()` so that when "incorrect" is detected, they return the result with the phase/reason containing the count info (e.g. "1incorrect", "2incorrect", "3+incorrect_final")
+- The count itself is tracked by the caller (DualFindViewModel / DualSiteWorkerService), so add a `detectedIncorrect: Bool` field to `DetectionResult` that callers use to increment their per-account counter
+- The callers then use `shouldRequeue()` and `isFinalNoAccount()` to decide whether to retry or finalize
 
-### 3. 🟡 Settlement Gate URL redirect is too aggressive
-Any URL change away from `/login` is treated as "page settled successfully". Redirects to CAPTCHA, error, or password-reset pages are falsely classified as settled. The gate should verify the destination is a genuine success page.
+---
 
-### 4. 🟡 `performLoginTest` is a 400+ line monolith
-Page loading, challenge handling, calibration, pattern cycling, evaluation, and AI telemetry are all jammed into one method. Splitting into phases would make debugging and future changes much safer.
+## Improvement 3: Settlement Gate URL redirect validation
 
-### 5. 🟢 12+ AI services initialized per login regardless of need
-Every login session calls into all AI services (anti-detection, fingerprint tuning, credential priority, interaction graph, etc.) even when those features are off. Lazy initialization or feature-gating would reduce per-test overhead.
+**Problem:** In the settlement gate, any URL change away from `/login` is immediately treated as "settled successfully." Redirects to CAPTCHA pages, error pages, or password reset pages are falsely classified as settled.
+
+**Fix:**
+
+- After detecting a URL redirect away from login, add a verification step before returning success:
+  - Check the new URL against known **bad** destination patterns: `captcha`, `challenge`, `verify`, `reset`, `error`, `403`, `blocked`, `maintenance`, `unavailable`
+  - If the new URL matches a bad pattern, don't treat it as successfully settled — continue polling instead
+  - Check for known **good** destination patterns: `lobby`, `home`, `dashboard`, `account`, `my-`, `welcome`, `deposit`
+  - If good pattern matched → settled (as before)
+  - If neither good nor bad → still treat as settled (preserves current behavior for unknown redirects) but log a warning
+- This prevents CAPTCHA/error page redirects from being falsely classified as login success
+
+---
+
+## Improvement 5: Lazy AI service initialization with feature gating
+
+**Problem:** 12+ AI services are initialized as stored properties on `LoginAutomationEngine`. All of them fire their recording/analysis callbacks after every single login test — even when those features aren't needed or enabled.
+
+**Fix:**
+
+- Convert the AI service stored properties from eager `let` declarations to lazy computed access:
+  - `aiProxyStrategy`, `aiChallengeSolver`, `aiURLOptimizer`, `aiFingerprintTuning`, `aiSessionHealth`, `aiCredentialPriority`, `aiAntiDetection`, `customTools`, `aiInteractionGraph` — all become accessed only when actually needed
+- Gate the post-outcome AI telemetry block (lines ~226-368) behind a single check:
+  - Add an `aiTelemetryEnabled` property to `AutomationSettings` (default: `true`)
+  - Wrap the entire AI recording section in `guard automationSettings.aiTelemetryEnabled else { return }` style check
+  - The `aiSessionHealth.predictHealth()` pre-check at session start remains ungated (it's a critical safety check)
+- This reduces per-test latency and memory overhead when AI telemetry is not needed
+- Add a toggle in settings views for "AI Telemetry" so users can disable the overhead
+

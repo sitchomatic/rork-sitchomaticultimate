@@ -34,6 +34,7 @@ class StrictLoginDetectionEngine {
         let incorrectDetectedViaOCR: Bool
         let buttonCycleCompleted: Bool
         let retryPerformed: Bool
+        let detectedIncorrect: Bool
     }
 
     // MARK: - Phase 1: Immediate Overrides
@@ -106,7 +107,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: false,
                 buttonCycleCompleted: buttonCycleCompleted,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: false
             )
         }
 
@@ -123,7 +125,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: true,
                 incorrectDetectedViaOCR: false,
                 buttonCycleCompleted: buttonCycleCompleted,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: true
             )
         }
 
@@ -137,19 +140,74 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: true,
                 buttonCycleCompleted: buttonCycleCompleted,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: true
             )
         }
 
-        logger.log("StrictDetection P4-Step9: No 'incorrect' detected after full cycle — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
+        logger.log("StrictDetection P4-Step8: first cycle inconclusive — starting ONE full retry", category: .evaluation, level: .warning, sessionId: sessionId)
+
+        let retryP1Override = await evaluateImmediateOverrides(
+            pageContent: (await session.getPageContent() ?? "").lowercased(),
+            screenshot: await session.captureScreenshot(),
+            sessionId: sessionId
+        )
+        if let override = retryP1Override {
+            return DetectionResult(
+                outcome: override,
+                phase: "P1_override_retry",
+                reason: "Immediate override detected on retry cycle",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: buttonCycleCompleted,
+                retryPerformed: true,
+                detectedIncorrect: false
+            )
+        }
+
+        try? await Task.sleep(for: .milliseconds(3500))
+
+        let retryContent = (await session.getPageContent() ?? "").lowercased()
+
+        if retryContent.contains("incorrect") {
+            logger.log("StrictDetection P4-Step8: 'incorrect' found in DOM on retry cycle", category: .evaluation, level: .info, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .noAcc,
+                phase: "P4_DOM_retry",
+                reason: "DOM scan found 'incorrect' on retry cycle after second 3.5s settle",
+                incorrectDetectedViaDOM: true,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: buttonCycleCompleted,
+                retryPerformed: true,
+                detectedIncorrect: true
+            )
+        }
+
+        let retryOCR = await ocrScanForIncorrect(session: session, sessionId: sessionId)
+        if retryOCR {
+            logger.log("StrictDetection P4-Step8: 'incorrect' found via OCR on retry cycle", category: .evaluation, level: .info, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .noAcc,
+                phase: "P4_OCR_retry",
+                reason: "OCR found 'incorrect' on retry cycle",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: true,
+                buttonCycleCompleted: buttonCycleCompleted,
+                retryPerformed: true,
+                detectedIncorrect: true
+            )
+        }
+
+        logger.log("StrictDetection P4-Step9: No 'incorrect' detected after full first attempt + retry — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
         return DetectionResult(
             outcome: .unsure,
             phase: "P4_final",
-            reason: "Neither DOM nor OCR detected 'incorrect' after complete cycle — extremely rare unsure",
+            reason: "Neither DOM nor OCR detected 'incorrect' after complete first attempt + full retry — extremely rare unsure",
             incorrectDetectedViaDOM: false,
             incorrectDetectedViaOCR: false,
             buttonCycleCompleted: buttonCycleCompleted,
-            retryPerformed: false
+            retryPerformed: true,
+            detectedIncorrect: false
         )
     }
 
@@ -176,7 +234,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: false,
                 buttonCycleCompleted: false,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: false
             )
         }
 
@@ -189,7 +248,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: true,
                 incorrectDetectedViaOCR: false,
                 buttonCycleCompleted: true,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: true
             )
         }
 
@@ -202,7 +262,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: true,
                 buttonCycleCompleted: true,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: true
             )
         }
 
@@ -213,7 +274,8 @@ class StrictLoginDetectionEngine {
             incorrectDetectedViaDOM: false,
             incorrectDetectedViaOCR: false,
             buttonCycleCompleted: true,
-            retryPerformed: false
+            retryPerformed: false,
+            detectedIncorrect: false
         )
     }
 
@@ -243,7 +305,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: false,
                 buttonCycleCompleted: false,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: false
             )
         }
 
@@ -290,7 +353,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: result.incorrectDetectedViaDOM,
                 incorrectDetectedViaOCR: result.incorrectDetectedViaOCR,
                 buttonCycleCompleted: buttonCycleOk,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: result.incorrectDetectedViaDOM || result.incorrectDetectedViaOCR
             )
         }
 
@@ -305,7 +369,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: true,
                 buttonCycleCompleted: buttonCycleOk,
-                retryPerformed: false
+                retryPerformed: false,
+                detectedIncorrect: true
             )
         }
 
@@ -347,7 +412,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: result.incorrectDetectedViaDOM,
                 incorrectDetectedViaOCR: result.incorrectDetectedViaOCR,
                 buttonCycleCompleted: true,
-                retryPerformed: true
+                retryPerformed: true,
+                detectedIncorrect: result.incorrectDetectedViaDOM || result.incorrectDetectedViaOCR
             )
         }
 
@@ -361,7 +427,8 @@ class StrictLoginDetectionEngine {
                 incorrectDetectedViaDOM: false,
                 incorrectDetectedViaOCR: true,
                 buttonCycleCompleted: true,
-                retryPerformed: true
+                retryPerformed: true,
+                detectedIncorrect: true
             )
         }
 
@@ -373,7 +440,8 @@ class StrictLoginDetectionEngine {
             incorrectDetectedViaDOM: false,
             incorrectDetectedViaOCR: false,
             buttonCycleCompleted: true,
-            retryPerformed: true
+            retryPerformed: true,
+            detectedIncorrect: false
         )
     }
 
@@ -383,7 +451,18 @@ class StrictLoginDetectionEngine {
         switch completedIncorrectCycles {
         case 0: return .unsure
         case 1, 2: return .noAcc
-        default: return .noAcc
+        case 3...: return .noAcc
+        default: return .unsure
+        }
+    }
+
+    nonisolated static func incorrectCountLabel(_ completedIncorrectCycles: Int) -> String {
+        switch completedIncorrectCycles {
+        case 0: return "unchecked"
+        case 1: return "1incorrect"
+        case 2: return "2incorrect"
+        case 3...: return "noAcc_final"
+        default: return "unknown"
         }
     }
 

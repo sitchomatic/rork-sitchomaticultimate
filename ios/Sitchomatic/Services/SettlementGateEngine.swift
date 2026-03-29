@@ -92,6 +92,30 @@ class SettlementGateEngine {
 
     private let checkURLJS = "(function(){try{return window.location.href||'';}catch(e){return'';}})()"
 
+    private let badRedirectPatterns = ["captcha", "challenge", "verify", "/reset", "error", "403", "blocked", "maintenance", "unavailable", "recaptcha", "hcaptcha", "cloudflare", "access-denied", "forbidden"]
+    private let goodRedirectPatterns = ["lobby", "/home", "dashboard", "account", "my-", "welcome", "deposit", "recommended", "last-played", "profile", "balance"]
+
+    private nonisolated func classifyRedirectURL(_ url: String) -> RedirectClassification {
+        let lower = url.lowercased()
+        for pattern in badRedirectPatterns {
+            if lower.contains(pattern) {
+                return .bad(pattern: pattern)
+            }
+        }
+        for pattern in goodRedirectPatterns {
+            if lower.contains(pattern) {
+                return .good(pattern: pattern)
+            }
+        }
+        return .unknown
+    }
+
+    nonisolated enum RedirectClassification: Sendable {
+        case good(pattern: String)
+        case bad(pattern: String)
+        case unknown
+    }
+
     private func adaptivePollMs(_ elapsedMs: Int) -> Int {
         if elapsedMs < 2000 { return 150 }
         if elapsedMs < 8000 { return 300 }
@@ -125,8 +149,17 @@ class SettlementGateEngine {
                 let currentURL = (await executeJS(checkURLJS) ?? "").lowercased()
                 if !currentURL.isEmpty && currentURL != loginURL && !currentURL.contains("/login") && !currentURL.contains("overlay=login") && currentURL != "about:blank" {
                     let ms = Int(Date().timeIntervalSince(start) * 1000)
-                    logger.log("Settlement: URL redirected in \(ms)ms — \(currentURL.prefix(80))", category: .automation, level: .success, sessionId: sessionId)
-                    return SettlementResult(settled: true, durationMs: ms, sawLoadingState: sawLoadingState, errorTextVisible: false, reason: "URL redirected away from login page")
+                    let classification = classifyRedirectURL(currentURL)
+                    switch classification {
+                    case .bad(let pattern):
+                        logger.log("Settlement: URL redirected to BAD destination in \(ms)ms — matched '\(pattern)' in \(currentURL.prefix(80)) — continuing poll", category: .automation, level: .warning, sessionId: sessionId)
+                    case .good(let pattern):
+                        logger.log("Settlement: URL redirected to GOOD destination in \(ms)ms — matched '\(pattern)' in \(currentURL.prefix(80))", category: .automation, level: .success, sessionId: sessionId)
+                        return SettlementResult(settled: true, durationMs: ms, sawLoadingState: sawLoadingState, errorTextVisible: false, reason: "URL redirected to verified destination (\(pattern))")
+                    case .unknown:
+                        logger.log("Settlement: URL redirected to UNKNOWN destination in \(ms)ms — \(currentURL.prefix(80)) — treating as settled", category: .automation, level: .warning, sessionId: sessionId)
+                        return SettlementResult(settled: true, durationMs: ms, sawLoadingState: sawLoadingState, errorTextVisible: false, reason: "URL redirected to unclassified destination")
+                    }
                 }
             }
 

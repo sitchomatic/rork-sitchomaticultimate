@@ -223,23 +223,6 @@ class LoginAutomationEngine {
             }
         }
 
-        let proxyId = extractProxyId(from: netConfig)
-        if let proxyId {
-            let latencyMs = attempt.startedAt.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
-            let isSuccess = outcome == .success || outcome == .noAcc || outcome == .permDisabled || outcome == .tempDisabled
-            let isBlocked = outcome == .connectionFailure
-            let isChallenge = outcome == .redBannerError || outcome == .smsDetected
-            aiProxyStrategy.recordOutcome(
-                proxyId: proxyId,
-                host: host,
-                target: proxyTarget.rawValue,
-                success: isSuccess,
-                latencyMs: latencyMs,
-                blocked: isBlocked,
-                challengeDetected: isChallenge
-            )
-        }
-
         if let started = attempt.startedAt {
             let responseTime = Date().timeIntervalSince(started)
             logger.log("Response time: \(Int(responseTime * 1000))ms on \(targetURL.host ?? "")", category: .timing, level: .debug, sessionId: sessionId, durationMs: Int(responseTime * 1000))
@@ -254,121 +237,139 @@ class LoginAutomationEngine {
             )
         }
 
-        let aiLatencyMs = attempt.startedAt.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
-        let aiIsBlocked = outcome == .connectionFailure
-        let aiIsChallenge = outcome == .redBannerError || outcome == .smsDetected
-        aiURLOptimizer.recordOutcome(
-            urlString: targetURL.absoluteString,
-            outcome: "\(outcome)",
-            latencyMs: aiLatencyMs,
-            blocked: aiIsBlocked,
-            challengeDetected: aiIsChallenge,
-            blankPage: false,
-            loginSuccess: outcome == .success
-        )
+        if automationSettings.aiTelemetryEnabled {
+            let aiLatencyMs = attempt.startedAt.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
+            let aiIsBlocked = outcome == .connectionFailure
+            let aiIsChallenge = outcome == .redBannerError || outcome == .smsDetected
 
-        if let profileIdx = session.activeProfileIndex, let stealthProfile = session.stealthProfile {
-            let fpScore = session.lastFingerprintScore
-            let detected = fpScore?.passed == false
-            aiFingerprintTuning.recordOutcome(
-                profileIndex: profileIdx,
-                profileSeed: stealthProfile.seed,
-                host: host,
-                detected: detected,
-                validationScore: fpScore?.totalScore ?? 0,
-                signals: fpScore?.signals ?? [],
-                loginSuccess: outcome == .success,
-                challengeTriggered: aiIsChallenge
-            )
-        }
-
-        let hostProfile = aiSessionHealth.profileFor(host: host)
-        let healthSnapshot = SessionHealthSnapshot(
-            sessionId: sessionId,
-            host: host,
-            urlString: targetURL.absoluteString,
-            pageLoadTimeMs: aiLatencyMs,
-            outcome: "\(outcome)",
-            wasTimeout: outcome == .timeout,
-            wasBlankPage: false,
-            wasCrash: session.processTerminated,
-            wasChallenge: aiIsChallenge,
-            wasConnectionFailure: outcome == .connectionFailure,
-            fingerprintDetected: session.lastFingerprintScore.map { !$0.passed } ?? false,
-            circuitBreakerOpen: await circuitBreaker.status(for: host) == .open,
-            consecutiveFailuresOnHost: hostProfile?.consecutiveFailures ?? 0,
-            activeSessions: activeSessions,
-            timestamp: Date()
-        )
-        aiSessionHealth.recordSnapshot(healthSnapshot)
-
-        aiCredentialPriority.recordOutcome(
-            username: attempt.credential.username,
-            outcome: "\(outcome)",
-            host: host,
-            latencyMs: aiLatencyMs,
-            wasChallenge: aiIsChallenge
-        )
-
-        let fpDetected = session.lastFingerprintScore.map { !$0.passed } ?? false
-        let fpSignals = session.lastFingerprintScore?.signals ?? []
-        let fpScoreVal = session.lastFingerprintScore?.totalScore ?? 0
-        if fpDetected || aiIsChallenge || aiIsBlocked {
-            let eventType: String
-            if fpDetected { eventType = "detection" }
-            else if aiIsChallenge { eventType = "challenge" }
-            else { eventType = "block" }
-            aiAntiDetection.recordDetectionEvent(
-                host: host,
-                urlString: targetURL.absoluteString,
-                eventType: eventType,
-                signals: fpSignals,
-                fingerprintScore: fpScoreVal,
-                outcome: "\(outcome)",
-                profileIndex: session.activeProfileIndex,
-                proxyType: netConfig.label
-            )
-        }
-
-        if outcome == .connectionFailure || outcome == .timeout || outcome == .unsure {
-            Task {
-                let recentLogs = attempt.logs.suffix(10).map(\.message)
-                let _ = await customTools.analyzeRunHealth(
-                    sessionId: sessionId,
-                    logs: recentLogs,
-                    pageText: nil,
-                    screenshotAvailable: false,
-                    currentOutcome: "\(outcome)",
+            let proxyId = extractProxyId(from: netConfig)
+            if let proxyId {
+                let isSuccess = outcome == .success || outcome == .noAcc || outcome == .permDisabled || outcome == .tempDisabled
+                aiProxyStrategy.recordOutcome(
+                    proxyId: proxyId,
                     host: host,
-                    attemptNumber: 1,
-                    elapsedMs: aiLatencyMs
+                    target: proxyTarget.rawValue,
+                    success: isSuccess,
+                    latencyMs: aiLatencyMs,
+                    blocked: aiIsBlocked,
+                    challengeDetected: aiIsChallenge
                 )
             }
+
+            aiURLOptimizer.recordOutcome(
+                urlString: targetURL.absoluteString,
+                outcome: "\(outcome)",
+                latencyMs: aiLatencyMs,
+                blocked: aiIsBlocked,
+                challengeDetected: aiIsChallenge,
+                blankPage: false,
+                loginSuccess: outcome == .success
+            )
+
+            if let profileIdx = session.activeProfileIndex, let stealthProfile = session.stealthProfile {
+                let fpScore = session.lastFingerprintScore
+                let detected = fpScore?.passed == false
+                aiFingerprintTuning.recordOutcome(
+                    profileIndex: profileIdx,
+                    profileSeed: stealthProfile.seed,
+                    host: host,
+                    detected: detected,
+                    validationScore: fpScore?.totalScore ?? 0,
+                    signals: fpScore?.signals ?? [],
+                    loginSuccess: outcome == .success,
+                    challengeTriggered: aiIsChallenge
+                )
+            }
+
+            let hostProfile = aiSessionHealth.profileFor(host: host)
+            let healthSnapshot = SessionHealthSnapshot(
+                sessionId: sessionId,
+                host: host,
+                urlString: targetURL.absoluteString,
+                pageLoadTimeMs: aiLatencyMs,
+                outcome: "\(outcome)",
+                wasTimeout: outcome == .timeout,
+                wasBlankPage: false,
+                wasCrash: session.processTerminated,
+                wasChallenge: aiIsChallenge,
+                wasConnectionFailure: outcome == .connectionFailure,
+                fingerprintDetected: session.lastFingerprintScore.map { !$0.passed } ?? false,
+                circuitBreakerOpen: await circuitBreaker.status(for: host) == .open,
+                consecutiveFailuresOnHost: hostProfile?.consecutiveFailures ?? 0,
+                activeSessions: activeSessions,
+                timestamp: Date()
+            )
+            aiSessionHealth.recordSnapshot(healthSnapshot)
+
+            aiCredentialPriority.recordOutcome(
+                username: attempt.credential.username,
+                outcome: "\(outcome)",
+                host: host,
+                latencyMs: aiLatencyMs,
+                wasChallenge: aiIsChallenge
+            )
+
+            let fpDetected = session.lastFingerprintScore.map { !$0.passed } ?? false
+            let fpSignals = session.lastFingerprintScore?.signals ?? []
+            let fpScoreVal = session.lastFingerprintScore?.totalScore ?? 0
+            if fpDetected || aiIsChallenge || aiIsBlocked {
+                let eventType: String
+                if fpDetected { eventType = "detection" }
+                else if aiIsChallenge { eventType = "challenge" }
+                else { eventType = "block" }
+                aiAntiDetection.recordDetectionEvent(
+                    host: host,
+                    urlString: targetURL.absoluteString,
+                    eventType: eventType,
+                    signals: fpSignals,
+                    fingerprintScore: fpScoreVal,
+                    outcome: "\(outcome)",
+                    profileIndex: session.activeProfileIndex,
+                    proxyType: netConfig.label
+                )
+            }
+
+            if outcome == .connectionFailure || outcome == .timeout || outcome == .unsure {
+                Task {
+                    let recentLogs = attempt.logs.suffix(10).map(\.message)
+                    let _ = await customTools.analyzeRunHealth(
+                        sessionId: sessionId,
+                        logs: recentLogs,
+                        pageText: nil,
+                        screenshotAvailable: false,
+                        currentOutcome: "\(outcome)",
+                        host: host,
+                        attemptNumber: 1,
+                        elapsedMs: aiLatencyMs
+                    )
+                }
+            }
+
+            let isOutcomeSuccess = outcome == .success || outcome == .noAcc || outcome == .permDisabled || outcome == .tempDisabled
+
+            interactionActions.append(InteractionAction(
+                actionType: "session_complete",
+                detail: "\(outcome)",
+                durationMs: aiLatencyMs,
+                delayBeforeMs: 0,
+                success: isOutcomeSuccess,
+                timestamp: Date()
+            ))
+            aiInteractionGraph.recordSequence(
+                host: host,
+                actions: interactionActions,
+                finalOutcome: "\(outcome)",
+                wasSuccess: isOutcomeSuccess,
+                totalDurationMs: aiLatencyMs,
+                patternUsed: "default",
+                proxyType: netConfig.label,
+                stealthSeed: session.activeProfileIndex
+            )
         }
-
-        let isOutcomeSuccess = outcome == .success || outcome == .noAcc || outcome == .permDisabled || outcome == .tempDisabled
-
-        interactionActions.append(InteractionAction(
-            actionType: "session_complete",
-            detail: "\(outcome)",
-            durationMs: aiLatencyMs,
-            delayBeforeMs: 0,
-            success: isOutcomeSuccess,
-            timestamp: Date()
-        ))
-        aiInteractionGraph.recordSequence(
-            host: host,
-            actions: interactionActions,
-            finalOutcome: "\(outcome)",
-            wasSuccess: isOutcomeSuccess,
-            totalDurationMs: aiLatencyMs,
-            patternUsed: "default",
-            proxyType: netConfig.label,
-            stealthSeed: session.activeProfileIndex
-        )
 
         let finalOutcomeResult = outcome
 
+        let postLatencyMs = attempt.startedAt.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
         let pageContent = attempt.responseSnippet ?? ""
         let currentURL = attempt.detectedURL ?? targetURL.absoluteString
         let confidenceResult = await confidenceEngine.evaluate(
@@ -380,7 +381,7 @@ class LoginAutomationEngine {
             redirectedToHomepage: currentURL.lowercased() != targetURL.absoluteString.lowercased() && !currentURL.lowercased().contains("/login"),
             navigationDetected: currentURL != targetURL.absoluteString,
             contentChanged: !pageContent.isEmpty,
-            responseTimeMs: aiLatencyMs,
+            responseTimeMs: postLatencyMs,
             screenshot: attempt.responseSnapshot,
             httpStatus: nil
         )

@@ -307,6 +307,9 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var v42CoordinateInteractionOnly: Bool = true
     var v42TypoChance: Double = 0.02
 
+    // MARK: - AI Telemetry
+    var aiTelemetryEnabled: Bool = true
+
     // MARK: - Speed Optimization (legacy)
     var speedOptimizationEnabled: Bool = false
     var autoTuneConcurrency: Bool = false

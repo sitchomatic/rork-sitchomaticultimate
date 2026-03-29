@@ -1428,6 +1428,14 @@ struct AutomationSettingsView: View {
             }
             .tint(.purple)
 
+            Toggle(isOn: $vm.automationSettings.aiTelemetryEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("AI Telemetry")
+                    Text("Record outcomes to AI services (proxy, fingerprint, health, etc.)").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .tint(.purple)
+
             Button { showPatternReorder = true } label: {
                 HStack {
                     Image(systemName: "list.number").foregroundStyle(accentColor)
