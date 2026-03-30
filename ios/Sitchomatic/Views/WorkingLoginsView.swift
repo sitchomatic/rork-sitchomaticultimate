@@ -233,8 +233,8 @@ struct WorkingCardRow: View {
                     .clipShape(.rect(cornerRadius: 8))
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8).fill(brandColor.opacity(0.12)).frame(width: 40, height: 40)
-                    Image(systemName: card.brand.iconName).font(.title3.bold()).foregroundStyle(brandColor)
+                    RoundedRectangle(cornerRadius: 8).fill(card.brand.displayColor.opacity(0.12)).frame(width: 40, height: 40)
+                    Image(systemName: card.brand.iconName).font(.title3.bold()).foregroundStyle(card.brand.displayColor)
                 }
             }
 
@@ -259,13 +259,6 @@ struct WorkingCardRow: View {
             }
         }
         .padding(.vertical, 2)
-    }
-
-    private var brandColor: Color {
-        switch card.brand {
-        case .visa: .blue; case .mastercard: .orange; case .amex: .green; case .jcb: .red
-        case .discover: .purple; case .dinersClub: .indigo; case .unionPay: .teal; case .unknown: .secondary
-        }
     }
 }
 

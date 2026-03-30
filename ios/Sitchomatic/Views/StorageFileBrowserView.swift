@@ -87,7 +87,7 @@ struct StorageFileBrowserView: View {
         }
         .sheet(isPresented: $showShareSheet) {
             if let url = shareURL {
-                ShareSheet(activityItems: [url])
+                ShareSheetView(items: [url])
             }
         }
     }
@@ -468,16 +468,4 @@ struct FileDetailSheet: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(.rect(cornerRadius: 12))
     }
-}
-
-// MARK: - Share Sheet
-
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

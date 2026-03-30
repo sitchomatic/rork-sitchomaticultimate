@@ -256,10 +256,10 @@ struct ReviewItemCardView: View {
     private func resolvedBadge(_ status: CredentialStatus) -> some View {
         Text(status.rawValue.uppercased())
             .font(.system(size: 9, weight: .heavy, design: .monospaced))
-            .foregroundStyle(statusColor(status))
+            .foregroundStyle(status.color)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(statusColor(status).opacity(0.12))
+            .background(status.color.opacity(0.12))
             .clipShape(Capsule())
     }
 
@@ -289,17 +289,6 @@ struct ReviewItemCardView: View {
         }
     }
 
-    private func statusColor(_ status: CredentialStatus) -> Color {
-        switch status {
-        case .working: .green
-        case .noAcc: .red
-        case .tempDisabled: .orange
-        case .permDisabled: .purple
-        case .unsure: .yellow
-        case .untested: .gray
-        case .testing: .blue
-        }
-    }
 }
 
 struct OverridePickerSheet: View {

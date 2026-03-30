@@ -96,7 +96,7 @@ struct EvidenceBundleListView: View {
         }
         .sheet(isPresented: $vm.showShareSheet) {
             if !vm.shareItems.isEmpty {
-                ActivityViewWrapper(activityItems: vm.shareItems)
+                ShareSheetView(items: vm.shareItems)
             }
         }
     }
@@ -283,14 +283,4 @@ struct EvidenceBundleRowView: View {
     private var borderColor: Color {
         bundle.isExported ? .cyan.opacity(0.15) : statusColor.opacity(0.2)
     }
-}
-
-struct ActivityViewWrapper: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

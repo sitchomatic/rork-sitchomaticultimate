@@ -67,9 +67,6 @@ struct ProxyManagerView: View {
         }
     }
 
-    private func log(_ message: String, level: DebugLogLevel = .info) {
-        logger.log(message, category: .network, level: level)
-    }
 
     private var overviewSection: some View {
         Section {
@@ -434,7 +431,7 @@ struct ProxyManagerView: View {
                     Task {
                         let result = await nordService.downloadAllTCPConfigs(for: nordService.recommendedServers, target: .joe)
                         proxyService.syncVPNConfigsAcrossTargets()
-                        log("NordVPN TCP: \(result.imported) imported, \(result.failed) failed -> all targets", level: result.imported > 0 ? .success : .error)
+                        logger.networkLog("NordVPN TCP: \(result.imported) imported, \(result.failed) failed -> all targets", level: result.imported > 0 ? .success : .error)
                     }
                 } label: {
                     HStack(spacing: 10) {
@@ -463,7 +460,7 @@ struct ProxyManagerView: View {
                             }
                         }
                         proxyService.syncWGConfigsAcrossTargets()
-                        log("Generated \(imported) WireGuard configs -> all targets", level: imported > 0 ? .success : .error)
+                        logger.networkLog("Generated \(imported) WireGuard configs -> all targets", level: imported > 0 ? .success : .error)
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: "lock.shield.fill").foregroundStyle(.purple)
@@ -499,7 +496,7 @@ struct ProxyManagerView: View {
                                     if let config = await nordService.downloadOVPNConfig(from: server, proto: .tcp) {
                                         proxyService.importVPNConfig(config, for: .joe)
                                         proxyService.syncVPNConfigsAcrossTargets()
-                                        log("Imported TCP .ovpn: \(server.hostname) -> all targets", level: .success)
+                                        logger.networkLog("Imported TCP .ovpn: \(server.hostname) -> all targets", level: .success)
                                     }
                                 }
                             } label: { Label("TCP .ovpn -> All", systemImage: "shield.lefthalf.filled") }
@@ -509,7 +506,7 @@ struct ProxyManagerView: View {
                                     if let wgConfig = nordService.generateWireGuardConfig(from: server) {
                                         proxyService.importWGConfig(wgConfig, for: .joe)
                                         proxyService.syncWGConfigsAcrossTargets()
-                                        log("Imported WG: \(server.hostname) -> all targets", level: .success)
+                                        logger.networkLog("Imported WG: \(server.hostname) -> all targets", level: .success)
                                     }
                                 } label: { Label("WireGuard -> All", systemImage: "lock.fill") }
                             }
@@ -602,10 +599,10 @@ struct ProxyManagerView: View {
                     guard !isTestingVPNConfigs else { return }
                     isTestingVPNConfigs = true
                     Task {
-                        log("Testing \(proxyService.unifiedVPNConfigs.count) OpenVPN configs...")
+                        logger.networkLog("Testing \(proxyService.unifiedVPNConfigs.count) OpenVPN configs...")
                         await proxyService.testAllUnifiedVPNConfigs()
                         let reachable = proxyService.unifiedVPNConfigs.filter(\.isReachable).count
-                        log("OpenVPN test: \(reachable)/\(proxyService.unifiedVPNConfigs.count) reachable", level: .success)
+                        logger.networkLog("OpenVPN test: \(reachable)/\(proxyService.unifiedVPNConfigs.count) reachable", level: .success)
                         isTestingVPNConfigs = false
                     }
                 } label: {
@@ -645,7 +642,7 @@ struct ProxyManagerView: View {
                         Button(role: .destructive) {
                             proxyService.removeVPNConfig(vpn, target: .joe)
                             proxyService.syncVPNConfigsAcrossTargets()
-                            log("Removed VPN: \(vpn.fileName)")
+                            logger.networkLog("Removed VPN: \(vpn.fileName)")
                         } label: { Label("Delete", systemImage: "trash") }
                     }
                 }
@@ -655,7 +652,7 @@ struct ProxyManagerView: View {
                     Button(role: .destructive) {
                         proxyService.removeUnreachableVPNConfigs(target: .joe)
                         proxyService.syncVPNConfigsAcrossTargets()
-                        log("Removed \(unreachableCount) unreachable OpenVPN configs")
+                        logger.networkLog("Removed \(unreachableCount) unreachable OpenVPN configs")
                     } label: {
                         Label("Remove \(unreachableCount) Unreachable", systemImage: "xmark.circle")
                     }
@@ -663,7 +660,7 @@ struct ProxyManagerView: View {
 
                 Button(role: .destructive) {
                     proxyService.clearAllUnifiedVPNConfigs()
-                    log("Cleared all OpenVPN configs")
+                    logger.networkLog("Cleared all OpenVPN configs")
                 } label: {
                     Label("Clear All Configs", systemImage: "trash")
                 }
@@ -704,10 +701,10 @@ struct ProxyManagerView: View {
                     guard !isTestingWGConfigs else { return }
                     isTestingWGConfigs = true
                     Task {
-                        log("Testing \(proxyService.unifiedWGConfigs.count) WireGuard configs...")
+                        logger.networkLog("Testing \(proxyService.unifiedWGConfigs.count) WireGuard configs...")
                         await proxyService.testAllUnifiedWGConfigs()
                         let reachable = proxyService.unifiedWGConfigs.filter(\.isReachable).count
-                        log("WireGuard test: \(reachable)/\(proxyService.unifiedWGConfigs.count) reachable", level: .success)
+                        logger.networkLog("WireGuard test: \(reachable)/\(proxyService.unifiedWGConfigs.count) reachable", level: .success)
                         isTestingWGConfigs = false
                     }
                 } label: {
@@ -743,7 +740,7 @@ struct ProxyManagerView: View {
                         Button(role: .destructive) {
                             proxyService.removeWGConfig(wg, target: .joe)
                             proxyService.syncWGConfigsAcrossTargets()
-                            log("Removed WireGuard: \(wg.fileName)")
+                            logger.networkLog("Removed WireGuard: \(wg.fileName)")
                         } label: { Label("Delete", systemImage: "trash") }
                     }
                 }
@@ -753,7 +750,7 @@ struct ProxyManagerView: View {
                     Button(role: .destructive) {
                         proxyService.removeUnreachableWGConfigs(target: .joe)
                         proxyService.syncWGConfigsAcrossTargets()
-                        log("Removed \(unreachableWGCount) unreachable WireGuard configs")
+                        logger.networkLog("Removed \(unreachableWGCount) unreachable WireGuard configs")
                     } label: {
                         Label("Remove \(unreachableWGCount) Unreachable", systemImage: "xmark.circle")
                     }
@@ -761,7 +758,7 @@ struct ProxyManagerView: View {
 
                 Button(role: .destructive) {
                     proxyService.clearAllUnifiedWGConfigs()
-                    log("Cleared all WireGuard configs")
+                    logger.networkLog("Cleared all WireGuard configs")
                 } label: {
                     Label("Clear All Configs", systemImage: "trash")
                 }
@@ -921,15 +918,15 @@ struct ProxyManagerView: View {
                         proxyService.importUnifiedVPNConfig(config)
                         imported += 1
                     } else {
-                        log("Failed to parse: \(fileName)", level: .warning)
+                        logger.networkLog("Failed to parse: \(fileName)", level: .warning)
                     }
                 }
             }
             if imported > 0 {
-                log("Imported \(imported) OpenVPN config(s) -> all targets", level: .success)
+                logger.networkLog("Imported \(imported) OpenVPN config(s) -> all targets", level: .success)
             }
         case .failure(let error):
-            log("VPN import error: \(error.localizedDescription)", level: .error)
+            logger.networkLog("VPN import error: \(error.localizedDescription)", level: .error)
         }
     }
 
@@ -963,13 +960,13 @@ struct ProxyManagerView: View {
             }
             if !parsed.isEmpty {
                 let report = proxyService.importUnifiedWGConfigs(parsed)
-                log("WireGuard import: \(report.added) added, \(report.duplicates) duplicates -> all targets", level: .success)
+                logger.networkLog("WireGuard import: \(report.added) added, \(report.duplicates) duplicates -> all targets", level: .success)
             }
             for name in failedFiles {
-                log("Failed to parse WireGuard: \(name)", level: .warning)
+                logger.networkLog("Failed to parse WireGuard: \(name)", level: .warning)
             }
         case .failure(let error):
-            log("WireGuard import error: \(error.localizedDescription)", level: .error)
+            logger.networkLog("WireGuard import error: \(error.localizedDescription)", level: .error)
         }
     }
 }

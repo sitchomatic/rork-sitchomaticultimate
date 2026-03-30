@@ -42,7 +42,7 @@ struct PPSRCardDetailView: View {
             VStack(spacing: 16) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(LinearGradient(colors: [brandColor, brandColor.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .fill(LinearGradient(colors: [card.brand.displayColor, card.brand.displayColor.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing))
                         .frame(height: 180)
 
                     VStack(alignment: .leading, spacing: 20) {
@@ -211,18 +211,6 @@ struct PPSRCardDetailView: View {
         }
     }
 
-    private var brandColor: Color {
-        switch card.brand {
-        case .visa: .blue
-        case .mastercard: .orange
-        case .amex: .green
-        case .jcb: .red
-        case .discover: .purple
-        case .dinersClub: .indigo
-        case .unionPay: .teal
-        case .unknown: .gray
-        }
-    }
 
     private var formattedCardNumber: String {
         let num = card.number

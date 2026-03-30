@@ -913,11 +913,11 @@ struct CardRow: View {
         HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(brandColor.opacity(0.12))
+                    .fill(card.brand.displayColor.opacity(0.12))
                     .frame(width: 38, height: 38)
                 Image(systemName: card.brand.iconName)
                     .font(.title3)
-                    .foregroundStyle(brandColor)
+                    .foregroundStyle(card.brand.displayColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -956,18 +956,5 @@ struct CardRow: View {
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(.rect(cornerRadius: 10))
-    }
-
-    private var brandColor: Color {
-        switch card.brand {
-        case .visa: .blue
-        case .mastercard: .orange
-        case .amex: .green
-        case .jcb: .red
-        case .discover: .purple
-        case .dinersClub: .indigo
-        case .unionPay: .teal
-        case .unknown: .secondary
-        }
     }
 }

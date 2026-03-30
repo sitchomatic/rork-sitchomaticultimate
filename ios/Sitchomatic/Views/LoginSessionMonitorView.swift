@@ -51,7 +51,7 @@ struct LoginSessionMonitorView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(FilterOption.allCases) { option in
-                    FilterChip(title: option.rawValue, count: countFor(option), isSelected: filterStatus == option) {
+                    LoginSessionFilterChip(title: option.rawValue, count: countFor(option), isSelected: filterStatus == option, color: .teal) {
                         withAnimation(.snappy) { filterStatus = option }
                     }
                 }
@@ -109,31 +109,6 @@ struct LoginSessionMonitorView: View {
     }
 }
 
-struct FilterChip: View {
-    let title: String
-    let count: Int
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Text(title).font(.subheadline.weight(.medium))
-                if count > 0 {
-                    Text("\(count)").font(.system(.caption2, design: .monospaced, weight: .bold))
-                        .padding(.horizontal, 5).padding(.vertical, 1)
-                        .background(isSelected ? Color.white.opacity(0.25) : Color(.tertiarySystemFill))
-                        .clipShape(Capsule())
-                }
-            }
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(isSelected ? Color.teal : Color(.tertiarySystemFill))
-            .foregroundStyle(isSelected ? .white : .primary)
-            .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-}
 
 struct SessionRowView: View {
     let check: PPSRCheck
@@ -260,7 +235,7 @@ struct SessionDetailSheet: View {
                             HStack(alignment: .top, spacing: 8) {
                                 Text(entry.formattedTime).font(.system(.caption2, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 80, alignment: .leading)
                                 Text(entry.level.rawValue).font(.system(.caption2, design: .monospaced, weight: .bold))
-                                    .foregroundStyle(logColor(entry.level)).frame(width: 36)
+                                    .foregroundStyle(entry.level.color).frame(width: 36)
                                 Text(entry.message).font(.system(.caption, design: .monospaced)).foregroundStyle(.primary)
                             }
                             .listRowSeparator(.hidden)
@@ -273,7 +248,7 @@ struct SessionDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .fullScreenCover(isPresented: $showFullScreenshot) {
                 if let snapshot = check.responseSnapshot {
-                    PPSRFullScreenshotView(image: snapshot)
+                FullScreenshotView(image: snapshot)
                 }
             }
         }
@@ -282,30 +257,4 @@ struct SessionDetailSheet: View {
         .presentationContentInteraction(.scrolls)
     }
 
-    private func logColor(_ level: PPSRLogEntry.Level) -> Color {
-        switch level { case .info: .blue; case .success: .green; case .warning: .orange; case .error: .red }
-    }
-}
-
-struct PPSRFullScreenshotView: View {
-    let image: UIImage
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView([.horizontal, .vertical]) {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            }
-            .background(.black)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }.foregroundStyle(.white)
-                }
-            }
-            .toolbarBackground(.hidden, for: .navigationBar)
-        }
-    }
 }
