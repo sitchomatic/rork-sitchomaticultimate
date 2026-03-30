@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import WebKit
 
 struct LoginSessionMonitorContentView: View {
     let vm: LoginViewModel
@@ -248,7 +249,15 @@ struct LoginSessionRow: View {
     private func attachLiveWebView() {
         guard !attempt.status.isTerminal else { return }
         let pool = WebViewPool.shared
-        guard let match = pool.activeViews.first(where: { _ in true }) else { return }
+        let targetID = attempt.id
+        let match: (key: UUID, value: WKWebView)
+        if let wv = pool.activeViews[targetID] {
+            match = (targetID, wv)
+        } else if let first = pool.activeViews.first {
+            match = first
+        } else {
+            return
+        }
         withAnimation(.easeInOut(duration: 0.15)) { liveFlash = true }
         debugService.attach(
             webViewID: match.key,

@@ -6,7 +6,8 @@ struct ActiveSessionRowView: View {
     private var debugService: LiveWebViewDebugService { LiveWebViewDebugService.shared }
 
     private var isLiveAttached: Bool {
-        debugService.isAttached && debugService.attachedLabel == item.label
+        guard let wvID = item.webViewID else { return false }
+        return debugService.isAttached && debugService.attachedWebViewID == wvID
     }
 
     var body: some View {
@@ -68,11 +69,27 @@ struct ActiveSessionRowView: View {
     private func attachLiveWebView() {
         guard item.isActive else { return }
         let pool = WebViewPool.shared
-        guard let match = pool.activeViews.first(where: { _ in true }) else { return }
+        guard let wvID = item.webViewID,
+              let webView = pool.activeViews[wvID] else {
+            guard let match = pool.activeViews.first else { return }
+            withAnimation(.easeInOut(duration: 0.15)) { liveFlash = true }
+            debugService.attach(
+                webViewID: match.key,
+                webView: match.value,
+                label: item.label,
+                sessionIndex: 0,
+                startedAt: nil
+            )
+            Task {
+                try? await Task.sleep(for: .milliseconds(300))
+                withAnimation { liveFlash = false }
+            }
+            return
+        }
         withAnimation(.easeInOut(duration: 0.15)) { liveFlash = true }
         debugService.attach(
-            webViewID: match.key,
-            webView: match.value,
+            webViewID: wvID,
+            webView: webView,
             label: item.label,
             sessionIndex: 0,
             startedAt: nil

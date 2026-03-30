@@ -205,6 +205,7 @@ class RunCommandViewModel {
                 .map { attempt in
                     ActiveSessionItem(
                         id: attempt.id.uuidString,
+                        webViewID: attempt.id,
                         label: attempt.credential.username,
                         statusText: attempt.status.rawValue,
                         statusIcon: attempt.status.icon,
@@ -220,6 +221,7 @@ class RunCommandViewModel {
                 .map { check in
                     ActiveSessionItem(
                         id: check.id.uuidString,
+                        webViewID: check.id,
                         label: "\(check.card.brand.rawValue) •••\(check.card.number.suffix(4))",
                         statusText: check.status.rawValue,
                         statusIcon: check.status.icon,
@@ -338,6 +340,7 @@ class RunCommandViewModel {
 
 struct ActiveSessionItem: Identifiable {
     let id: String
+    let webViewID: UUID?
     let label: String
     let statusText: String
     let statusIcon: String

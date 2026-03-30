@@ -52,8 +52,18 @@ public final class WebViewPool {
 
     private init() {}
 
-    public func mount(_ webView: WKWebView, for id: UUID) { activeViews[id] = webView }
-    public func unmount(id: UUID) { activeViews.removeValue(forKey: id) }
+    public var onMount: ((UUID, WKWebView) -> Void)?
+    public var onUnmount: ((UUID) -> Void)?
+
+    public func mount(_ webView: WKWebView, for id: UUID) {
+        activeViews[id] = webView
+        onMount?(id, webView)
+    }
+
+    public func unmount(id: UUID) {
+        activeViews.removeValue(forKey: id)
+        onUnmount?(id)
+    }
 
     public var activeCount: Int { activeViews.count }
 
