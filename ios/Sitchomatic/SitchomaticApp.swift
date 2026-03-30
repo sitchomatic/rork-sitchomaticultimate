@@ -10,6 +10,7 @@ struct SitchomaticApp: App {
     @State private var showCrashReport: Bool = false
     @State private var pendingCrashReport: CrashReport?
     @State private var showSafeBootAlert: Bool = false
+    @State private var liveDebug = LiveWebViewDebugService.shared
 
     init() {
         Self.performEarlySafeBootCheck()
@@ -141,6 +142,14 @@ struct SitchomaticApp: App {
             }
             .overlay(alignment: .topTrailing) {
                 RunCommandPillView()
+            }
+            .overlay(alignment: .bottomTrailing) {
+                LiveWebViewMiniWindow()
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 90)
+            }
+            .fullScreenCover(isPresented: $liveDebug.isFullScreen) {
+                LiveWebViewFullScreenView()
             }
             .animation(.spring(duration: 0.35, bounce: 0.15), value: activeModeRaw)
             .onChange(of: activeModeRaw) { _, newValue in

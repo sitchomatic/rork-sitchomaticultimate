@@ -1,41 +1,39 @@
-# Refactor performLoginTest into separate phase methods
+# Live WebView Debug Preview — Triple-Tap to Watch
 
-## What changes
+## Features
 
-Break the ~685-line `performLoginTest` method into **6 clearly named phase methods**, each handling one logical step of the login test flow. The main method becomes a short orchestrator that calls each phase in sequence and handles early returns.
+- **Triple-tap any active session row** (in both the Sessions list and the Run Command active sessions) to attach to that session's live WebView
+- **Floating mini-window** appears as a draggable, resizable picture-in-picture overlay showing the real-time WebView content
+- **Tap the mini-window to expand** to a full-screen sheet with the live WebView at native resolution
+- **Session picker badge** — the attached session shows a green "LIVE 👁" indicator on its row
+- **Auto-detach** when the session completes or is torn down — mini-window fades out with a brief "Session ended" toast
+- **Switch sessions** by triple-tapping a different active session row — seamlessly transfers the live preview
+- **Login engine only** for now — works with `LoginSiteWebSession` WebViews tracked in `WebViewPool`
 
-### Phase methods
+## Design
 
-1. `**phaseLoadPage**` — Handles 3 page load retries, crash recovery, and blank page detection. Returns the loaded state or a failure outcome.
-2. `**phaseHandleChallenges**` — Runs the challenge classifier and executes the AI-recommended bypass strategy (abort, waitAndRetry, rotateProxy, rotateFingerprint, fullSessionReset, etc.). Returns whether to continue or abort.
-3. `**phaseValidatePageReadiness**` — Injects settlement monitor, waits for full page readiness, dismisses cookie notices, verifies login fields exist, checks for dead sessions and interactive elements. Returns success or a failure outcome.
-4. `**phaseCalibrate**` — Runs auto-calibration or Vision ML calibration if no saved calibration exists. Returns the calibration result.
-5. `**phasePatternCycleLoop**` — The main login attempt loop: pattern selection, field filling, submit strategies (debug button replay → calibrated → legacy → OCR → Vision ML), response polling, page evaluation, screenshot capture. Returns the final outcome from all cycles.
-6. `**phaseResolveFinalOutcome**` — Takes the last evaluation result and final outcome from the loop and maps it to the correct return value with appropriate logging.
+- **Mini-window**: ~160×280pt floating overlay with rounded corners, thin green glowing border, "LIVE" badge in top-left corner, drag handle at top. Positioned bottom-right by default. Subtle drop shadow
+- **Full-screen mode**: Full sheet with the WebView filling the screen, a top toolbar showing the credential email, session index, elapsed time, and a "Minimize" button to return to mini-window
+- **Triple-tap feedback**: Haptic impact + brief green flash on the tapped session row
+- **Session row indicator**: Small pulsing green eye icon (SF Symbol `eye.fill`) next to the session label when that session is being watched
+- **Detach toast**: Small capsule notification "Session ended" that fades after 2 seconds
 
-### The refactored `performLoginTest` becomes:
+## How It Works (Technical Summary)
 
-A ~40-line orchestrator that:
+1. **LiveWebViewDebugService** — A singleton `@Observable` that holds the currently-attached WebView UUID and manages the live preview state (attached/detached, mini/fullscreen)
+2. **Triple-tap gesture** added to `LoginSessionRow` and `ActiveSessionRowView` — looks up the session's WebView UUID in `WebViewPool.shared.activeViews` and attaches it to the debug service
+3. **LiveWebViewMiniWindow** — A draggable overlay view that uses `EphemeralWebViewContainer` to display the actual WKWebView at mini size. Mounted in the app's root view via `.overlay`
+4. **LiveWebViewFullScreen** — A sheet that displays the same WebView at full resolution with session metadata
+5. **HiddenWebViewAnchor modification** — When a WebView is attached to the live preview, it's excluded from the hidden 1x1 anchor (since it's now visible elsewhere)
+6. **Auto-cleanup** — Observes `WebViewPool` changes; when the attached UUID is unmounted, auto-detaches
 
-- Calls `phaseLoadPage` → early return on failure
-- Calls `phaseHandleChallenges` → early return on abort
-- Calls `phaseValidatePageReadiness` → early return on failure
-- Calls `phaseCalibrate` → gets calibration
-- Calls `phasePatternCycleLoop` → gets outcome
-- Returns `phaseResolveFinalOutcome`
+## Files Created/Modified
 
-### What stays the same
-
-- **Zero logic changes** — every line of existing logic is preserved exactly as-is, just moved into the appropriate phase method
-- All existing helper methods (`retryFill`, `advanceTo`, `failAttempt`, `captureAlwaysScreenshot`, etc.) remain untouched
-- All callbacks, logging, and replay logger calls remain in place
-- The `runLoginTest` wrapper method is not modified
-- All other files in the project are untouched
-
-### Benefits
-
-- Each phase is independently readable and debuggable
-- Future changes to one phase (e.g. adding a new challenge handler) won't risk breaking others
-- Error sources are immediately identifiable by which phase method they originate from
-- Xcode jump-to-definition and call hierarchy work much better with smaller methods
+- **New**: `LiveWebViewDebugService.swift` — singleton managing live preview state
+- **New**: `LiveWebViewMiniWindow.swift` — floating draggable mini-window overlay
+- **New**: `LiveWebViewFullScreenView.swift` — full-screen sheet view
+- **Modified**: `LoginSessionRow` — add triple-tap gesture + live indicator badge
+- **Modified**: `ActiveSessionRowView` — add triple-tap gesture + live indicator badge  
+- **Modified**: `HiddenWebViewAnchor` — skip rendering attached WebView at 1x1
+- **Modified**: App root / ContentView — add the mini-window overlay
 

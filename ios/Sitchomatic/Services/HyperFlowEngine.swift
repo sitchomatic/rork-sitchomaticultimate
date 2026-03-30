@@ -85,12 +85,13 @@ struct EphemeralWebViewContainer: UIViewRepresentable {
 /// headless views as active foreground components, preventing background JS suspension.
 public struct HiddenWebViewAnchor: View {
     @State private var pool = WebViewPool.shared
+    private var liveDebug: LiveWebViewDebugService { LiveWebViewDebugService.shared }
     public init() {}
 
     public var body: some View {
         ZStack {
             ForEach(Array(pool.activeViews.keys), id: \.self) { id in
-                if let webView = pool.activeViews[id] {
+                if id != liveDebug.attachedWebViewID, let webView = pool.activeViews[id] {
                     EphemeralWebViewContainer(webView: webView)
                         .frame(width: 1, height: 1)
                         .opacity(0.01)

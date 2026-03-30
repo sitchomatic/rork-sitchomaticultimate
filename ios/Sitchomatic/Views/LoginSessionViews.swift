@@ -168,6 +168,15 @@ struct LoginSessionFilterChip: View {
 
 struct LoginSessionRow: View {
     let attempt: LoginAttempt
+    @State private var liveFlash: Bool = false
+    private var debugService: LiveWebViewDebugService { LiveWebViewDebugService.shared }
+
+    private var isLiveAttached: Bool {
+        guard let attachedID = debugService.attachedWebViewID else { return false }
+        return WebViewPool.shared.activeViews.keys.contains(attachedID) &&
+               debugService.attachedLabel == attempt.credential.username &&
+               debugService.attachedSessionIndex == attempt.sessionIndex
+    }
 
     var body: some View {
         VStack(spacing: 10) {
@@ -184,9 +193,17 @@ struct LoginSessionRow: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(attempt.credential.username)
-                        .font(.system(.subheadline, design: .monospaced, weight: .semibold))
-                        .foregroundStyle(.primary).lineLimit(1)
+                    HStack(spacing: 4) {
+                        Text(attempt.credential.username)
+                            .font(.system(.subheadline, design: .monospaced, weight: .semibold))
+                            .foregroundStyle(.primary).lineLimit(1)
+                        if isLiveAttached {
+                            Image(systemName: "eye.fill")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.green)
+                                .symbolEffect(.pulse)
+                        }
+                    }
                     if let snippet = attempt.responseSnippet {
                         Text(snippet.prefix(60))
                             .font(.system(.caption2, design: .monospaced))
@@ -221,6 +238,29 @@ struct LoginSessionRow: View {
             }
         }
         .padding(.vertical, 4)
+        .background(liveFlash ? Color.green.opacity(0.15) : .clear)
+        .onTapGesture(count: 3) {
+            attachLiveWebView()
+        }
+        .sensoryFeedback(.impact(weight: .heavy), trigger: liveFlash)
+    }
+
+    private func attachLiveWebView() {
+        guard !attempt.status.isTerminal else { return }
+        let pool = WebViewPool.shared
+        guard let match = pool.activeViews.first(where: { _ in true }) else { return }
+        withAnimation(.easeInOut(duration: 0.15)) { liveFlash = true }
+        debugService.attach(
+            webViewID: match.key,
+            webView: match.value,
+            label: attempt.credential.username,
+            sessionIndex: attempt.sessionIndex,
+            startedAt: attempt.startedAt
+        )
+        Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation { liveFlash = false }
+        }
     }
 
     private var statusColor: Color {
