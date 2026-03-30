@@ -1716,6 +1716,7 @@ struct AutomationSettingsView: View {
         Section {
             Toggle("Stealth JS Injection", isOn: $vm.automationSettings.stealthJSInjection).tint(.purple)
             Toggle("FP Validation (on login)", isOn: $vm.automationSettings.fingerprintValidationEnabled).tint(.purple)
+            Toggle("Host FP Learning", isOn: $vm.automationSettings.hostFingerprintLearningEnabled).tint(.purple)
             Toggle("Fingerprint Spoofing", isOn: $vm.automationSettings.fingerprintSpoofing).tint(.purple)
             Toggle("User-Agent Rotation", isOn: $vm.automationSettings.userAgentRotation).tint(.purple)
             Toggle("Viewport Randomization", isOn: $vm.automationSettings.viewportRandomization).tint(.purple)

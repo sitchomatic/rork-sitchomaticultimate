@@ -6,13 +6,17 @@ import Vision
 class HostFingerprintLearningService {
     static let shared = HostFingerprintLearningService()
 
-    private let logger = DebugLogger.shared
+    var isEnabled: Bool = false {
+        didSet {
+            if isEnabled && !signaturesLoaded {
+                loadSignatures()
+            }
+        }
+    }
+    private lazy var logger: DebugLogger = DebugLogger.shared
     private let persistKey = "host_fingerprint_learning_v1"
     private var signatures: [String: PageSignature] = [:]
-
-    init() {
-        loadSignatures()
-    }
+    private var signaturesLoaded: Bool = false
 
     nonisolated struct PageSignature: Codable, Sendable {
         var host: String = ""
@@ -79,6 +83,7 @@ class HostFingerprintLearningService {
     }
 
     func captureSignature(from session: LoginSiteWebSession, host: String) async -> PageSignature? {
+        guard isEnabled else { return nil }
         let probeJS = """
         (function(){
             var forms = document.querySelectorAll('form');
@@ -156,7 +161,7 @@ class HostFingerprintLearningService {
     }
 
     func recordPatternOutcome(host: String, pattern: String, success: Bool) {
-        guard var sig = signatures[host] else { return }
+        guard isEnabled, var sig = signatures[host] else { return }
         sig.matchedPatterns[pattern, default: 0] += success ? 1 : -1
         let best = sig.matchedPatterns.max(by: { $0.value < $1.value })
         sig.bestPattern = best?.key
@@ -166,11 +171,12 @@ class HostFingerprintLearningService {
     }
 
     func bestPatternForHost(_ host: String) -> String? {
-        signatures[host]?.bestPattern
+        guard isEnabled else { return nil }
+        return signatures[host]?.bestPattern
     }
 
     func findSimilarHost(to host: String) -> (host: String, similarity: Double, bestPattern: String?)? {
-        guard let targetSig = signatures[host] else { return nil }
+        guard isEnabled, let targetSig = signatures[host] else { return nil }
 
         var bestMatch: (String, Double, String?)? = nil
         for (otherHost, otherSig) in signatures where otherHost != host {
@@ -183,6 +189,7 @@ class HostFingerprintLearningService {
     }
 
     func suggestPattern(for host: String) -> String? {
+        guard isEnabled else { return nil }
         if let direct = bestPatternForHost(host) { return direct }
         if let similar = findSimilarHost(to: host) {
             logger.log("HostFingerprint: no direct pattern for \(host), using similar host \(similar.host) (similarity: \(String(format: "%.0f%%", similar.similarity * 100)))", category: .automation, level: .info)
@@ -192,11 +199,13 @@ class HostFingerprintLearningService {
     }
 
     func signatureFor(_ host: String) -> PageSignature? {
-        signatures[host]
+        guard isEnabled else { return nil }
+        return signatures[host]
     }
 
     func allSignatures() -> [PageSignature] {
-        Array(signatures.values).sorted { $0.lastUpdated > $1.lastUpdated }
+        guard isEnabled else { return [] }
+        return Array(signatures.values).sorted { $0.lastUpdated > $1.lastUpdated }
     }
 
     func clearAll() {
@@ -212,6 +221,8 @@ class HostFingerprintLearningService {
     }
 
     private func loadSignatures() {
+        guard !signaturesLoaded else { return }
+        signaturesLoaded = true
         if let data = UserDefaults.standard.data(forKey: persistKey),
            let decoded = try? JSONDecoder().decode([String: PageSignature].self, from: data) {
             signatures = decoded

@@ -5,9 +5,13 @@ import WebKit
 class FingerprintValidationService {
     static let shared = FingerprintValidationService()
 
-    private(set) var lastScore: FingerprintScore?
-    private(set) var scoreHistory: [FingerprintScore] = []
-    private let logger = DebugLogger.shared
+    var isEnabled: Bool = false
+    private var _lastScore: FingerprintScore?
+    private var _scoreHistory: [FingerprintScore] = []
+    private lazy var logger: DebugLogger = DebugLogger.shared
+
+    var lastScore: FingerprintScore? { isEnabled ? _lastScore : nil }
+    var scoreHistory: [FingerprintScore] { isEnabled ? _scoreHistory : [] }
 
     struct FingerprintScore {
         let timestamp: Date
@@ -263,6 +267,12 @@ class FingerprintValidationService {
     """
 
     func validate(in webView: WKWebView, profileSeed: UInt32) async -> FingerprintScore {
+        guard isEnabled else {
+            return FingerprintScore(
+                timestamp: Date(), totalScore: 0, maxSafeScore: Self.maxAcceptableScore,
+                signals: ["validation disabled"], profileSeed: profileSeed, passed: true
+            )
+        }
         logger.startTimer(key: "fp_validate_\(profileSeed)")
         let result = await executeJS(validationJS(), in: webView)
         let elapsed = logger.stopTimer(key: "fp_validate_\(profileSeed)")
@@ -277,7 +287,7 @@ class FingerprintValidationService {
                 timestamp: Date(), totalScore: 0, maxSafeScore: Self.maxAcceptableScore,
                 signals: ["validation JS failed to execute"], profileSeed: profileSeed, passed: true
             )
-            lastScore = fallback
+            _lastScore = fallback
             logger.log("Fingerprint: validation JS failed to execute (seed: \(profileSeed))", category: .fingerprint, level: .error, durationMs: elapsed, metadata: [
                 "resultPreview": String((result ?? "nil").prefix(100))
             ])
@@ -288,9 +298,9 @@ class FingerprintValidationService {
             timestamp: Date(), totalScore: totalScore, maxSafeScore: maxSafe,
             signals: signalArray, profileSeed: profileSeed, passed: passed
         )
-        lastScore = score
-        scoreHistory.insert(score, at: 0)
-        if scoreHistory.count > 50 { scoreHistory = Array(scoreHistory.prefix(50)) }
+        _lastScore = score
+        _scoreHistory.insert(score, at: 0)
+        if _scoreHistory.count > 50 { _scoreHistory = Array(_scoreHistory.prefix(50)) }
 
         logger.log("Fingerprint: \(passed ? "PASS" : "FAIL") score=\(totalScore)/\(maxSafe) signals=\(signalArray.count) seed=\(profileSeed)", category: .fingerprint, level: passed ? .success : .warning, durationMs: elapsed)
 
@@ -306,20 +316,20 @@ class FingerprintValidationService {
     }
 
     func clearHistory() {
-        scoreHistory.removeAll()
-        lastScore = nil
+        _scoreHistory.removeAll()
+        _lastScore = nil
     }
 
     var averageScore: Double {
-        guard !scoreHistory.isEmpty else { return 0 }
-        let sum = scoreHistory.reduce(0) { $0 + $1.totalScore }
-        return Double(sum) / Double(scoreHistory.count)
+        guard isEnabled, !_scoreHistory.isEmpty else { return 0 }
+        let sum = _scoreHistory.reduce(0) { $0 + $1.totalScore }
+        return Double(sum) / Double(_scoreHistory.count)
     }
 
     var passRate: Double {
-        guard !scoreHistory.isEmpty else { return 1.0 }
-        let passes = scoreHistory.filter(\.passed).count
-        return Double(passes) / Double(scoreHistory.count)
+        guard isEnabled, !_scoreHistory.isEmpty else { return 1.0 }
+        let passes = _scoreHistory.filter(\.passed).count
+        return Double(passes) / Double(_scoreHistory.count)
     }
 
     var formattedPassRate: String {

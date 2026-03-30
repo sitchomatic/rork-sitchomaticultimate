@@ -1036,6 +1036,8 @@ class DualFindViewModel {
         let session = LoginSiteWebSession(targetURL: targetURL, networkConfig: netConfig)
         session.stealthEnabled = stealthEnabled
         session.fingerprintValidationEnabled = automationSettings.fingerprintValidationEnabled
+        FingerprintValidationService.shared.isEnabled = automationSettings.fingerprintValidationEnabled
+        HostFingerprintLearningService.shared.isEnabled = automationSettings.hostFingerprintLearningEnabled
         await session.setUp(wipeAll: true)
 
         return session

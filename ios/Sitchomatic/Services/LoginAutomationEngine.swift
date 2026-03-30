@@ -35,7 +35,7 @@ class LoginAutomationEngine {
     private let crashRecovery = WebViewCrashRecoveryService.shared
     private let lifetimeBudget = WebViewLifetimeBudgetService.shared
     private let screenshotDedup = ScreenshotDedupService.shared
-    private let hostFingerprint = HostFingerprintLearningService.shared
+    private lazy var hostFingerprint: HostFingerprintLearningService = .shared
     private let adaptiveRetry = AdaptiveRetryService.shared
     private let urlQualityScoring = URLQualityScoringService.shared
     private let confidenceEngine = ConfidenceResultEngine.shared
@@ -113,6 +113,8 @@ class LoginAutomationEngine {
         session.monitoringSessionId = sessionId
         session.stealthEnabled = stealthEnabled
         session.fingerprintValidationEnabled = automationSettings.fingerprintValidationEnabled
+        FingerprintValidationService.shared.isEnabled = automationSettings.fingerprintValidationEnabled
+        hostFingerprint.isEnabled = automationSettings.hostFingerprintLearningEnabled
         session.onFingerprintLog = { [weak self] msg, level in
             Task { @MainActor [weak self] in
                 attempt.logs.append(PPSRLogEntry(message: msg, level: level))

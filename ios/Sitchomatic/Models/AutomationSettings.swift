@@ -94,6 +94,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     // MARK: - Stealth
     var stealthJSInjection: Bool = true
     var fingerprintValidationEnabled: Bool = false
+    var hostFingerprintLearningEnabled: Bool = false
     var fingerprintSpoofing: Bool = true
     var userAgentRotation: Bool = true
     var viewportRandomization: Bool = true
