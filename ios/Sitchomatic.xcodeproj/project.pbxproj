@@ -62,7 +62,7 @@
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = XX3EF90E44253091710094XX /* App2Sitch2Fraudulent */;
+			target = XX3EF90E44253091710094XX /* SitchomaticWidget */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -150,9 +150,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		105FC5792E9EAD3100EA8BCF /* App2Sitch2Fraudulent */ = {
+		105FC5792E9EAD3100EA8BCF /* Sitchomatic */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */;
+			buildConfigurationList = 105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "Sitchomatic" */;
 			buildPhases = (
 				105FC5762E9EAD3100EA8BCF /* Sources */,
 				105FC5772E9EAD3100EA8BCF /* Frameworks */,
@@ -167,17 +167,17 @@
 			fileSystemSynchronizedGroups = (
 				105FC57C2E9EAD3100EA8BCF /* Sitchomatic */,
 			);
-			name = App2Sitch2Fraudulent;
+			name = Sitchomatic;
 			packageProductDependencies = (
 				XXEE1CB1627E13D5F0A46EXX /* CoreXLSX */,
 			);
-			productName = App2Sitch2Fraudulent;
+			productName = Sitchomatic;
 			productReference = 105FC57A2E9EAD3100EA8BCF /* Sitchomatic.app */;
 			productType = "com.apple.product-type.application";
 		};
-		105FC5882E9EAD3200EA8BCF /* App2Sitch2Fraudulent */ = {
+		105FC5882E9EAD3200EA8BCF /* SitchomaticTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */;
+			buildConfigurationList = 105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "SitchomaticTests" */;
 			buildPhases = (
 				105FC5852E9EAD3200EA8BCF /* Sources */,
 				105FC5862E9EAD3200EA8BCF /* Frameworks */,
@@ -191,16 +191,16 @@
 			fileSystemSynchronizedGroups = (
 				105FC58C2E9EAD3200EA8BCF /* SitchomaticTests */,
 			);
-			name = App2Sitch2Fraudulent;
+			name = SitchomaticTests;
 			packageProductDependencies = (
 			);
-			productName = App2Sitch2Fraudulent;
+			productName = SitchomaticTests;
 			productReference = 105FC5892E9EAD3200EA8BCF /* SitchomaticTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		105FC5922E9EAD3200EA8BCF /* App2Sitch2Fraudulent */ = {
+		105FC5922E9EAD3200EA8BCF /* SitchomaticUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */;
+			buildConfigurationList = 105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "SitchomaticUITests" */;
 			buildPhases = (
 				105FC58F2E9EAD3200EA8BCF /* Sources */,
 				105FC5902E9EAD3200EA8BCF /* Frameworks */,
@@ -214,16 +214,16 @@
 			fileSystemSynchronizedGroups = (
 				105FC5962E9EAD3200EA8BCF /* SitchomaticUITests */,
 			);
-			name = App2Sitch2Fraudulent;
+			name = SitchomaticUITests;
 			packageProductDependencies = (
 			);
-			productName = App2Sitch2Fraudulent;
+			productName = SitchomaticUITests;
 			productReference = 105FC5932E9EAD3200EA8BCF /* SitchomaticUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		XX3EF90E44253091710094XX /* App2Sitch2Fraudulent */ = {
+		XX3EF90E44253091710094XX /* SitchomaticWidget */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = XXE1AE403D2751F620882DXX /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */;
+			buildConfigurationList = XXE1AE403D2751F620882DXX /* Build configuration list for PBXNativeTarget "SitchomaticWidget" */;
 			buildPhases = (
 				XXE0FD6AFA7551401BFCEBXX /* Sources */,
 				XX75B8358D2242CEB782C5XX /* Frameworks */,
@@ -233,8 +233,8 @@
 			);
 			dependencies = (
 			);
-			name = App2Sitch2Fraudulent;
-			productName = App2Sitch2Fraudulent;
+			name = SitchomaticWidget;
+			productName = SitchomaticWidget;
 			productReference = XXA3D412C462DAD7A5CD4DXX /* SitchomaticWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
 			fileSystemSynchronizedGroups = (
@@ -264,7 +264,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "App2Sitch2Fraudulent" */;
+			buildConfigurationList = 105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "Sitchomatic" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -278,10 +278,10 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				105FC5792E9EAD3100EA8BCF /* App2Sitch2Fraudulent */,
-				105FC5882E9EAD3200EA8BCF /* App2Sitch2Fraudulent */,
-				105FC5922E9EAD3200EA8BCF /* App2Sitch2Fraudulent */,
-				XX3EF90E44253091710094XX /* App2Sitch2Fraudulent */,
+				105FC5792E9EAD3100EA8BCF /* Sitchomatic */,
+				105FC5882E9EAD3200EA8BCF /* SitchomaticTests */,
+				105FC5922E9EAD3200EA8BCF /* SitchomaticUITests */,
+				XX3EF90E44253091710094XX /* SitchomaticWidget */,
 			);
 			packageReferences = (
 				XX461D6B922D577012C142XX /* XCRemoteSwiftPackageReference "CoreXLSX" */,
@@ -354,17 +354,17 @@
 /* Begin PBXTargetDependency section */
 		105FC58B2E9EAD3200EA8BCF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 105FC5792E9EAD3100EA8BCF /* App2Sitch2Fraudulent */;
+			target = 105FC5792E9EAD3100EA8BCF /* Sitchomatic */;
 			targetProxy = 105FC58A2E9EAD3200EA8BCF /* PBXContainerItemProxy */;
 		};
 		105FC5952E9EAD3200EA8BCF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 105FC5792E9EAD3100EA8BCF /* App2Sitch2Fraudulent */;
+			target = 105FC5792E9EAD3100EA8BCF /* Sitchomatic */;
 			targetProxy = 105FC5942E9EAD3200EA8BCF /* PBXContainerItemProxy */;
 		};
 		XXFA8E20FF73054FAA8E11XX /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = XX3EF90E44253091710094XX /* App2Sitch2Fraudulent */;
+			target = XX3EF90E44253091710094XX /* SitchomaticWidget */;
 			targetProxy = XX24BB9A3233188528A96AXX /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -513,7 +513,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -547,7 +547,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -569,7 +569,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -591,7 +591,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -611,7 +611,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -631,7 +631,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -646,7 +646,7 @@
 		XX4405D791374AFE1C63B9XX /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.sitchomaticwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.sitchomaticwidget;
 				PRODUCT_NAME = SitchomaticWidget;
 				SWIFT_VERSION = 5.0;
 				SDKROOT = iphoneos;
@@ -668,7 +668,7 @@
 		XXDB1124C5D8D652F99983XX /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.sitchomaticwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.sitchomaticwidget;
 				PRODUCT_NAME = SitchomaticWidget;
 				SWIFT_VERSION = 5.0;
 				SDKROOT = iphoneos;
@@ -690,7 +690,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "App2Sitch2Fraudulent" */ = {
+		105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "Sitchomatic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC59B2E9EAD3200EA8BCF /* Debug */,
@@ -699,7 +699,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */ = {
+		105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "Sitchomatic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC59E2E9EAD3200EA8BCF /* Debug */,
@@ -708,7 +708,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */ = {
+		105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "SitchomaticTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC5A12E9EAD3200EA8BCF /* Debug */,
@@ -717,7 +717,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */ = {
+		105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "SitchomaticUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC5A42E9EAD3200EA8BCF /* Debug */,
@@ -726,7 +726,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		XXE1AE403D2751F620882DXX /* Build configuration list for PBXNativeTarget "App2Sitch2Fraudulent" */ = {
+		XXE1AE403D2751F620882DXX /* Build configuration list for PBXNativeTarget "SitchomaticWidget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				XXDB1124C5D8D652F99983XX /* Debug */,
