@@ -30,9 +30,6 @@ class ConcurrentSpeedOptimizer {
         var concurrency: Int
         var stepDelayMs: Int
         var trialDelayMs: Int
-        var hardPauseMs: Int
-        var tripleClickDelayMs: Int
-        var postClickWaitMs: Int
         var lastOptimized: Date
         var throughputPerMinute: Double
     }
@@ -151,9 +148,6 @@ class ConcurrentSpeedOptimizer {
                 concurrency: best.concurrency,
                 stepDelayMs: best.stepDelayMs,
                 trialDelayMs: max(500, best.stepDelayMs * 2),
-                hardPauseMs: max(2000, 4000 - (best.concurrency * 300)),
-                tripleClickDelayMs: best.stepDelayMs,
-                postClickWaitMs: max(1500, 2500 - (best.concurrency * 150)),
                 lastOptimized: Date(),
                 throughputPerMinute: best.throughputPerMinute
             )
@@ -174,9 +168,6 @@ class ConcurrentSpeedOptimizer {
     func applyProfileToSettings(_ settings: inout AutomationSettings) {
         guard let profile = loadProfile() else { return }
         settings.maxConcurrency = profile.concurrency
-        settings.trueDetectionHardPauseMs = profile.hardPauseMs
-        settings.trueDetectionTripleClickDelayMs = profile.tripleClickDelayMs
-        settings.trueDetectionPostClickWaitMs = profile.postClickWaitMs
-        logger.log("SpeedOptimizer: applied saved profile — concurrency=\(profile.concurrency) hardPause=\(profile.hardPauseMs)ms", category: .automation, level: .info)
+        logger.log("SpeedOptimizer: applied saved profile — concurrency=\(profile.concurrency)", category: .automation, level: .info)
     }
 }
