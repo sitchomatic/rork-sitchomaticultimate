@@ -183,6 +183,8 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var autoFallbackOVPNtoSOCKS5: Bool = true
     var delayRandomizationEnabled: Bool = true
     var delayRandomizationPercent: Int = 25
+    /// When enabled, overrides mid-tier delays (betweenAttempts, pageStabilization, ajaxSettle, errorRecovery)
+    /// with this single value at runtime, allowing fast global adjustment without tuning each delay individually.
     var miscellaneousDelayMs: Int = 600
     var miscellaneousDelayEnabled: Bool = false
 
