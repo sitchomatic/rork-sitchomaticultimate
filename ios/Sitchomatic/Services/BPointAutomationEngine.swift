@@ -10,6 +10,7 @@ class BPointAutomationEngine {
     var stealthEnabled: Bool = false
     var speedMultiplier: Double = 1.0
     var screenshotCropRect: CGRect = .zero
+    var automationSettings: AutomationSettings = AutomationSettings()
     private let logger = DebugLogger.shared
     private let billerPool = BPointBillerPoolService.shared
     var onScreenshot: ((PPSRDebugScreenshot) -> Void)?
@@ -322,8 +323,6 @@ class BPointAutomationEngine {
         guard !isTimedOut(deadline) else { return .timeout }
         await speedDelay(milliseconds: 500)
 
-        await captureScreenshotForCheck(session: session, check: check, step: "pre_submit", note: "Card details filled — pre-submit", autoResult: .unknown)
-
         guard !isTimedOut(deadline) else { return .timeout }
         logger.log("Phase: SUBMIT PAYMENT", category: .automation, level: .info, sessionId: sessionId)
         advanceTo(.processingPayment, check: check, message: "Submitting payment...")
@@ -346,12 +345,33 @@ class BPointAutomationEngine {
         }
 
         let preSubmitURL = session.webView?.url?.absoluteString ?? ""
+
+        let bpTimings = automationSettings.parsedPostSubmitTimings
+        let bpSubmitTime = ContinuousClock.now
+        var bpTimedTask: Task<Void, Never>?
+        if !bpTimings.isEmpty {
+            bpTimedTask = Task { [weak self] in
+                guard let self else { return }
+                for (idx, delay) in bpTimings.enumerated() {
+                    let elapsed = ContinuousClock.now - bpSubmitTime
+                    let target = Duration.milliseconds(Int(delay * 1000))
+                    let remaining = target - elapsed
+                    if remaining > .zero {
+                        try? await Task.sleep(for: remaining)
+                    }
+                    guard !Task.isCancelled else { return }
+                    await self.captureScreenshotForCheck(session: session, check: check, step: "post_submit_\(idx + 1)_\(String(format: "%.1fs", delay))", note: "Timed post-submit \(idx + 1)/\(bpTimings.count) at \(String(format: "%.1fs", delay))")
+                }
+            }
+        }
+
         let remainingForPostNav = max(5, deadline.timeIntervalSinceNow - 3)
         let postNavigated = await waitForBPointNavigation(session: session, timeout: min(TimeoutResolver.resolveAutomationTimeout(15), remainingForPostNav))
         if !postNavigated {
             check.logs.append(PPSRLogEntry(message: "Page did not navigate after submit — checking content", level: .warning))
         }
         await speedDelay(seconds: 2)
+        bpTimedTask?.cancel()
 
         let postSubmitURL = session.webView?.url?.absoluteString ?? ""
         let urlChanged = postSubmitURL != preSubmitURL

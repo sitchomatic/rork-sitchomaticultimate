@@ -114,6 +114,16 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var unifiedScreenshotsPerAttempt: UnifiedScreenshotCount = .ten
     var unifiedScreenshotPostClickDelayMs: Int = 1500
     var unifiedScreenshotDisabledOverride: Bool = true
+    var postSubmitScreenshotTimings: String = "0.5, 1.5, 2.0, 2.7, 3.6"
+    var postSubmitScreenshotsOnly: Bool = true
+
+    var parsedPostSubmitTimings: [Double] {
+        postSubmitScreenshotTimings
+            .split(separator: ",")
+            .compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+            .filter { $0 >= 0 && $0 <= 30 }
+            .sorted()
+    }
 
     // MARK: - Concurrency
     var maxConcurrency: Int = 7

@@ -1012,12 +1012,33 @@ class LoginAutomationEngine {
             }
 
             let preSubmitURL = await session.getCurrentURL()
+
+            let postSubmitTimings = automationSettings.parsedPostSubmitTimings
+            let submitTimestamp = ContinuousClock.now
+            var timedScreenshotTask: Task<Void, Never>?
+            if !postSubmitTimings.isEmpty {
+                timedScreenshotTask = Task { [weak self] in
+                    guard let self else { return }
+                    for (idx, delay) in postSubmitTimings.enumerated() {
+                        let elapsed = ContinuousClock.now - submitTimestamp
+                        let target = Duration.milliseconds(Int(delay * 1000))
+                        let remaining = target - elapsed
+                        if remaining > .zero {
+                            try? await Task.sleep(for: remaining)
+                        }
+                        guard !Task.isCancelled else { return }
+                        await self.captureDebugScreenshot(session: session, attempt: attempt, step: "post_submit_\(idx + 1)_\(String(format: "%.1fs", delay))", note: "Timed post-submit screenshot \(idx + 1)/\(postSubmitTimings.count) at \(String(format: "%.1fs", delay))")
+                    }
+                }
+            }
+
             let baseTimeout = automationSettings.waitForResponseSeconds
             let responseTimeout = TimeoutResolver.resolveAutomationTimeout(cycle == 1 ? max(baseTimeout, 25) : baseTimeout)
             attempt.logs.append(PPSRLogEntry(message: "Cycle \(cycle): waiting up to \(Int(responseTimeout))s for response\(cycle == 1 ? " (extended first-press timeout)" : "")...", level: .info))
 
             logger.startTimer(key: "\(sessionId)_poll_\(cycle)")
             let pollResult = await session.rapidWelcomePoll(timeout: responseTimeout, originalURL: preSubmitURL)
+            timedScreenshotTask?.cancel()
             let pollMs = logger.stopTimer(key: "\(sessionId)_poll_\(cycle)")
             logger.log("Rapid poll complete: welcome=\(pollResult.welcomeTextFound) redirect=\(pollResult.redirectedToHomepage) nav=\(pollResult.navigationDetected) banner=\(pollResult.errorBannerDetected) sms=\(pollResult.smsNotificationDetected)", category: .automation, level: .debug, sessionId: sessionId, durationMs: pollMs)
 

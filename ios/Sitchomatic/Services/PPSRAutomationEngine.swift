@@ -369,11 +369,31 @@ class PPSRAutomationEngine {
         let preSubmitURL = session.webView?.url?.absoluteString ?? ""
         check.logs.append(PPSRLogEntry(message: "Pre-submit URL: \(preSubmitURL)", level: .info))
 
+        let ppTimings = automationSettings.parsedPostSubmitTimings
+        let ppSubmitTime = ContinuousClock.now
+        var ppTimedTask: Task<Void, Never>?
+        if !ppTimings.isEmpty {
+            ppTimedTask = Task { [weak self] in
+                guard let self else { return }
+                for (idx, delay) in ppTimings.enumerated() {
+                    let elapsed = ContinuousClock.now - ppSubmitTime
+                    let target = Duration.milliseconds(Int(delay * 1000))
+                    let remaining = target - elapsed
+                    if remaining > .zero {
+                        try? await Task.sleep(for: remaining)
+                    }
+                    guard !Task.isCancelled else { return }
+                    await self.captureScreenshotForCheck(session: session, check: check, step: "post_submit_\(idx + 1)_\(String(format: "%.1fs", delay))", note: "Timed post-submit \(idx + 1)/\(ppTimings.count) at \(String(format: "%.1fs", delay))")
+                }
+            }
+        }
+
         let navigated = await session.waitForNavigation(timeout: TimeoutResolver.resolveAutomationTimeout(10))
         if !navigated {
             check.logs.append(PPSRLogEntry(message: "Page did not navigate after submit — checking content anyway", level: .warning))
         }
         await speedDelay(seconds: 1)
+        ppTimedTask?.cancel()
 
         let postSubmitURL = session.webView?.url?.absoluteString ?? ""
         let urlChanged = postSubmitURL != preSubmitURL

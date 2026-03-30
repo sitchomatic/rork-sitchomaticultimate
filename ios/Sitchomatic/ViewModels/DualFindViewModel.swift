@@ -616,7 +616,23 @@ class DualFindViewModel {
                 log("V5.2 [\(label)] Calibrated fallback submit used")
             }
 
-            await captureDualFindScreenshot(session: session, email: email, password: password, site: site, step: "pre_submit", label: label)
+            let submitTime = ContinuousClock.now
+            let timings = automationSettings.parsedPostSubmitTimings
+            var timedScreenshotTask: Task<Void, Never>?
+            if !timings.isEmpty {
+                timedScreenshotTask = Task {
+                    for (idx, delay) in timings.enumerated() {
+                        let elapsed = ContinuousClock.now - submitTime
+                        let targetDuration = Duration.milliseconds(Int(delay * 1000))
+                        let remaining = targetDuration - elapsed
+                        if remaining > .zero {
+                            try? await Task.sleep(for: remaining)
+                        }
+                        guard !Task.isCancelled else { return }
+                        await captureDualFindScreenshot(session: session, email: email, password: password, site: site, step: "post_submit_\(idx + 1)_\(String(format: "%.1fs", delay))", label: label)
+                    }
+                }
+            }
 
             if let fingerprint = preClickFingerprint {
                 let settlement = await settlementGate.waitForSettlement(
@@ -633,7 +649,7 @@ class DualFindViewModel {
 
             try? await Task.sleep(for: .milliseconds(Int.random(in: 400...700)))
 
-            await captureDualFindScreenshot(session: session, email: email, password: password, site: site, step: "post_submit", label: label)
+            timedScreenshotTask?.cancel()
 
             var outcome: DualFindTestOutcome = await evaluateV52CascadeWithTimeout(session: session, timeout: 10)
 

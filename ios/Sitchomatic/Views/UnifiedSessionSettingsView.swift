@@ -629,6 +629,35 @@ struct UnifiedSessionSettingsView: View {
                 }
             }
             Stepper("Max Retention: \(vm.automationSettings.maxScreenshotRetention)", value: $vm.automationSettings.maxScreenshotRetention, in: 50...2000, step: 50)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Post-Submit Screenshot Timings (seconds)")
+                    .font(.subheadline.weight(.medium))
+                TextField("e.g. 0.5, 1.5, 2.0, 2.7, 3.6", text: $vm.automationSettings.postSubmitScreenshotTimings)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(.body, design: .monospaced))
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                let parsed = vm.automationSettings.parsedPostSubmitTimings
+                if parsed.isEmpty {
+                    Text("No valid timings — enter comma-separated seconds")
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                } else {
+                    Text("\(parsed.count) screenshot\(parsed.count == 1 ? "" : "s") at: \(parsed.map { String(format: "%.1fs", $0) }.joined(separator: ", ")) after submit")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Toggle(isOn: $vm.automationSettings.postSubmitScreenshotsOnly) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Post-Submit Only")
+                    Text("All screenshots taken after submit triple-click")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(accentColor)
         } header: {
             Label("Screenshot / Debug", systemImage: "camera.viewfinder")
         }
