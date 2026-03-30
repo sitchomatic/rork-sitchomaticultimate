@@ -9,7 +9,7 @@ nonisolated enum BlankScreenshotDetector: Sendable {
         let height = cgImage.height
         guard width > 0, height > 0 else { return true }
 
-        let sampleSize = 60
+        let sampleSize = 120
         let sampleW = min(sampleSize, width)
         let sampleH = min(sampleSize, height)
 

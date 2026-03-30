@@ -25,6 +25,7 @@ class PPSRAutomationEngine {
     var onUnusualFailure: ((String) -> Void)?
     var onLog: ((String, PPSRLogEntry.Level) -> Void)?
     var onBlankScreenshot: (() -> Void)?
+    var automationSettings: AutomationSettings = AutomationSettings()
     private let dohService = PPSRDoHService.shared
     private let networkFactory = NetworkSessionFactory.shared
     private let deviceProxy = DeviceProxyService.shared
@@ -66,7 +67,7 @@ class PPSRAutomationEngine {
         }
     }
 
-    func runCheck(_ check: PPSRCheck, timeout: TimeInterval = 90) async -> CheckOutcome {
+    func runCheck(_ check: PPSRCheck, timeout: TimeInterval = 90, skipPreTest: Bool = false) async -> CheckOutcome {
         let timeout = TimeoutResolver.resolveAutomationTimeout(timeout)
         activeSessions += 1
         defer { activeSessions -= 1 }
@@ -77,16 +78,18 @@ class PPSRAutomationEngine {
         logger.startSession(sessionId, category: .ppsr, message: "Starting PPSR check for \(check.card.brand) \(check.card.displayNumber)")
         logger.log("Config: timeout=\(Int(timeout))s stealth=\(stealthEnabled) retrySubmit=\(retrySubmitOnFail) VIN=\(check.vin) email=\(check.email)", category: .ppsr, level: .debug, sessionId: sessionId)
 
-        let preCheck = await runPreTestNetworkCheck()
-        if !preCheck.passed {
-            check.logs.append(PPSRLogEntry(message: "PRE-TEST FAILED: \(preCheck.detail)", level: .error))
-            logger.log("Pre-test network check FAILED: \(preCheck.detail)", category: .network, level: .error, sessionId: sessionId)
-            failCheck(check, message: "Pre-test network check failed: \(preCheck.detail)")
-            onConnectionFailure?(preCheck.detail)
-            return .connectionFailure
+        if !skipPreTest {
+            let preCheck = await runPreTestNetworkCheck()
+            if !preCheck.passed {
+                check.logs.append(PPSRLogEntry(message: "PRE-TEST FAILED: \(preCheck.detail)", level: .error))
+                logger.log("Pre-test network check FAILED: \(preCheck.detail)", category: .network, level: .error, sessionId: sessionId)
+                failCheck(check, message: "Pre-test network check failed: \(preCheck.detail)")
+                onConnectionFailure?(preCheck.detail)
+                return .connectionFailure
+            }
+            check.logs.append(PPSRLogEntry(message: preCheck.detail, level: .success))
+            logger.log(preCheck.detail, category: .network, level: .success, sessionId: sessionId)
         }
-        check.logs.append(PPSRLogEntry(message: preCheck.detail, level: .success))
-        logger.log(preCheck.detail, category: .network, level: .success, sessionId: sessionId)
 
         let session = LoginWebSession()
         session.stealthEnabled = stealthEnabled
@@ -193,14 +196,13 @@ class PPSRAutomationEngine {
         check.logs.append(PPSRLogEntry(message: "Page loaded: \"\(pageTitle)\"", level: .info))
         logger.log("Page title: \"\(pageTitle)\"", category: .webView, level: .debug, sessionId: sessionId)
 
-        let blankPageSettings = AutomationSettings()
         if let initialScreenshot = await session.captureScreenshotWithCrop(cropRect: nil).full, BlankScreenshotDetector.isBlank(initialScreenshot) {
-            check.logs.append(PPSRLogEntry(message: "BLANK PAGE after load — waiting up to \(blankPageSettings.blankPageTimeoutSeconds)s for content...", level: .warning))
-            logger.log("BLANK PAGE detected after load for \(check.card.displayNumber) — polling for \(blankPageSettings.blankPageTimeoutSeconds)s", category: .screenshot, level: .warning, sessionId: sessionId)
+            check.logs.append(PPSRLogEntry(message: "BLANK PAGE after load — waiting up to \(automationSettings.blankPageTimeoutSeconds)s for content...", level: .warning))
+            logger.log("BLANK PAGE detected after load for \(check.card.displayNumber) — polling for \(automationSettings.blankPageTimeoutSeconds)s", category: .screenshot, level: .warning, sessionId: sessionId)
 
             let appeared = await BlankPageRecoveryService.shared.waitForNonBlankPPSRSession(
                 session: session,
-                timeoutSeconds: blankPageSettings.blankPageTimeoutSeconds,
+                timeoutSeconds: automationSettings.blankPageTimeoutSeconds,
                 sessionId: sessionId,
                 onLog: { [weak self] msg, level in
                     check.logs.append(PPSRLogEntry(message: msg, level: level))
@@ -215,7 +217,7 @@ class PPSRAutomationEngine {
 
                 let recoveryResult = await BlankPageRecoveryService.shared.attemptRecoveryForPPSRSession(
                     session: session,
-                    settings: blankPageSettings,
+                    settings: automationSettings,
                     sessionId: sessionId,
                     onLog: { [weak self] msg, level in
                         check.logs.append(PPSRLogEntry(message: msg, level: level))
@@ -383,12 +385,12 @@ class PPSRAutomationEngine {
         }
 
         if let postSubmitScreenshot = await session.captureScreenshotWithCrop(cropRect: nil).full, BlankScreenshotDetector.isBlank(postSubmitScreenshot) {
-            check.logs.append(PPSRLogEntry(message: "BLANK SCREENSHOT after submit — waiting up to \(blankPageSettings.blankPageTimeoutSeconds)s...", level: .warning))
-            logger.log("BLANK SCREENSHOT after submit for \(check.card.displayNumber) — polling for \(blankPageSettings.blankPageTimeoutSeconds)s", category: .screenshot, level: .warning, sessionId: sessionId)
+            check.logs.append(PPSRLogEntry(message: "BLANK SCREENSHOT after submit — waiting up to \(automationSettings.blankPageTimeoutSeconds)s...", level: .warning))
+            logger.log("BLANK SCREENSHOT after submit for \(check.card.displayNumber) — polling for \(automationSettings.blankPageTimeoutSeconds)s", category: .screenshot, level: .warning, sessionId: sessionId)
 
             let postAppeared = await BlankPageRecoveryService.shared.waitForNonBlankPPSRSession(
                 session: session,
-                timeoutSeconds: blankPageSettings.blankPageTimeoutSeconds,
+                timeoutSeconds: automationSettings.blankPageTimeoutSeconds,
                 sessionId: sessionId,
                 onLog: { [weak self] msg, level in
                     check.logs.append(PPSRLogEntry(message: msg, level: level))
@@ -403,7 +405,7 @@ class PPSRAutomationEngine {
 
                 let postRecovery = await BlankPageRecoveryService.shared.attemptRecoveryForPPSRSession(
                     session: session,
-                    settings: blankPageSettings,
+                    settings: automationSettings,
                     sessionId: sessionId,
                     onLog: { [weak self] msg, level in
                         check.logs.append(PPSRLogEntry(message: msg, level: level))
@@ -711,20 +713,9 @@ class PPSRAutomationEngine {
 
         check.responseSnapshot = fullImage
 
-
-        let compressed: UIImage
-        if let jpegData = fullImage.jpegData(compressionQuality: 0.3), let ci = UIImage(data: jpegData) {
-            compressed = ci
-        } else {
-            compressed = fullImage
-        }
-        var compressedCrop: UIImage?
-        if let cropped = result.cropped, let jpegData = cropped.jpegData(compressionQuality: 0.4), let ci = UIImage(data: jpegData) {
-            compressedCrop = ci
-        }
         let screenshot = PPSRDebugScreenshot(
             stepName: step, cardDisplayNumber: check.card.displayNumber, cardId: check.card.id,
-            vin: check.vin, email: check.email, image: compressed, croppedImage: compressedCrop,
+            vin: check.vin, email: check.email, image: fullImage, croppedImage: result.cropped,
             note: note, autoDetectedResult: autoResult
         )
         check.screenshotIds.append(screenshot.id)

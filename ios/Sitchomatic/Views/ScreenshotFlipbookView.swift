@@ -177,10 +177,6 @@ struct FlipbookPage: View {
 
     var body: some View {
         GeometryReader { geo in
-            let imageAspect = screenshot.image.size.width / screenshot.image.size.height
-            let fitWidth = geo.size.width
-            let fitHeight = fitWidth / imageAspect
-
             Image(uiImage: screenshot.image)
                 .resizable()
                 .aspectRatio(contentMode: .fit)

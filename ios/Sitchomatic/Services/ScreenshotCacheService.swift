@@ -6,6 +6,7 @@ class ScreenshotCacheService {
     static let shared = ScreenshotCacheService()
 
     private let cacheDirectory: URL
+    private let cachedBaseDirectory: URL
     private(set) var maxMemoryCacheCount: Int = 300
     private(set) var maxDiskCacheCount: Int = 1500
     private let maxDiskCacheSizeBytes: Int64 = 500 * 1024 * 1024
@@ -22,6 +23,7 @@ class ScreenshotCacheService {
         let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         cacheDirectory = cachesDir.appendingPathComponent("ScreenshotCache", isDirectory: true)
+        cachedBaseDirectory = cacheDirectory
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
 
@@ -234,8 +236,6 @@ class ScreenshotCacheService {
     private nonisolated func fileURL(for key: String) -> URL {
         let safeKey = key.replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: ":", with: "_")
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-        return cachesDir.appendingPathComponent("ScreenshotCache", isDirectory: true).appendingPathComponent("\(safeKey).jpg")
+        return cachedBaseDirectory.appendingPathComponent("\(safeKey).jpg")
     }
 }

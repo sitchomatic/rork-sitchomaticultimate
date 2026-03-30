@@ -26,7 +26,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var trueDetectionIgnoreClassNames: Bool = true
 
     // MARK: - Page Loading
-    var pageLoadTimeout: TimeInterval = 90
+    var pageLoadTimeout: TimeInterval = 90 // Per-page-load timeout (single navigation attempt)
     var pageLoadRetries: Int = 3
     var retryBackoffMultiplier: Double = 2.0
     var waitForJSRenderMs: Int = 4500
@@ -70,7 +70,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     // MARK: - Submit Behavior
     var submitRetryCount: Int = 5
     var submitRetryDelayMs: Int = 4800
-    var waitForResponseSeconds: Double = 90.0
+    var waitForResponseSeconds: Double = 90.0 // Post-submit polling timeout (waiting for server response after form submit)
     var rapidPollEnabled: Bool = true
     var rapidPollIntervalMs: Int = 200
 

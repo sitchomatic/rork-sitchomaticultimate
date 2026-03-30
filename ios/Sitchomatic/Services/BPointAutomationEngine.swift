@@ -562,19 +562,9 @@ class BPointAutomationEngine {
         guard let fullImage = result.full else { return }
         check.responseSnapshot = fullImage
 
-        let compressed: UIImage
-        if let jpegData = fullImage.jpegData(compressionQuality: 0.3), let ci = UIImage(data: jpegData) {
-            compressed = ci
-        } else {
-            compressed = fullImage
-        }
-        var compressedCrop: UIImage?
-        if let cropped = result.cropped, let jpegData = cropped.jpegData(compressionQuality: 0.4), let ci = UIImage(data: jpegData) {
-            compressedCrop = ci
-        }
         let screenshot = PPSRDebugScreenshot(
             stepName: step, cardDisplayNumber: check.card.displayNumber, cardId: check.card.id,
-            vin: check.vin, email: check.email, image: compressed, croppedImage: compressedCrop,
+            vin: check.vin, email: check.email, image: fullImage, croppedImage: result.cropped,
             note: note, autoDetectedResult: autoResult
         )
         check.screenshotIds.append(screenshot.id)

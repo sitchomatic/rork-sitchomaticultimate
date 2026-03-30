@@ -23,6 +23,7 @@ class PPSRAutomationViewModel {
 
     var cards: [PPSRCard] = []
     var checks: [PPSRCheck] = []
+    var automationSettings: AutomationSettings = AutomationSettings()
     var testEmail: String = "dev@test.ppsr.gov.au"
     var maxConcurrency: Int = 4
     var isRunning: Bool = false
@@ -50,7 +51,7 @@ class PPSRAutomationViewModel {
         guard batchTotalCount > 0 else { return 0 }
         return Double(batchCompletedCount) / Double(batchTotalCount)
     }
-    var testTimeout: TimeInterval = 90
+    var testTimeout: TimeInterval = 90 // Overall per-card test timeout (includes all phases: load, fill, submit, evaluate)
     var activeGateway: TestGateway = {
         if let raw = UserDefaults.standard.string(forKey: "ppsr_active_gateway"),
            let gw = TestGateway(rawValue: raw) { return gw }
@@ -653,7 +654,7 @@ class PPSRAutomationViewModel {
         if debugScreenshots.count > keep {
             let overflow = Array(debugScreenshots.suffix(from: keep))
             for ss in overflow {
-                ScreenshotCacheService.shared.store(ss.image, forKey: ss.id)
+                ScreenshotCacheService.shared.storeData(ss.imageData, forKey: ss.id)
             }
             debugScreenshots.removeLast(debugScreenshots.count - keep)
             log("Memory pressure: flushed \(before - keep) screenshots to disk cache", level: .warning)
@@ -751,7 +752,6 @@ class PPSRAutomationViewModel {
     private func syncActiveTestCount() {
         let actualActive = checks.filter({ !$0.status.isTerminal }).count
         if activeTestCount != actualActive {
-            log("activeTestCount sync: \(activeTestCount) → \(actualActive)", level: .warning)
             activeTestCount = actualActive
         }
     }
@@ -795,7 +795,7 @@ class PPSRAutomationViewModel {
 
             isRunning = true
             activeTestCount += 1
-            let outcome = await engine.runCheck(check, timeout: testTimeout)
+            let outcome = await engine.runCheck(check, timeout: testTimeout, skipPreTest: true)
             activeTestCount -= 1
             handleOutcome(outcome, card: card, check: check, vin: vin)
             if activeTestCount == 0 { isRunning = false }
@@ -848,6 +848,7 @@ class PPSRAutomationViewModel {
         engine.retrySubmitOnFail = retrySubmitOnFail
         engine.screenshotCropRect = screenshotCropRect
         engine.speedMultiplier = speedMultiplier.multiplier
+        engine.automationSettings = automationSettings
     }
 
     private func handleOutcome(_ outcome: CheckOutcome, card: PPSRCard, check: PPSRCheck, vin: String) {
@@ -963,7 +964,9 @@ class PPSRAutomationViewModel {
                     group.addTask { [engine, testTimeout] in
                         defer {
                             Task { @MainActor in
-                                self.activeTestCount = max(0, self.activeTestCount - 1)
+                                if self.isRunning && self.activeTestCount > 0 {
+                                    self.activeTestCount -= 1
+                                }
                             }
                         }
                         let outcome = await engine.runCheck(check, timeout: testTimeout)
@@ -1063,7 +1066,9 @@ class PPSRAutomationViewModel {
                     group.addTask { [bpointEngine, testTimeout] in
                         defer {
                             Task { @MainActor in
-                                self.activeTestCount = max(0, self.activeTestCount - 1)
+                                if self.isRunning && self.activeTestCount > 0 {
+                                    self.activeTestCount -= 1
+                                }
                             }
                         }
                         let outcome = await bpointEngine.runCheck(check, chargeAmount: capturedAmount, timeout: testTimeout)
@@ -1316,6 +1321,10 @@ class PPSRAutomationViewModel {
                     self.testSelectedCards(retryCards)
                 }
             }
+        }
+
+        if !autoRetryEnabled || requeued == 0 {
+            autoRetryBackoffCounts.removeAll()
         }
 
         showBatchResultPopup = true
