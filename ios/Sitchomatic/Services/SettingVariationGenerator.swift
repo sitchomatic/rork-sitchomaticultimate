@@ -13,7 +13,6 @@ class SettingVariationGenerator {
     ]
 
     private let patterns: [String] = [
-        "TRUE DETECTION",
         "Tab Navigation",
         "Click-Focus Sequential",
         "Calibrated Typing",
@@ -93,7 +92,7 @@ class SettingVariationGenerator {
     }
 
     private func snapshotFingerprint(_ s: TestDebugSettingsSnapshot) -> String {
-        "\(s.connectionMode.rawValue)|\(s.wireGuardConfigIndex ?? -1)|\(s.pattern)|\(s.typingSpeedMinMs)-\(s.typingSpeedMaxMs)|\(s.stealthJSInjection)|\(s.humanMouseMovement)|\(s.fingerprintSpoofing)|\(s.trueDetectionEnabled)|\(s.tabBetweenFields)|\(s.pageLoadExtraDelayMs)|\(s.preSubmitDelayMs)|\(s.postSubmitDelayMs)|\(s.sessionIsolation.rawValue)"
+        "\(s.connectionMode.rawValue)|\(s.wireGuardConfigIndex ?? -1)|\(s.pattern)|\(s.typingSpeedMinMs)-\(s.typingSpeedMaxMs)|\(s.stealthJSInjection)|\(s.humanMouseMovement)|\(s.fingerprintSpoofing)|\(s.tabBetweenFields)|\(s.pageLoadExtraDelayMs)|\(s.preSubmitDelayMs)|\(s.postSubmitDelayMs)|\(s.sessionIsolation.rawValue)"
     }
 
     private func tweakSnapshot(_ s: TestDebugSettingsSnapshot) -> TestDebugSettingsSnapshot {
@@ -111,7 +110,6 @@ class SettingVariationGenerator {
             humanScrollJitter: s.humanScrollJitter,
             viewportRandomization: s.viewportRandomization,
             fingerprintSpoofing: s.fingerprintSpoofing,
-            trueDetectionEnabled: s.trueDetectionEnabled,
             tabBetweenFields: s.tabBetweenFields,
             pageLoadExtraDelayMs: s.pageLoadExtraDelayMs,
             preSubmitDelayMs: newPreSubmit,
@@ -135,7 +133,6 @@ class SettingVariationGenerator {
             humanScrollJitter: overrides.pinHumanSim ?? snapshot.humanScrollJitter,
             viewportRandomization: snapshot.viewportRandomization,
             fingerprintSpoofing: overrides.pinFingerprint ?? snapshot.fingerprintSpoofing,
-            trueDetectionEnabled: overrides.pinTrueDetection ?? snapshot.trueDetectionEnabled,
             tabBetweenFields: (overrides.pinPattern ?? snapshot.pattern) == "Tab Navigation",
             pageLoadExtraDelayMs: snapshot.pageLoadExtraDelayMs,
             preSubmitDelayMs: snapshot.preSubmitDelayMs,
@@ -179,7 +176,6 @@ class SettingVariationGenerator {
             let postSubmit = postSubmitDelays[(i / 3) % postSubmitDelays.count]
             let pageDelay = pageLoadDelays[(i / 4) % pageLoadDelays.count]
             let isolation = sessionIsolations[(i / 6) % sessionIsolations.count]
-            let useTrueDetection = pattern == "TRUE DETECTION"
             let humanSim = (i % 3) != 2
             let stealth = (i % 4) != 3
             let viewport = (i % 5) != 4
@@ -204,7 +200,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: humanSim,
                 viewportRandomization: viewport,
                 fingerprintSpoofing: fingerprint,
-                trueDetectionEnabled: useTrueDetection,
                 tabBetweenFields: pattern == "Tab Navigation",
                 pageLoadExtraDelayMs: pageDelay.ms,
                 preSubmitDelayMs: preSubmit.ms,
@@ -227,7 +222,7 @@ class SettingVariationGenerator {
         let netModes = availableConnectionModes()
         let poolSize = 24
 
-        let basePattern = "TRUE DETECTION"
+        let basePattern = "Calibrated Typing"
 
         for i in 0..<count {
             let net = netModes[i % netModes.count]
@@ -246,7 +241,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: true,
                 viewportRandomization: false,
                 fingerprintSpoofing: true,
-                trueDetectionEnabled: true,
                 tabBetweenFields: false,
                 pageLoadExtraDelayMs: 2000,
                 preSubmitDelayMs: 350,
@@ -275,7 +269,6 @@ class SettingVariationGenerator {
             let speed = typingSpeeds[(i / patterns.count) % typingSpeeds.count]
             let preSubmit = preSubmitDelays[(i / (patterns.count * 2)) % preSubmitDelays.count]
             let postSubmit = postSubmitDelays[(i / (patterns.count * 3)) % postSubmitDelays.count]
-            let useTrueDetection = pattern == "TRUE DETECTION"
             let humanSim = (i % 3) != 2
             let stealth = (i % 4) != 3
             let fingerprint = (i % 3) != 0
@@ -297,7 +290,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: humanSim,
                 viewportRandomization: false,
                 fingerprintSpoofing: fingerprint,
-                trueDetectionEnabled: useTrueDetection,
                 tabBetweenFields: pattern == "Tab Navigation",
                 pageLoadExtraDelayMs: 2000,
                 preSubmitDelayMs: preSubmit.ms,
@@ -325,7 +317,7 @@ class SettingVariationGenerator {
         let baseSnapshot = TestDebugSettingsSnapshot(
             connectionMode: defaultMode,
             wireGuardConfigIndex: wgIndex,
-            pattern: "TRUE DETECTION",
+            pattern: "Calibrated Typing",
             typingSpeedMinMs: 80,
             typingSpeedMaxMs: 150,
             stealthJSInjection: true,
@@ -333,7 +325,6 @@ class SettingVariationGenerator {
             humanScrollJitter: true,
             viewportRandomization: false,
             fingerprintSpoofing: true,
-            trueDetectionEnabled: true,
             tabBetweenFields: false,
             pageLoadExtraDelayMs: 2000,
             preSubmitDelayMs: 350,
@@ -357,7 +348,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: s.humanScrollJitter,
                 viewportRandomization: s.viewportRandomization,
                 fingerprintSpoofing: s.fingerprintSpoofing,
-                trueDetectionEnabled: s.trueDetectionEnabled,
                 tabBetweenFields: s.tabBetweenFields,
                 pageLoadExtraDelayMs: s.pageLoadExtraDelayMs,
                 preSubmitDelayMs: s.preSubmitDelayMs,
@@ -370,9 +360,9 @@ class SettingVariationGenerator {
             idx += 1
         }
 
-        addSession(differentiator: "Baseline (TRUE DETECTION + defaults)", snapshot: baseSnapshot)
+        addSession(differentiator: "Baseline (defaults)", snapshot: baseSnapshot)
 
-        for pattern in patterns where pattern != "TRUE DETECTION" && idx < count {
+        for pattern in patterns where idx < count {
             let snap = TestDebugSettingsSnapshot(
                 connectionMode: baseSnapshot.connectionMode,
                 wireGuardConfigIndex: baseSnapshot.wireGuardConfigIndex,
@@ -384,7 +374,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: baseSnapshot.humanScrollJitter,
                 viewportRandomization: baseSnapshot.viewportRandomization,
                 fingerprintSpoofing: baseSnapshot.fingerprintSpoofing,
-                trueDetectionEnabled: false,
                 tabBetweenFields: pattern == "Tab Navigation",
                 pageLoadExtraDelayMs: baseSnapshot.pageLoadExtraDelayMs,
                 preSubmitDelayMs: baseSnapshot.preSubmitDelayMs,
@@ -408,7 +397,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: baseSnapshot.humanScrollJitter,
                 viewportRandomization: baseSnapshot.viewportRandomization,
                 fingerprintSpoofing: baseSnapshot.fingerprintSpoofing,
-                trueDetectionEnabled: baseSnapshot.trueDetectionEnabled,
                 tabBetweenFields: baseSnapshot.tabBetweenFields,
                 pageLoadExtraDelayMs: baseSnapshot.pageLoadExtraDelayMs,
                 preSubmitDelayMs: baseSnapshot.preSubmitDelayMs,
@@ -432,7 +420,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: baseSnapshot.humanScrollJitter,
                 viewportRandomization: baseSnapshot.viewportRandomization,
                 fingerprintSpoofing: stealth,
-                trueDetectionEnabled: baseSnapshot.trueDetectionEnabled,
                 tabBetweenFields: baseSnapshot.tabBetweenFields,
                 pageLoadExtraDelayMs: baseSnapshot.pageLoadExtraDelayMs,
                 preSubmitDelayMs: baseSnapshot.preSubmitDelayMs,
@@ -456,7 +443,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: human,
                 viewportRandomization: baseSnapshot.viewportRandomization,
                 fingerprintSpoofing: baseSnapshot.fingerprintSpoofing,
-                trueDetectionEnabled: baseSnapshot.trueDetectionEnabled,
                 tabBetweenFields: baseSnapshot.tabBetweenFields,
                 pageLoadExtraDelayMs: baseSnapshot.pageLoadExtraDelayMs,
                 preSubmitDelayMs: baseSnapshot.preSubmitDelayMs,
@@ -481,7 +467,6 @@ class SettingVariationGenerator {
                 humanScrollJitter: baseSnapshot.humanScrollJitter,
                 viewportRandomization: baseSnapshot.viewportRandomization,
                 fingerprintSpoofing: baseSnapshot.fingerprintSpoofing,
-                trueDetectionEnabled: baseSnapshot.trueDetectionEnabled,
                 tabBetweenFields: baseSnapshot.tabBetweenFields,
                 pageLoadExtraDelayMs: baseSnapshot.pageLoadExtraDelayMs,
                 preSubmitDelayMs: baseSnapshot.preSubmitDelayMs,
@@ -516,9 +501,6 @@ class SettingVariationGenerator {
         if let pinPat = overrides.pinPattern {
             parts = parts.filter { !patterns.contains($0) }
             parts.append("[PIN: \(pinPat)]")
-        }
-        if overrides.pinTrueDetection != nil {
-            parts.append("[PIN: TD=\(snapshot.trueDetectionEnabled ? "ON" : "OFF")]")
         }
         return parts
     }
