@@ -1112,7 +1112,7 @@ class LoginSiteWebSession: NSObject {
     }
 
     func tripleClickSubmit() async -> (success: Bool, detail: String) {
-        let submitSelector = "#login-submit"
+        let submitSelector = LoginSelectorConstants.submit
         let clickCount = 4
         let delayMs = 1600
         let escapedSelector = submitSelector
