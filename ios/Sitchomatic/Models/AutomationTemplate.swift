@@ -263,7 +263,6 @@ nonisolated struct AutomationTemplate: Codable, Sendable, Identifiable {
             s.fullSessionResetOnFinalRetry = true
             s.maxSubmitCycles = 6
             s.submitRetryCount = 5
-            s.submitRetryDelayMs = 1500
             s.maxRequeueCount = 5
             s.requeueOnTimeout = true
             s.requeueOnConnectionFailure = true

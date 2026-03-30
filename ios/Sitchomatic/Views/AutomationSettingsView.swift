@@ -1363,7 +1363,6 @@ struct AutomationSettingsView: View {
     private var submitBehaviorSection: some View {
         Section {
             Stepper("Submit Retries: \(vm.automationSettings.submitRetryCount)", value: $vm.automationSettings.submitRetryCount, in: 1...10)
-            Stepper("Retry Delay: \(vm.automationSettings.submitRetryDelayMs)ms", value: $vm.automationSettings.submitRetryDelayMs, in: 200...5000, step: 200)
             HStack {
                 Text("Wait for Response")
                 Spacer()
@@ -1872,7 +1871,6 @@ struct AutomationSettingsView: View {
     private var urlRotationSection: some View {
         Section {
             Toggle("URL Rotation", isOn: $vm.automationSettings.urlRotationEnabled).tint(accentColor)
-            Stepper("Disable After \(vm.automationSettings.disableURLAfterConsecutiveFailures) Failures", value: $vm.automationSettings.disableURLAfterConsecutiveFailures, in: 1...10)
             HStack {
                 Text("Re-Enable After")
                 Spacer()

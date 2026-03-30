@@ -1559,7 +1559,6 @@ struct FlowSettingsView: View {
 
             Section("Submit Behavior") {
                 Stepper("Retry Count: \(settings.submitRetryCount)", value: $settings.submitRetryCount, in: 0...10)
-                Stepper("Retry Delay: \(settings.submitRetryDelayMs)ms", value: $settings.submitRetryDelayMs, in: 100...10000, step: 100)
                 Toggle("Rapid Poll", isOn: $settings.rapidPollEnabled)
             }
 

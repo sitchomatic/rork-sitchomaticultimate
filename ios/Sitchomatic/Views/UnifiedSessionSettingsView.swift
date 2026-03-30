@@ -325,7 +325,6 @@ struct UnifiedSessionSettingsView: View {
     private var submitBehaviorSection: some View {
         Section {
             Stepper("Submit Retries: \(vm.automationSettings.submitRetryCount)", value: $vm.automationSettings.submitRetryCount, in: 1...10)
-            Stepper("Retry Delay: \(vm.automationSettings.submitRetryDelayMs)ms", value: $vm.automationSettings.submitRetryDelayMs, in: 1000...15000, step: 500)
             HStack {
                 Text("Wait for Response")
                 Spacer()
