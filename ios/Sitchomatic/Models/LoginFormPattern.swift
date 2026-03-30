@@ -1,7 +1,6 @@
 import Foundation
 
 nonisolated enum LoginFormPattern: String, CaseIterable, Codable, Sendable {
-    case trueDetection = "TRUE DETECTION"
     case tabNavigation = "Tab Navigation"
     case clickFocusSequential = "Click-Focus Sequential"
     case execCommandInsert = "ExecCommand Insert"
@@ -16,8 +15,6 @@ nonisolated enum LoginFormPattern: String, CaseIterable, Codable, Sendable {
 
     var description: String {
         switch self {
-        case .trueDetection:
-            "Hardcoded Interaction Protocol: Triple-Wait → #email → #login-password → Triple-Click #login-submit with force dispatch"
         case .tabNavigation:
             "Click email → char-by-char type → Tab to password → char-by-char type → Enter to submit"
         case .clickFocusSequential:
