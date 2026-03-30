@@ -142,26 +142,14 @@ class DNSPoolService {
     }
 
     static let defaultServers: [DNSServerEntry] = [
-        DNSServerEntry(name: "Cloudflare", protocolType: .doh, endpoint: "https://cloudflare-dns.com/dns-query", port: 443, region: .anycast, isDefault: true),
         DNSServerEntry(name: "Cloudflare", protocolType: .dot, endpoint: "1.1.1.1", port: 853, region: .anycast, isDefault: true),
-        DNSServerEntry(name: "Google", protocolType: .doh, endpoint: "https://dns.google/dns-query", port: 443, region: .anycast, isDefault: true),
         DNSServerEntry(name: "Google", protocolType: .dot, endpoint: "dns.google", port: 853, region: .anycast, isDefault: true),
-        DNSServerEntry(name: "Quad9", protocolType: .doh, endpoint: "https://dns.quad9.net:5053/dns-query", port: 5053, region: .anycast, isDefault: true),
         DNSServerEntry(name: "Quad9", protocolType: .dot, endpoint: "dns.quad9.net", port: 853, region: .anycast, isDefault: true),
         DNSServerEntry(name: "Seby AU", protocolType: .doh, endpoint: "https://doh.seby.io/dns-query", port: 443, region: .au, isDefault: true),
-        DNSServerEntry(name: "Seby AU", protocolType: .dot, endpoint: "dns.seby.io", port: 853, region: .au, isDefault: true),
-        DNSServerEntry(name: "AdFilter Sydney", protocolType: .doh, endpoint: "https://syd.adfilter.net/dns-query", port: 443, region: .au, isDefault: true),
-        DNSServerEntry(name: "AdFilter Adelaide", protocolType: .doh, endpoint: "https://adl.adfilter.net/dns-query", port: 443, region: .au, isDefault: true),
         DNSServerEntry(name: "NextDNS", protocolType: .doh, endpoint: "https://dns.nextdns.io/dns-query", port: 443, region: .multicast, isDefault: true),
         DNSServerEntry(name: "NextDNS", protocolType: .dot, endpoint: "dns.nextdns.io", port: 853, region: .multicast, isDefault: true),
-        DNSServerEntry(name: "ControlD", protocolType: .doh, endpoint: "https://freedns.controld.com/p0", port: 443, region: .multicast, isDefault: true),
-        DNSServerEntry(name: "Mullvad", protocolType: .doh, endpoint: "https://dns.mullvad.net/dns-query", port: 443, region: .global, isDefault: true),
         DNSServerEntry(name: "Mullvad", protocolType: .dot, endpoint: "dns.mullvad.net", port: 853, region: .global, isDefault: true),
-        DNSServerEntry(name: "AdGuard", protocolType: .doh, endpoint: "https://dns.adguard-dns.com/dns-query", port: 443, region: .anycast, isDefault: true),
-        DNSServerEntry(name: "AliDNS", protocolType: .doh, endpoint: "https://dns.alidns.com/dns-query", port: 443, region: .global, isDefault: true),
-        DNSServerEntry(name: "Wikimedia", protocolType: .doh, endpoint: "https://wikimedia-dns.org/dns-query", port: 443, region: .global, isDefault: true),
         DNSServerEntry(name: "CleanBrowsing", protocolType: .dot, endpoint: "security-filter-dns.cleanbrowsing.org", port: 853, region: .global, isDefault: true),
-        DNSServerEntry(name: "Quad9 AU", protocolType: .doh, endpoint: "https://dns11.quad9.net:5053/dns-query", port: 5053, region: .au, isDefault: true),
     ]
 
     var managedServers: [ManagedDNSServer] = []
