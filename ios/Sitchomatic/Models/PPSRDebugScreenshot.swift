@@ -58,8 +58,8 @@ class PPSRDebugScreenshot: Identifiable {
     let cardId: String
     let vin: String
     let email: String
-    let image: UIImage
-    var croppedImage: UIImage?
+    let imageData: Data
+    var croppedImageData: Data?
     var note: String
     var site: String = ""
     var autoDetectedResult: AutoDetectedResult = .unknown
@@ -111,6 +111,26 @@ class PPSRDebugScreenshot: Identifiable {
         return autoDetectedResult.toOverride
     }
 
+    var image: UIImage {
+        ScreenshotImageCache.shared.image(forKey: "\(id)_img", data: imageData)
+    }
+
+    var croppedImage: UIImage? {
+        get {
+            guard let data = croppedImageData else { return nil }
+            return ScreenshotImageCache.shared.image(forKey: "\(id)_crop", data: data)
+        }
+        set {
+            if let img = newValue {
+                croppedImageData = img.jpegData(compressionQuality: 0.5)
+                ScreenshotImageCache.shared.removeImage(forKey: "\(id)_crop")
+            } else {
+                croppedImageData = nil
+                ScreenshotImageCache.shared.removeImage(forKey: "\(id)_crop")
+            }
+        }
+    }
+
     var displayImage: UIImage {
         croppedImage ?? image
     }
@@ -129,8 +149,8 @@ class PPSRDebugScreenshot: Identifiable {
         self.cardId = cardId
         self.vin = vin
         self.email = email
-        self.image = image
-        self.croppedImage = croppedImage
+        self.imageData = image.jpegData(compressionQuality: 0.4) ?? Data()
+        self.croppedImageData = croppedImage?.jpegData(compressionQuality: 0.4)
         self.note = note
         self.site = site
         self.autoDetectedResult = autoDetectedResult

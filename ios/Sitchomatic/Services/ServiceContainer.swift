@@ -4,34 +4,14 @@ import Foundation
 class ServiceContainer {
     static let shared = ServiceContainer()
 
-    let proxyRotation: ProxyRotationService
-    let networkSessionFactory: NetworkSessionFactory
-    let deviceProxy: DeviceProxyService
-    let debugLogger: DebugLogger
-    let fingerprintValidation: FingerprintValidationService
-    let screenshotCache: ScreenshotCacheService
+    lazy var proxyRotation: ProxyRotationService = .shared
+    lazy var networkSessionFactory: NetworkSessionFactory = .shared
+    lazy var deviceProxy: DeviceProxyService = .shared
+    lazy var debugLogger: DebugLogger = .shared
+    lazy var fingerprintValidation: FingerprintValidationService = .shared
+    lazy var screenshotCache: ScreenshotCacheService = .shared
 
-    let socks5Manager: SOCKS5ProxyManager
-    let jsBuilder: LoginJSBuilder
-    let typingEngine: HumanTypingEngine
-
-    init(
-        proxyRotation: ProxyRotationService? = nil,
-        networkSessionFactory: NetworkSessionFactory? = nil,
-        deviceProxy: DeviceProxyService? = nil,
-        debugLogger: DebugLogger? = nil,
-        fingerprintValidation: FingerprintValidationService? = nil,
-        screenshotCache: ScreenshotCacheService? = nil
-    ) {
-        self.proxyRotation = proxyRotation ?? .shared
-        self.networkSessionFactory = networkSessionFactory ?? .shared
-        self.deviceProxy = deviceProxy ?? .shared
-        self.debugLogger = debugLogger ?? .shared
-        self.fingerprintValidation = fingerprintValidation ?? .shared
-        self.screenshotCache = screenshotCache ?? .shared
-
-        self.socks5Manager = SOCKS5ProxyManager()
-        self.jsBuilder = LoginJSBuilder()
-        self.typingEngine = HumanTypingEngine()
-    }
+    lazy var socks5Manager: SOCKS5ProxyManager = SOCKS5ProxyManager()
+    lazy var jsBuilder: LoginJSBuilder = LoginJSBuilder()
+    lazy var typingEngine: HumanTypingEngine = HumanTypingEngine()
 }

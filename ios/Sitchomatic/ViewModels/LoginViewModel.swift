@@ -1184,7 +1184,7 @@ class LoginViewModel {
 
     func addScreenshot(_ screenshot: PPSRDebugScreenshot) {
         if isRunning && CrashProtectionService.shared.isMemoryCritical {
-            ScreenshotCacheService.shared.store(screenshot.image, forKey: screenshot.id)
+            ScreenshotCacheService.shared.storeData(screenshot.imageData, forKey: screenshot.id)
             return
         }
         debugScreenshots.insert(screenshot, at: 0)
@@ -1192,7 +1192,7 @@ class LoginViewModel {
         if debugScreenshots.count > effectiveLimit {
             let overflow = Array(debugScreenshots.suffix(from: effectiveLimit))
             for ss in overflow {
-                ScreenshotCacheService.shared.store(ss.image, forKey: ss.id)
+                ScreenshotCacheService.shared.storeData(ss.imageData, forKey: ss.id)
             }
             debugScreenshots.removeLast(debugScreenshots.count - effectiveLimit)
         }

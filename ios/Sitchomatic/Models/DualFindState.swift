@@ -210,10 +210,14 @@ nonisolated struct DualFindLiveScreenshot: Identifiable, Sendable {
     let password: String
     let platform: String
     let url: String
-    let image: UIImage
+    let imageData: Data
     let step: String
     let timestamp: Date
     let outcome: String
+
+    var image: UIImage {
+        ScreenshotImageCache.shared.image(forKey: "\(id)_df", data: imageData)
+    }
 
     init(email: String, password: String, platform: String, url: String, image: UIImage, step: String, outcome: String = "") {
         self.id = UUID().uuidString
@@ -221,7 +225,7 @@ nonisolated struct DualFindLiveScreenshot: Identifiable, Sendable {
         self.password = password
         self.platform = platform
         self.url = url
-        self.image = image
+        self.imageData = image.jpegData(compressionQuality: 0.4) ?? Data()
         self.step = step
         self.timestamp = Date()
         self.outcome = outcome

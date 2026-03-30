@@ -26,6 +26,12 @@ class ScreenshotCacheService {
     }
 
     func store(_ image: UIImage, forKey key: String) {
+        let compressed = compressForMemory(image)
+        let jpegData = compressed.jpegData(compressionQuality: 0.4) ?? Data()
+        storeData(jpegData, forKey: key)
+    }
+
+    func storeData(_ data: Data, forKey key: String) {
         let now = Date()
         batchScreenshotCount += 1
 
@@ -42,10 +48,10 @@ class ScreenshotCacheService {
 
         let skipMemoryCache = diskOnlyMode || CrashProtectionService.shared.isMemoryCritical
 
-        let compressed = compressForMemory(image)
-
         if !skipMemoryCache {
-            memoryCache[key] = compressed
+            if let img = UIImage(data: data) {
+                memoryCache[key] = img
+            }
             accessOrder.removeAll { $0 == key }
             accessOrder.append(key)
             evictMemoryCacheIfNeeded()
@@ -56,11 +62,8 @@ class ScreenshotCacheService {
         }
 
         let fileURL = fileURL(for: key)
-        let jpegData = compressed.jpegData(compressionQuality: 0.4)
         Task.detached(priority: .utility) {
-            if let data = jpegData {
-                try? data.write(to: fileURL, options: .atomic)
-            }
+            try? data.write(to: fileURL, options: .atomic)
             await MainActor.run { [weak self] in
                 self?.evictDiskCacheIfNeeded()
             }

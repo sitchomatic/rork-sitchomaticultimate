@@ -42,22 +42,23 @@ class UnifiedScreenshotManager {
             return
         }
 
-        let compressed = compressImage(image)
+        let compressedData = compressToData(image)
+        let compressedImage = UIImage(data: compressedData) ?? image
 
         var analysis: VisionTextCropService.AnalysisResult?
-        var cropResult: VisionTextCropService.CropResult?
+        var croppedData: Data?
 
         if runVisionAnalysis {
             analysisStats.totalAnalyzed += 1
-            let analysisValue = await visionCrop.analyzeScreenshot(compressed)
+            let analysisValue = await visionCrop.analyzeScreenshot(compressedImage)
             analysis = analysisValue
 
             if !analysisValue.crucialMatches.isEmpty {
                 analysisStats.crucialDetections += 1
-                let crop = await visionCrop.smartCrop(compressed, analysis: analysisValue)
-                cropResult = crop
+                let crop = await visionCrop.smartCrop(compressedImage, analysis: analysisValue)
                 if crop.cropRect != .zero {
                     analysisStats.smartCrops += 1
+                    croppedData = crop.croppedImage.jpegData(compressionQuality: 0.4)
                 }
             }
 
@@ -72,8 +73,8 @@ class UnifiedScreenshotManager {
             step: step,
             attemptNumber: attemptNumber,
             clickPriority: clickPriority,
-            fullImage: compressed,
-            croppedImage: cropResult?.croppedImage,
+            fullImageData: compressedData,
+            croppedImageData: croppedData,
             detectedOutcome: analysis?.detectedOutcome ?? .unknown,
             crucialKeywords: analysis?.crucialMatches ?? [],
             allDetectedText: analysis?.allText ?? "",
@@ -173,13 +174,11 @@ class UnifiedScreenshotManager {
         if screenshots.count > keep {
             screenshots = Array(screenshots.prefix(keep))
         }
+        ScreenshotImageCache.shared.clearAll()
     }
 
-    private func compressImage(_ image: UIImage) -> UIImage {
-        if let jpegData = image.jpegData(compressionQuality: 0.4), let compressed = UIImage(data: jpegData) {
-            return compressed
-        }
-        return image
+    private func compressToData(_ image: UIImage) -> Data {
+        image.jpegData(compressionQuality: 0.4) ?? Data()
     }
 }
 
@@ -192,8 +191,8 @@ class UnifiedScreenshot: Identifiable {
     let site: String
     let step: ScreenshotStep
     let attemptNumber: Int
-    let fullImage: UIImage
-    let croppedImage: UIImage?
+    let fullImageData: Data
+    let croppedImageData: Data?
     let detectedOutcome: VisionTextCropService.DetectedOutcome
     let crucialKeywords: [String]
     let allDetectedText: String
@@ -202,12 +201,21 @@ class UnifiedScreenshot: Identifiable {
     let clickPriority: Int
     var userOverride: UserResultOverride = .none
 
+    var fullImage: UIImage {
+        ScreenshotImageCache.shared.image(forKey: "\(id)_full", data: fullImageData)
+    }
+
+    var croppedImage: UIImage? {
+        guard let data = croppedImageData else { return nil }
+        return ScreenshotImageCache.shared.image(forKey: "\(id)_crop", data: data)
+    }
+
     var displayImage: UIImage {
         croppedImage ?? fullImage
     }
 
     var hasCrop: Bool {
-        croppedImage != nil
+        croppedImageData != nil
     }
 
     var isCrucial: Bool {
@@ -250,8 +258,8 @@ class UnifiedScreenshot: Identifiable {
         step: ScreenshotStep,
         attemptNumber: Int,
         clickPriority: Int = 0,
-        fullImage: UIImage,
-        croppedImage: UIImage?,
+        fullImageData: Data,
+        croppedImageData: Data?,
         detectedOutcome: VisionTextCropService.DetectedOutcome,
         crucialKeywords: [String],
         allDetectedText: String,
@@ -266,8 +274,8 @@ class UnifiedScreenshot: Identifiable {
         self.step = step
         self.attemptNumber = attemptNumber
         self.clickPriority = clickPriority
-        self.fullImage = fullImage
-        self.croppedImage = croppedImage
+        self.fullImageData = fullImageData
+        self.croppedImageData = croppedImageData
         self.detectedOutcome = detectedOutcome
         self.crucialKeywords = crucialKeywords
         self.allDetectedText = allDetectedText
