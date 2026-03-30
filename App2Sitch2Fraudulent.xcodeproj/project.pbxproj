@@ -513,7 +513,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -547,7 +547,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -569,7 +569,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -591,7 +591,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -611,7 +611,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -631,7 +631,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -646,7 +646,7 @@
 		XX4405D791374AFE1C63B9XX /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.sitchomaticwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.sitchomaticwidget;
 				PRODUCT_NAME = SitchomaticWidget;
 				SWIFT_VERSION = 5.0;
 				SDKROOT = iphoneos;
@@ -668,7 +668,7 @@
 		XXDB1124C5D8D652F99983XX /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirmwuazott.sitchomaticwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = app.rork.gi7ggokjdoeirm88.sitchomaticwidget;
 				PRODUCT_NAME = SitchomaticWidget;
 				SWIFT_VERSION = 5.0;
 				SDKROOT = iphoneos;
