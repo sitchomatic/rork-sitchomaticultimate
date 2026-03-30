@@ -1111,70 +1111,11 @@ class LoginSiteWebSession: NSObject {
         _ = await executeJS(js)
     }
 
-    func trueDetectionFillEmail(_ email: String) async -> (success: Bool, detail: String) {
-        let config = TrueDetectionService.TrueDetectionConfig()
-        let escaped = email.replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "'", with: "\\'")
-            .replacingOccurrences(of: "\n", with: "\\n")
-            .replacingOccurrences(of: "\r", with: "\\r")
-        let js = """
-        (function() {
-            var el = document.querySelector('\(config.emailSelector)');
-            if (!el) {
-                var fallbacks = ['input[type="email"]', 'input[name="email"]', 'input[name="username"]', 'input[type="text"]:first-of-type'];
-                for (var i = 0; i < fallbacks.length; i++) { el = document.querySelector(fallbacks[i]); if (el) break; }
-            }
-            if (!el) return 'NOT_FOUND';
-            el.focus();
-            var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-            if (ns && ns.set) { ns.set.call(el, ''); } else { el.value = ''; }
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            if (ns && ns.set) { ns.set.call(el, '\(escaped)'); } else { el.value = '\(escaped)'; }
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            el.dispatchEvent(new Event('change', {bubbles: true}));
-            el.dispatchEvent(new Event('blur', {bubbles: true}));
-            return el.value === '\(escaped)' ? 'OK' : 'VALUE_MISMATCH';
-        })();
-        """
-        let result = await executeJS(js)
-        if result == "OK" || result == "VALUE_MISMATCH" {
-            return (true, "TrueDetection email filled")
-        }
-        return (false, "TrueDetection email fill failed: \(result ?? "nil")")
-    }
-
-    func trueDetectionFillPassword(_ password: String) async -> (success: Bool, detail: String) {
-        let config = TrueDetectionService.TrueDetectionConfig()
-        let escaped = password.replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "'", with: "\\'")
-            .replacingOccurrences(of: "\n", with: "\\n")
-            .replacingOccurrences(of: "\r", with: "\\r")
-        let js = """
-        (function() {
-            var el = document.querySelector('\(config.passwordSelector)');
-            if (!el) { el = document.querySelector('input[type="password"]'); }
-            if (!el) return 'NOT_FOUND';
-            el.focus();
-            var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-            if (ns && ns.set) { ns.set.call(el, ''); } else { el.value = ''; }
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            if (ns && ns.set) { ns.set.call(el, '\(escaped)'); } else { el.value = '\(escaped)'; }
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            el.dispatchEvent(new Event('change', {bubbles: true}));
-            el.dispatchEvent(new Event('blur', {bubbles: true}));
-            return el.value === '\(escaped)' ? 'OK' : 'VALUE_MISMATCH';
-        })();
-        """
-        let result = await executeJS(js)
-        if result == "OK" || result == "VALUE_MISMATCH" {
-            return (true, "TrueDetection password filled")
-        }
-        return (false, "TrueDetection password fill failed: \(result ?? "nil")")
-    }
-
-    func trueDetectionTripleClickSubmit() async -> (success: Bool, detail: String) {
-        let config = TrueDetectionService.TrueDetectionConfig()
-        let escapedSelector = config.submitSelector
+    func tripleClickSubmit() async -> (success: Bool, detail: String) {
+        let submitSelector = "#login-submit"
+        let clickCount = 4
+        let delayMs = 1600
+        let escapedSelector = submitSelector
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "'", with: "\\'")
         let js = """
@@ -1185,9 +1126,9 @@ class LoginSiteWebSession: NSObject {
                 for (var i = 0; i < fallbacks.length; i++) { btn = document.querySelector(fallbacks[i]); if (btn) break; }
             }
             if (!btn) return 'NOT_FOUND';
-            // Triple-click pattern: matches TrueDetectionService's cycled click protocol
+            // Triple-click pattern: cycled click protocol
             // to maximize form submission reliability across different web frameworks
-            for (var c = 0; c < 3; c++) {
+            for (var c = 0; c < \(clickCount); c++) {
                 btn.click();
                 btn.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}));
             }
@@ -1196,23 +1137,9 @@ class LoginSiteWebSession: NSObject {
         """
         let result = await executeJS(js)
         if result == "CLICKED" {
-            return (true, "TrueDetection triple-click submit fired")
+            return (true, "Triple-click submit fired")
         }
-        return (false, "TrueDetection submit failed: \(result ?? "nil")")
-    }
-
-    func trueDetectionValidateSuccess() async -> (success: Bool, detail: String) {
-        let config = TrueDetectionService.TrueDetectionConfig()
-        let validated = await TrueDetectionService.shared.validateSuccess(
-            session: self,
-            config: config,
-            sessionId: monitoringSessionId ?? "unknown",
-            onLog: nil
-        )
-        if validated {
-            return (true, "TrueDetection success validated")
-        }
-        return (false, "TrueDetection: no success markers found")
+        return (false, "Submit failed: \(result ?? "nil")")
     }
 
     func pressEnterOnPasswordField() async -> (success: Bool, detail: String) {
