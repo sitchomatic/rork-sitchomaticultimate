@@ -591,7 +591,7 @@ struct UnifiedSessionFeedView: View {
                         .frame(width: 70, alignment: .leading)
                     Text(entry.level.rawValue)
                         .font(.system(.caption2, design: .monospaced, weight: .bold))
-                        .foregroundStyle(logColor(entry.level))
+                        .foregroundStyle(entry.level.color)
                         .frame(width: 36)
                     Text(entry.message)
                         .font(.system(.caption, design: .monospaced))
@@ -652,14 +652,6 @@ struct UnifiedSessionFeedView: View {
         .presentationDragIndicator(.visible)
     }
 
-    private func logColor(_ level: PPSRLogEntry.Level) -> Color {
-        switch level {
-        case .info: .blue
-        case .success: .green
-        case .warning: .orange
-        case .error: .red
-        }
-    }
 }
 
 struct PairedSessionTile: View {

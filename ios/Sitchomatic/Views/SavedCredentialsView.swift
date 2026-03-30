@@ -379,7 +379,7 @@ struct SavedCredentialsView: View {
                                     screenshot: screenshot,
                                     title: "\(card.brand.rawValue) \(card.number.suffix(4))",
                                     subtitle: card.formattedExpiry,
-                                    statusColor: cardTileStatusColor(card.status),
+                                    statusColor: card.status.color,
                                     statusText: card.status.rawValue,
                                     badge: card.totalTests > 0 ? "\(card.successCount)/\(card.totalTests)" : nil
                                 )
@@ -394,14 +394,6 @@ struct SavedCredentialsView: View {
         }
     }
 
-    private func cardTileStatusColor(_ status: CardStatus) -> Color {
-        switch status {
-        case .working: .green
-        case .dead: .red
-        case .testing: .teal
-        case .untested: .secondary
-        }
-    }
 
     @State private var showFormatHelp: Bool = false
 
@@ -696,8 +688,8 @@ struct SavedCardRow: View {
     var body: some View {
         HStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8).fill(brandColor.opacity(0.12)).frame(width: 40, height: 40)
-                Image(systemName: card.brand.iconName).font(.title3.bold()).foregroundStyle(brandColor)
+                RoundedRectangle(cornerRadius: 8).fill(card.brand.displayColor.opacity(0.12)).frame(width: 40, height: 40)
+                Image(systemName: card.brand.iconName).font(.title3.bold()).foregroundStyle(card.brand.displayColor)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -728,27 +720,14 @@ struct SavedCardRow: View {
 
             VStack(alignment: .trailing, spacing: 4) {
                 HStack(spacing: 3) {
-                    Circle().fill(statusColor).frame(width: 6, height: 6)
-                    Text(card.status.rawValue).font(.system(.caption2, design: .monospaced)).foregroundStyle(statusColor)
+                    Circle().fill(card.status.color).frame(width: 6, height: 6)
+                    Text(card.status.rawValue).font(.system(.caption2, design: .monospaced)).foregroundStyle(card.status.color)
                 }
                 if card.status == .testing { ProgressView().controlSize(.small).tint(.teal) }
             }
         }
         .padding(.vertical, 4)
         .task { if card.binData == nil { await card.loadBINData() } }
-    }
-
-    private var brandColor: Color {
-        switch card.brand {
-        case .visa: .blue; case .mastercard: .orange; case .amex: .green; case .jcb: .red
-        case .discover: .purple; case .dinersClub: .indigo; case .unionPay: .teal; case .unknown: .secondary
-        }
-    }
-
-    private var statusColor: Color {
-        switch card.status {
-        case .working: .green; case .dead: .red; case .testing: .teal; case .untested: .secondary
-        }
     }
 }
 

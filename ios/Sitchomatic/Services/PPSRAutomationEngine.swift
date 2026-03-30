@@ -704,7 +704,7 @@ class PPSRAutomationEngine {
         check.logs.append(PPSRLogEntry(message: "ERROR: \(message)", level: .error))
     }
 
-    private func captureScreenshotForCheck(session: LoginWebSession, check: PPSRCheck, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult = .unknown) async {
+    private func captureScreenshotForCheck(session: some ScreenshotCapableSession, check: PPSRCheck, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult = .unknown) async {
         let cropRect = screenshotCropRect == .zero ? nil : screenshotCropRect
         let result = await session.captureScreenshotWithCrop(cropRect: cropRect)
         guard let fullImage = result.full else { return }

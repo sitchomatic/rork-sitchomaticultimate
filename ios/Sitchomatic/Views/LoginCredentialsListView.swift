@@ -324,7 +324,7 @@ struct LoginCredentialsListView: View {
                                     screenshot: screenshot,
                                     title: cred.username,
                                     subtitle: cred.maskedPassword,
-                                    statusColor: credTileStatusColor(cred.status),
+                                    statusColor: cred.status.color,
                                     statusText: cred.status.rawValue,
                                     badge: cred.totalTests > 0 ? "\(cred.successCount)/\(cred.totalTests)" : nil
                                 )
@@ -339,17 +339,6 @@ struct LoginCredentialsListView: View {
         }
     }
 
-    private func credTileStatusColor(_ status: CredentialStatus) -> Color {
-        switch status {
-        case .working: .green
-        case .noAcc: .red
-        case .permDisabled: .red.opacity(0.7)
-        case .tempDisabled: .orange
-        case .unsure: .yellow
-        case .testing: .green
-        case .untested: .secondary
-        }
-    }
 
     private var importSheet: some View {
         NavigationStack {

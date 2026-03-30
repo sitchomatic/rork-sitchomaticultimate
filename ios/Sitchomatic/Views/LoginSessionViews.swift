@@ -305,7 +305,7 @@ struct LoginSessionDetailSheet: View {
                             HStack(alignment: .top, spacing: 8) {
                                 Text(entry.formattedTime).font(.system(.caption2, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 80, alignment: .leading)
                                 Text(entry.level.rawValue).font(.system(.caption2, design: .monospaced, weight: .bold))
-                                    .foregroundStyle(logColor(entry.level)).frame(width: 36)
+                                    .foregroundStyle(entry.level.color).frame(width: 36)
                                 Text(entry.message).font(.system(.caption, design: .monospaced)).foregroundStyle(.primary)
                             }
                             .listRowSeparator(.hidden)
@@ -337,9 +337,6 @@ struct LoginSessionDetailSheet: View {
         }
     }
 
-    private func logColor(_ level: PPSRLogEntry.Level) -> Color {
-        switch level { case .info: .blue; case .success: .green; case .warning: .orange; case .error: .red }
-    }
 }
 
 struct FullScreenshotView: View {

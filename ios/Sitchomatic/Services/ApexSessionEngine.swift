@@ -20,6 +20,7 @@ import Vision
 private enum ApexConstants {
     static let maxPageContentLength = 3000
     static let heartbeatTimeoutSeconds: TimeInterval = 15
+    static let defaultSnapshotSize = CGSize(width: 390, height: 844)
 
     static let keyboardSuppressionJS = """
     (function() {
@@ -40,6 +41,31 @@ private enum ApexConstants {
 
     static var keyboardSuppressionScript: WKUserScript {
         WKUserScript(source: keyboardSuppressionJS, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+    }
+}
+
+/// Shared image cropping utility for web session screenshots.
+private func apexCropImage(_ image: UIImage, to rect: CGRect) -> UIImage? {
+    guard let cgImage = image.cgImage else { return nil }
+    let scale = image.scale
+    let scaledRect = CGRect(x: rect.origin.x * scale, y: rect.origin.y * scale,
+                            width: rect.width * scale, height: rect.height * scale)
+    guard let cropped = cgImage.cropping(to: scaledRect) else { return nil }
+    return UIImage(cgImage: cropped, scale: scale, orientation: image.imageOrientation)
+}
+
+/// Protocol for web sessions that support screenshot capture with optional cropping.
+@MainActor
+protocol ScreenshotCapableSession {
+    func captureScreenshot() async -> UIImage?
+}
+
+extension ScreenshotCapableSession {
+    func captureScreenshotWithCrop(cropRect: CGRect?) async -> (full: UIImage?, cropped: UIImage?) {
+        let full = await captureScreenshot()
+        guard let full, let cropRect, cropRect != .zero else { return (full, nil) }
+        let cropped = apexCropImage(full, to: cropRect)
+        return (full, cropped)
     }
 }
 
@@ -296,8 +322,6 @@ class LoginSiteWebSession: NSObject {
         await executeJS("document.body ? document.body.innerText.substring(0, \(ApexConstants.maxPageContentLength)) : ''")
     }
 
-    private static let defaultSnapshotSize = CGSize(width: 390, height: 844)
-
     func captureScreenshot() async -> UIImage? {
         guard let webView else {
             logger.log("captureScreenshot: webView is nil", category: .screenshot, level: .warning)
@@ -307,8 +331,8 @@ class LoginSiteWebSession: NSObject {
         let savedFrame = webView.frame
         if needsResize {
             let vp = stealthProfile?.viewport
-            let w = CGFloat(vp?.width ?? Int(Self.defaultSnapshotSize.width))
-            let h = CGFloat(vp?.height ?? Int(Self.defaultSnapshotSize.height))
+            let w = CGFloat(vp?.width ?? Int(ApexConstants.defaultSnapshotSize.width))
+            let h = CGFloat(vp?.height ?? Int(ApexConstants.defaultSnapshotSize.height))
             webView.frame = CGRect(origin: savedFrame.origin, size: CGSize(width: w, height: h))
             webView.layoutIfNeeded()
         }
@@ -967,8 +991,8 @@ class LoginSiteWebSession: NSObject {
         let savedFrame = webView.frame
         if needsResize {
             let vp = stealthProfile?.viewport
-            let w = CGFloat(vp?.width ?? Int(Self.defaultSnapshotSize.width))
-            let h = CGFloat(vp?.height ?? Int(Self.defaultSnapshotSize.height))
+            let w = CGFloat(vp?.width ?? Int(ApexConstants.defaultSnapshotSize.width))
+            let h = CGFloat(vp?.height ?? Int(ApexConstants.defaultSnapshotSize.height))
             webView.frame = CGRect(origin: savedFrame.origin, size: CGSize(width: w, height: h))
             webView.layoutIfNeeded()
         }
@@ -1332,7 +1356,7 @@ extension LoginSiteWebSession: WKScriptMessageHandler {
 /// Drop-in replacement for the legacy LoginWebSession used by PPSRAutomationEngine.
 /// Isolated WKProcessPool + nonPersistent WKWebsiteDataStore per instance.
 @MainActor
-class LoginWebSession: NSObject {
+class LoginWebSession: NSObject, ScreenshotCapableSession {
 
     // MARK: Public Properties
 
@@ -1567,7 +1591,6 @@ class LoginWebSession: NSObject {
         await executeJS("document.body ? document.body.innerText.substring(0, \(ApexConstants.maxPageContentLength)) : ''")
     }
 
-    private static let defaultSnapshotSizeLWS = CGSize(width: 390, height: 844)
 
     func captureScreenshot() async -> UIImage? {
         guard let webView else {
@@ -1578,8 +1601,8 @@ class LoginWebSession: NSObject {
         let savedFrame = webView.frame
         if needsResize {
             let vp = stealthProfile?.viewport
-            let w = CGFloat(vp?.width ?? Int(Self.defaultSnapshotSizeLWS.width))
-            let h = CGFloat(vp?.height ?? Int(Self.defaultSnapshotSizeLWS.height))
+            let w = CGFloat(vp?.width ?? Int(ApexConstants.defaultSnapshotSize.width))
+            let h = CGFloat(vp?.height ?? Int(ApexConstants.defaultSnapshotSize.height))
             webView.frame = CGRect(origin: savedFrame.origin, size: CGSize(width: w, height: h))
             webView.layoutIfNeeded()
         }
@@ -1589,13 +1612,6 @@ class LoginWebSession: NSObject {
         let config = WKSnapshotConfiguration()
         config.rect = webView.bounds
         return try? await webView.takeSnapshot(configuration: config)
-    }
-
-    func captureScreenshotWithCrop(cropRect: CGRect?) async -> (full: UIImage?, cropped: UIImage?) {
-        let full = await captureScreenshot()
-        guard let full, let cropRect, cropRect != .zero else { return (full, nil) }
-        let cropped = cropImage(full, to: cropRect)
-        return (full, cropped)
     }
 
     // MARK: PPSR-Specific Form Filling
@@ -1955,15 +1971,6 @@ class LoginWebSession: NSObject {
         }
     }
 
-    private func cropImage(_ image: UIImage, to rect: CGRect) -> UIImage? {
-        guard let cgImage = image.cgImage else { return nil }
-        let scale = image.scale
-        let scaledRect = CGRect(x: rect.origin.x * scale, y: rect.origin.y * scale,
-                                width: rect.width * scale, height: rect.height * scale)
-        guard let cropped = cgImage.cropping(to: scaledRect) else { return nil }
-        return UIImage(cgImage: cropped, scale: scale, orientation: image.imageOrientation)
-    }
-
     // MARK: Additional PPSR Methods
 
     func checkForIframes() async -> Bool {
@@ -2093,7 +2100,7 @@ extension LoginWebSession: WKScriptMessageHandler {
 /// Drop-in replacement for the legacy BPointWebSession used by BPointAutomationEngine.
 /// Isolated WKProcessPool + nonPersistent WKWebsiteDataStore per instance.
 @MainActor
-class BPointWebSession: NSObject {
+class BPointWebSession: NSObject, ScreenshotCapableSession {
 
     // MARK: Public Properties
 
@@ -2360,7 +2367,6 @@ class BPointWebSession: NSObject {
         await executeJS("document.body ? document.body.innerText.substring(0, \(ApexConstants.maxPageContentLength)) : ''")
     }
 
-    private static let defaultSnapshotSizeBP = CGSize(width: 390, height: 844)
 
     func captureScreenshot() async -> UIImage? {
         guard let webView else {
@@ -2371,8 +2377,8 @@ class BPointWebSession: NSObject {
         let savedFrame = webView.frame
         if needsResize {
             let vp = stealthProfile?.viewport
-            let w = CGFloat(vp?.width ?? Int(Self.defaultSnapshotSizeBP.width))
-            let h = CGFloat(vp?.height ?? Int(Self.defaultSnapshotSizeBP.height))
+            let w = CGFloat(vp?.width ?? Int(ApexConstants.defaultSnapshotSize.width))
+            let h = CGFloat(vp?.height ?? Int(ApexConstants.defaultSnapshotSize.height))
             webView.frame = CGRect(origin: savedFrame.origin, size: CGSize(width: w, height: h))
             webView.layoutIfNeeded()
         }
@@ -2382,13 +2388,6 @@ class BPointWebSession: NSObject {
         let config = WKSnapshotConfiguration()
         config.rect = webView.bounds
         return try? await webView.takeSnapshot(configuration: config)
-    }
-
-    func captureScreenshotWithCrop(cropRect: CGRect?) async -> (full: UIImage?, cropped: UIImage?) {
-        let full = await captureScreenshot()
-        guard let full, let cropRect, cropRect != .zero else { return (full, nil) }
-        let cropped = cropImage(full, to: cropRect)
-        return (full, cropped)
     }
 
     // MARK: BPoint Form Filling
@@ -2741,15 +2740,6 @@ class BPointWebSession: NSObject {
             }
             try? await Task.sleep(for: .milliseconds(300))
         }
-    }
-
-    private func cropImage(_ image: UIImage, to rect: CGRect) -> UIImage? {
-        guard let cgImage = image.cgImage else { return nil }
-        let scale = image.scale
-        let scaledRect = CGRect(x: rect.origin.x * scale, y: rect.origin.y * scale,
-                                width: rect.width * scale, height: rect.height * scale)
-        guard let cropped = cgImage.cropping(to: scaledRect) else { return nil }
-        return UIImage(cgImage: cropped, scale: scale, orientation: image.imageOrientation)
     }
 
     func detectEmailFieldOnPaymentPage() async -> Bool {

@@ -235,7 +235,7 @@ struct EvidenceBundleDetailView: View {
                         ForEach(bundle.logs.prefix(20)) { log in
                             HStack(spacing: 6) {
                                 Circle()
-                                    .fill(logColor(log.level))
+                                    .fill(log.level.color)
                                     .frame(width: 4, height: 4)
                                 Text(log.formattedTime)
                                     .font(.system(size: 8, weight: .medium, design: .monospaced))
@@ -401,14 +401,6 @@ struct EvidenceBundleDetailView: View {
         return .white.opacity(0.4)
     }
 
-    private func logColor(_ level: PPSRLogEntry.Level) -> Color {
-        switch level {
-        case .error: .red
-        case .warning: .orange
-        case .success: .green
-        case .info: .blue
-        }
-    }
 
     private func timeString(_ date: Date) -> String {
         let formatter = DateFormatter()

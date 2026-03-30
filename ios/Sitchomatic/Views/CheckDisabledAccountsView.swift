@@ -162,24 +162,13 @@ struct CheckDisabledAccountsView: View {
 
     private func statusBadge(_ status: CredentialStatus) -> some View {
         HStack(spacing: 3) {
-            Circle().fill(statusColor(status)).frame(width: 5, height: 5)
+            Circle().fill(status.color).frame(width: 5, height: 5)
             Text(status.rawValue)
                 .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(statusColor(status))
+                .foregroundStyle(status.color)
         }
     }
 
-    private func statusColor(_ status: CredentialStatus) -> Color {
-        switch status {
-        case .working: .green
-        case .noAcc: .red
-        case .permDisabled: .red.opacity(0.7)
-        case .tempDisabled: .orange
-        case .unsure: .yellow
-        case .testing: .green
-        case .untested: .secondary
-        }
-    }
 
     private var resultsSection: some View {
         VStack(spacing: 0) {

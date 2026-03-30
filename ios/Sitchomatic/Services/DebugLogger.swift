@@ -89,6 +89,10 @@ class DebugLogger {
         level >= .error ? flushPendingEntries() : scheduleFlush()
     }
 
+    func networkLog(_ message: String, level: DebugLogLevel = .info) {
+        log(message, category: .network, level: level)
+    }
+
     func logError(
         _ message: String, error: Error,
         category: DebugLogCategory = .system,

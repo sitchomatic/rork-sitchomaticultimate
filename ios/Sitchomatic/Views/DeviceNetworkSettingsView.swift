@@ -46,9 +46,6 @@ struct DeviceNetworkSettingsView: View {
         .sheet(isPresented: $showProxyImport) { proxyImportSheet }
     }
 
-    private func log(_ message: String, level: DebugLogLevel = .info) {
-        logger.log(message, category: .network, level: level)
-    }
 
     // MARK: - Device Wide Banner
 
@@ -783,10 +780,10 @@ struct DeviceNetworkSettingsView: View {
                     guard !isTestingProxies else { return }
                     isTestingProxies = true
                     Task {
-                        log("Testing all \(proxyService.unifiedProxies.count) proxies...")
+                        logger.networkLog("Testing all \(proxyService.unifiedProxies.count) proxies...")
                         await proxyService.testAllUnifiedProxies()
                         let working = proxyService.unifiedProxies.filter(\.isWorking).count
-                        log("Proxy test: \(working)/\(proxyService.unifiedProxies.count) working", level: .success)
+                        logger.networkLog("Proxy test: \(working)/\(proxyService.unifiedProxies.count) working", level: .success)
                         isTestingProxies = false
                     }
                 } label: {
@@ -800,7 +797,7 @@ struct DeviceNetworkSettingsView: View {
                 Button {
                     let exported = proxyService.exportProxies(target: .joe)
                     UIPasteboard.general.string = exported
-                    log("Exported \(proxyService.unifiedProxies.count) proxies to clipboard", level: .success)
+                    logger.networkLog("Exported \(proxyService.unifiedProxies.count) proxies to clipboard", level: .success)
                 } label: {
                     Label("Export to Clipboard", systemImage: "doc.on.doc")
                 }
@@ -810,7 +807,7 @@ struct DeviceNetworkSettingsView: View {
                     Button(role: .destructive) {
                         proxyService.removeDead(forIgnition: false)
                         proxyService.syncProxiesAcrossTargets()
-                        log("Removed \(deadCount) dead proxies")
+                        logger.networkLog("Removed \(deadCount) dead proxies")
                     } label: {
                         Label("Remove \(deadCount) Dead", systemImage: "xmark.circle")
                     }
@@ -818,7 +815,7 @@ struct DeviceNetworkSettingsView: View {
 
                 Button(role: .destructive) {
                     proxyService.clearAllUnifiedProxies()
-                    log("Cleared all proxies")
+                    logger.networkLog("Cleared all proxies")
                 } label: {
                     Label("Clear All Proxies", systemImage: "trash")
                 }
@@ -1375,7 +1372,7 @@ struct DeviceNetworkSettingsView: View {
                         let report = proxyService.importUnifiedProxy(proxyBulkText)
                         proxyImportReport = report
                         if report.added > 0 {
-                            log("Imported \(report.added) SOCKS5 proxies → all targets", level: .success)
+                            logger.networkLog("Imported \(report.added) SOCKS5 proxies → all targets", level: .success)
                         }
                         proxyBulkText = ""
                         if report.failed.isEmpty && report.added > 0 {
@@ -1437,7 +1434,7 @@ struct DeviceNetworkSettingsView: View {
                             Spacer()
                             Button {
                                 let result = PPSRDoHService.shared.bulkImportProviders(dnsImportText)
-                                log("DNS import: \(result.added) added, \(result.duplicates) dupes, \(result.invalid) invalid", level: result.added > 0 ? .success : .warning)
+                                logger.networkLog("DNS import: \(result.added) added, \(result.duplicates) dupes, \(result.invalid) invalid", level: result.added > 0 ? .success : .warning)
                                 dnsImportText = ""
                                 if result.added > 0 { withAnimation(.snappy) { showDNSImport = false } }
                             } label: {
@@ -1459,7 +1456,7 @@ struct DeviceNetworkSettingsView: View {
 
                         Button {
                             if PPSRDoHService.shared.addProvider(name: newDNSName, url: newDNSURL) {
-                                log("Added DNS provider: \(newDNSName)", level: .success)
+                                logger.networkLog("Added DNS provider: \(newDNSName)", level: .success)
                                 newDNSName = ""
                                 newDNSURL = ""
                             }
@@ -1513,7 +1510,7 @@ struct DeviceNetworkSettingsView: View {
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 PPSRDoHService.shared.deleteProvider(id: provider.id)
-                                log("Deleted DNS provider: \(provider.name)")
+                                logger.networkLog("Deleted DNS provider: \(provider.name)")
                             } label: { Label("Delete", systemImage: "trash") }
                         }
                     }
@@ -1539,9 +1536,9 @@ struct DeviceNetworkSettingsView: View {
                             let passed = outcome.results.filter(\.passed).count
                             let total = outcome.results.count
                             if outcome.disabledCount > 0 {
-                                log("DNS test: \(passed)/\(total) passed, \(outcome.disabledCount) auto-disabled", level: passed > 0 ? .warning : .error)
+                                logger.networkLog("DNS test: \(passed)/\(total) passed, \(outcome.disabledCount) auto-disabled", level: passed > 0 ? .warning : .error)
                             } else {
-                                log("DNS test complete: \(passed)/\(total) servers passed", level: passed > 0 ? .success : .error)
+                                logger.networkLog("DNS test complete: \(passed)/\(total) servers passed", level: passed > 0 ? .success : .error)
                             }
                         }
                     } label: {
@@ -1568,13 +1565,13 @@ struct DeviceNetworkSettingsView: View {
                     }
                     Button {
                         PPSRDoHService.shared.enableAll()
-                        log("Enabled all DNS providers", level: .success)
+                        logger.networkLog("Enabled all DNS providers", level: .success)
                     } label: {
                         Label("Enable All", systemImage: "checkmark.circle")
                     }
                     Button {
                         PPSRDoHService.shared.resetToDefaults()
-                        log("Reset DNS providers to defaults", level: .success)
+                        logger.networkLog("Reset DNS providers to defaults", level: .success)
                     } label: {
                         Label("Reset to Defaults", systemImage: "arrow.uturn.backward")
                     }

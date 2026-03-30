@@ -1008,7 +1008,7 @@ struct LoginScreenshotCorrectionSheet: View {
                                 .font(.system(size: 9, weight: .heavy, design: .monospaced))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(statusColor(cred.status))
+                                .background(cred.status.color)
                                 .clipShape(Capsule())
                             if cred.totalTests > 0 {
                                 Text("\(cred.totalTests) tests")
@@ -1034,23 +1034,12 @@ struct LoginScreenshotCorrectionSheet: View {
                 .clipShape(.rect(cornerRadius: 12))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(statusColor(cred.status).opacity(0.3), lineWidth: 1)
+                        .strokeBorder(cred.status.color.opacity(0.3), lineWidth: 1)
                 )
             }
         }
     }
 
-    private func statusColor(_ status: CredentialStatus) -> Color {
-        switch status {
-        case .working: .green
-        case .noAcc: .red
-        case .permDisabled: .purple
-        case .tempDisabled: .orange
-        case .unsure: .yellow
-        case .untested: .gray
-        case .testing: .blue
-        }
-    }
 
     private func evidenceSummaryCard(_ bundle: EvidenceBundle) -> some View {
         VStack(alignment: .leading, spacing: 8) {
