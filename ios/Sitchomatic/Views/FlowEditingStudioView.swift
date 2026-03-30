@@ -1555,11 +1555,6 @@ struct FlowSettingsView: View {
                 Toggle("Hover Before Click", isOn: $settings.loginButtonHoverBeforeClick)
                 Toggle("Focus Before Click", isOn: $settings.loginButtonFocusBeforeClick)
                 Toggle("Click Offset Jitter", isOn: $settings.loginButtonClickOffsetJitter)
-                Toggle("Enter Key Fallback", isOn: $settings.loginButtonEnterKeyFallback)
-                Toggle("Form Submit Fallback", isOn: $settings.loginButtonFormSubmitFallback)
-                Toggle("Vision ML Fallback", isOn: $settings.loginButtonVisionMLFallback)
-                Toggle("OCR Fallback", isOn: $settings.loginButtonOCRFallback)
-                Toggle("Coordinate Fallback", isOn: $settings.loginButtonCoordinateFallback)
             }
 
             Section("Submit Behavior") {

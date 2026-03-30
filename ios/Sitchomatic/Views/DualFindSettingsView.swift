@@ -475,16 +475,6 @@ struct DualFindSettingsView: View {
                 dfKeywordRow("Button Text Matches", count: vm.automationSettings.loginButtonTextMatches.count)
             }
 
-            Toggle("Enter Key Fallback", isOn: $vm.automationSettings.loginButtonEnterKeyFallback)
-                .tint(accentColor)
-            Toggle("Form Submit Fallback", isOn: $vm.automationSettings.loginButtonFormSubmitFallback)
-                .tint(accentColor)
-            Toggle("Vision ML Fallback", isOn: $vm.automationSettings.loginButtonVisionMLFallback)
-                .tint(accentColor)
-            Toggle("OCR Fallback", isOn: $vm.automationSettings.loginButtonOCRFallback)
-                .tint(accentColor)
-            Toggle("Coordinate Fallback", isOn: $vm.automationSettings.loginButtonCoordinateFallback)
-                .tint(accentColor)
         } header: {
             Label("Submit Behavior", systemImage: "arrow.right.circle.fill")
         }
