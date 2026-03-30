@@ -7,20 +7,18 @@ struct TestDebugOverridesView: View {
     @State private var pinNetwork: Bool = false
     @State private var selectedNetwork: ConnectionMode = .wireguard
     @State private var pinPattern: Bool = false
-    @State private var selectedPattern: String = "TRUE DETECTION"
+    @State private var selectedPattern: String = "Tab Navigation"
     @State private var pinStealth: Bool = false
     @State private var stealthOn: Bool = true
     @State private var pinHumanSim: Bool = false
     @State private var humanSimOn: Bool = true
     @State private var pinFingerprint: Bool = false
     @State private var fingerprintOn: Bool = true
-    @State private var pinTrueDetection: Bool = false
-    @State private var trueDetectionOn: Bool = true
     @State private var pinIsolation: Bool = false
     @State private var selectedIsolation: AutomationSettings.SessionIsolationMode = .full
 
     private let patterns = [
-        "TRUE DETECTION", "Tab Navigation", "Click-Focus Sequential",
+        "Tab Navigation", "Click-Focus Sequential",
         "Calibrated Typing", "Calibrated Direct", "Form Submit Direct"
     ]
 
@@ -50,13 +48,6 @@ struct TestDebugOverridesView: View {
                             }
                         }
                         .pickerStyle(.menu)
-                    }
-
-                    overrideToggle(
-                        "TRUE DETECTION", icon: "target", isPinned: $pinTrueDetection
-                    ) {
-                        Toggle("Enabled", isOn: $trueDetectionOn)
-                            .tint(.purple)
                     }
 
                     overrideToggle(
@@ -182,10 +173,6 @@ struct TestDebugOverridesView: View {
             pinFingerprint = true
             fingerprintOn = f
         }
-        if let t = overrides.pinTrueDetection {
-            pinTrueDetection = true
-            trueDetectionOn = t
-        }
         if let iso = overrides.pinSessionIsolation {
             pinIsolation = true
             selectedIsolation = iso
@@ -198,7 +185,6 @@ struct TestDebugOverridesView: View {
         overrides.pinStealth = pinStealth ? stealthOn : nil
         overrides.pinHumanSim = pinHumanSim ? humanSimOn : nil
         overrides.pinFingerprint = pinFingerprint ? fingerprintOn : nil
-        overrides.pinTrueDetection = pinTrueDetection ? trueDetectionOn : nil
         overrides.pinSessionIsolation = pinIsolation ? selectedIsolation : nil
     }
 }

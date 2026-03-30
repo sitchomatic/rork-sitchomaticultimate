@@ -14,9 +14,6 @@ struct AutomationSettingsView: View {
     @State private var showMFAKeywordEditor: Bool = false
     @State private var showCaptchaKeywordEditor: Bool = false
     @State private var showTemplates: Bool = false
-    @State private var showSuccessMarkerEditor: Bool = false
-    @State private var showTerminalKeywordEditor: Bool = false
-    @State private var showErrorBannerEditor: Bool = false
     @State private var showCalibrationSheet: Bool = false
     @State private var calibrationURL: String = ""
     @State private var isAutoCalibrating: Bool = false
@@ -46,7 +43,6 @@ struct AutomationSettingsView: View {
         List {
             autoSaveSection
             templateQuickSection
-            trueDetectionSection
             urlCalibrationSection
             pageLoadingSection
             fieldDetectionSection
@@ -133,24 +129,6 @@ struct AutomationSettingsView: View {
         }
         .sheet(isPresented: $showCaptchaKeywordEditor) {
             NavigationStack { KeywordListEditor(title: "CAPTCHA Keywords", keywords: $vm.automationSettings.captchaKeywords) }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
-        }
-        .sheet(isPresented: $showSuccessMarkerEditor) {
-            NavigationStack { KeywordListEditor(title: "Success Markers", keywords: $vm.automationSettings.trueDetectionSuccessMarkers) }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
-        }
-        .sheet(isPresented: $showTerminalKeywordEditor) {
-            NavigationStack { KeywordListEditor(title: "Terminal Keywords", keywords: $vm.automationSettings.trueDetectionTerminalKeywords) }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
-        }
-        .sheet(isPresented: $showErrorBannerEditor) {
-            NavigationStack { KeywordListEditor(title: "Error Banner Selectors", keywords: $vm.automationSettings.trueDetectionErrorBannerSelectors) }
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
                 .presentationContentInteraction(.scrolls)
@@ -268,84 +246,11 @@ struct AutomationSettingsView: View {
         } header: {
             Label("Quick Apply", systemImage: "bolt.fill")
         } footer: {
-            Text("Apply a pre-configured template for TRUE DETECTION, Vision ML, Coordinate, Stealth, Speed, or Resilient automation.")
+            Text("Apply a pre-configured template for Vision ML, Coordinate, Stealth, Speed, or Resilient automation.")
         }
     }
 
-    // MARK: - TRUE DETECTION
-
-    private var trueDetectionSection: some View {
-        Section {
-            Toggle(isOn: $vm.automationSettings.trueDetectionEnabled) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("TRUE DETECTION")
-                        .font(.headline)
-                    Text("Hardcoded Interaction Protocol — bypasses all DOM detection")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(accentColor)
-
-            if vm.automationSettings.trueDetectionEnabled {
-                Toggle("Always First Priority", isOn: $vm.automationSettings.trueDetectionPriority)
-                    .tint(accentColor)
-
-                Group {
-                    Stepper("Hard Pause: \(vm.automationSettings.trueDetectionHardPauseMs)ms", value: $vm.automationSettings.trueDetectionHardPauseMs, in: 1000...8000, step: 500)
-                    Stepper("Click Count: \(vm.automationSettings.trueDetectionTripleClickCount)", value: $vm.automationSettings.trueDetectionTripleClickCount, in: 1...10)
-                    Stepper("Click Delay: \(vm.automationSettings.trueDetectionTripleClickDelayMs)ms", value: $vm.automationSettings.trueDetectionTripleClickDelayMs, in: 200...3000, step: 100)
-                    Stepper("Submit Cycles: \(vm.automationSettings.trueDetectionSubmitCycleCount)", value: $vm.automationSettings.trueDetectionSubmitCycleCount, in: 1...8)
-                    Stepper("Button Recovery Timeout: \(vm.automationSettings.trueDetectionButtonRecoveryTimeoutMs)ms", value: $vm.automationSettings.trueDetectionButtonRecoveryTimeoutMs, in: 2000...30000, step: 1000)
-                    Stepper("Max Attempts: \(vm.automationSettings.trueDetectionMaxAttempts)", value: $vm.automationSettings.trueDetectionMaxAttempts, in: 1...10)
-                    Stepper("Post-Click Wait: \(vm.automationSettings.trueDetectionPostClickWaitMs)ms", value: $vm.automationSettings.trueDetectionPostClickWaitMs, in: 500...5000, step: 250)
-                    Stepper("Cooldown: \(vm.automationSettings.trueDetectionCooldownMinutes) min", value: $vm.automationSettings.trueDetectionCooldownMinutes, in: 1...60)
-                }
-
-                selectorField("Email Selector", placeholder: "#email", binding: $vm.automationSettings.trueDetectionEmailSelector)
-                selectorField("Password Selector", placeholder: "#login-password", binding: $vm.automationSettings.trueDetectionPasswordSelector)
-                selectorField("Submit Selector", placeholder: "#login-submit", binding: $vm.automationSettings.trueDetectionSubmitSelector)
-
-                Button {
-                    showSuccessMarkerEditor = true
-                } label: {
-                    keywordRow("Success Markers", count: vm.automationSettings.trueDetectionSuccessMarkers.count)
-                }
-
-                Button {
-                    showTerminalKeywordEditor = true
-                } label: {
-                    keywordRow("Terminal Keywords", count: vm.automationSettings.trueDetectionTerminalKeywords.count)
-                }
-
-                Button {
-                    showErrorBannerEditor = true
-                } label: {
-                    keywordRow("Error Banner Selectors", count: vm.automationSettings.trueDetectionErrorBannerSelectors.count)
-                }
-
-                Toggle("No Proxy Rotation", isOn: $vm.automationSettings.trueDetectionNoProxyRotation)
-                    .tint(accentColor)
-                Toggle("Strict Waits", isOn: $vm.automationSettings.trueDetectionStrictWaits)
-                    .tint(accentColor)
-                Toggle("Ignore Placeholders", isOn: $vm.automationSettings.trueDetectionIgnorePlaceholders)
-                    .tint(accentColor)
-                Toggle("Ignore XPaths", isOn: $vm.automationSettings.trueDetectionIgnoreXPaths)
-                    .tint(accentColor)
-                Toggle("Ignore Class Names", isOn: $vm.automationSettings.trueDetectionIgnoreClassNames)
-                    .tint(accentColor)
-            }
-        } header: {
-            HStack {
-                Image(systemName: "shield.checkered")
-                Text("TRUE DETECTION Protocol")
-            }
-        } footer: {
-            Text("Triple-Wait → #email → #login-password → Triple-Click #login-submit. Success = balance/wallet/my account/logout. No DOM guessing.")
-        }
-    }
-
-    // MARK: - URL Calibration (True Detection)
+    // MARK: - URL Calibration
 
     private var urlCalibrationSection: some View {
         Section {
@@ -366,7 +271,7 @@ struct AutomationSettingsView: View {
                 guard !isAutoCalibrating else { return }
                 isAutoCalibrating = true
                 autoCalibrationLog = []
-                vm.log("Starting bulk auto-calibration with TRUE DETECTION...")
+                vm.log("Starting bulk auto-calibration...")
                 Task {
                     let urls = vm.urlRotation.enabledURLs
                     for (index, rotUrl) in urls.enumerated() {
@@ -407,7 +312,7 @@ struct AutomationSettingsView: View {
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Auto-Calibrate All URLs").font(.subheadline.bold())
-                        Text(isAutoCalibrating ? "Probing \(autoCalibrationLog.count) URLs..." : "TRUE DETECTION probe on all enabled URLs")
+                        Text(isAutoCalibrating ? "Probing \(autoCalibrationLog.count) URLs..." : "Auto-probe on all enabled URLs")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -448,10 +353,10 @@ struct AutomationSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "shield.checkered")
-                Text("URL Calibration + TRUE DETECTION")
+            Text("URL Calibration")
             }
         } footer: {
-            Text("Calibrates CSS selectors (#email, #login-password, #login-submit) per URL using TRUE DETECTION probing. Success validated by balance/wallet/my account/logout markers.")
+            Text("Calibrates CSS selectors (#email, #login-password, #login-submit) per URL. Success validated by balance/wallet/my account/logout markers.")
         }
     }
 
@@ -1290,45 +1195,43 @@ struct AutomationSettingsView: View {
         }
     }
 
-    // MARK: - Fallback Button Detection
+    // MARK: - Button Detection
 
     private var fallbackButtonSection: some View {
         Group {
-            if !vm.automationSettings.trueDetectionEnabled {
-                Section {
-                    Picker("Detection Mode", selection: $vm.automationSettings.loginButtonDetectionMode) {
-                        ForEach(AutomationSettings.ButtonDetectionMode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
-                        }
+            Section {
+                Picker("Detection Mode", selection: $vm.automationSettings.loginButtonDetectionMode) {
+                    ForEach(AutomationSettings.ButtonDetectionMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
                     }
-
-                    Picker("Click Method", selection: $vm.automationSettings.loginButtonClickMethod) {
-                        ForEach(AutomationSettings.ButtonClickMethod.allCases, id: \.self) { method in
-                            Text(method.rawValue).tag(method)
-                        }
-                    }
-
-                    Button { showButtonTextEditor = true } label: {
-                        keywordRow("Button Text Matches", count: vm.automationSettings.loginButtonTextMatches.count)
-                    }
-
-                    HStack {
-                        Text("Confidence Threshold")
-                        Spacer()
-                        Text("\(Int(vm.automationSettings.loginButtonConfidenceThreshold * 100))%")
-                            .font(.system(.caption, design: .monospaced, weight: .bold))
-                            .foregroundStyle(.secondary)
-                    }
-                    Slider(value: $vm.automationSettings.loginButtonConfidenceThreshold, in: 0.2...1.0, step: 0.05)
-                        .tint(accentColor)
-
-                    Stepper("Max Candidates: \(vm.automationSettings.loginButtonMaxCandidates)", value: $vm.automationSettings.loginButtonMaxCandidates, in: 1...15)
-                    Stepper("Min Size: \(vm.automationSettings.loginButtonMinSizePx)px", value: $vm.automationSettings.loginButtonMinSizePx, in: 5...80, step: 5)
-                } header: {
-                    Label("Button Detection (Fallback)", systemImage: "hand.tap.fill")
-                } footer: {
-                    Text("Only used when TRUE DETECTION is disabled. Vision ML uses screenshots, Coordinate uses pixel positions.")
                 }
+
+                Picker("Click Method", selection: $vm.automationSettings.loginButtonClickMethod) {
+                    ForEach(AutomationSettings.ButtonClickMethod.allCases, id: \.self) { method in
+                        Text(method.rawValue).tag(method)
+                    }
+                }
+
+                Button { showButtonTextEditor = true } label: {
+                    keywordRow("Button Text Matches", count: vm.automationSettings.loginButtonTextMatches.count)
+                }
+
+                HStack {
+                    Text("Confidence Threshold")
+                    Spacer()
+                    Text("\(Int(vm.automationSettings.loginButtonConfidenceThreshold * 100))%")
+                        .font(.system(.caption, design: .monospaced, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $vm.automationSettings.loginButtonConfidenceThreshold, in: 0.2...1.0, step: 0.05)
+                    .tint(accentColor)
+
+                Stepper("Max Candidates: \(vm.automationSettings.loginButtonMaxCandidates)", value: $vm.automationSettings.loginButtonMaxCandidates, in: 1...15)
+                Stepper("Min Size: \(vm.automationSettings.loginButtonMinSizePx)px", value: $vm.automationSettings.loginButtonMinSizePx, in: 5...80, step: 5)
+            } header: {
+                Label("Button Detection", systemImage: "hand.tap.fill")
+            } footer: {
+                Text("Vision ML uses screenshots, Coordinate uses pixel positions.")
             }
 
             Section {
@@ -1556,7 +1459,7 @@ struct AutomationSettingsView: View {
         } header: {
             Label("Post-Submit Evaluation", systemImage: "checklist.checked")
         } footer: {
-            Text("Success is validated by TRUE DETECTION markers (balance/wallet/my account/logout) and redirect detection. \"Welcome\" text is a secondary indicator only.")
+            Text("Success is validated by success markers (balance/wallet/my account/logout) and redirect detection. \"Welcome\" text is a secondary indicator only.")
         }
     }
 
@@ -2072,7 +1975,7 @@ struct AutomationSettingsView: View {
             } label: {
                 Label("Reset All to Defaults", systemImage: "arrow.counterclockwise")
             }
-            .sensoryFeedback(.warning, trigger: vm.automationSettings.trueDetectionEnabled)
+            .font(.subheadline)
         } header: {
             Label("Recorded Flow Overrides", systemImage: "record.circle")
         } footer: {

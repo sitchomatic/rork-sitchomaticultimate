@@ -201,8 +201,6 @@ class DualFindViewModel {
 
         reloadAllSettings()
 
-        automationSettings.trueDetectionEnabled = true
-        automationSettings.trueDetectionPriority = true
         if let data = try? JSONEncoder().encode(automationSettings) {
             UserDefaults.standard.set(data, forKey: "automation_settings_v1")
         }

@@ -154,7 +154,7 @@ class ReplayDebuggerService {
     private func extractPattern(from event: SessionReplayEvent) -> String? {
         let detail = event.detail.lowercased()
         if detail.contains("pattern") {
-            let patterns = ["TRUE DETECTION", "Calibrated Typing", "Calibrated Direct", "Tab Navigation",
+            let patterns = ["Calibrated Typing", "Calibrated Direct", "Tab Navigation",
                           "React Native Setter", "Form Submit Direct", "Coordinate Click",
                           "Vision ML Coordinate", "Click-Focus Sequential", "ExecCommand Insert",
                           "Slow Deliberate Typer", "Mobile Touch Burst"]

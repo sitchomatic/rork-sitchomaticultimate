@@ -92,7 +92,7 @@ struct AutomationToolsMenuView: View {
             } header: {
                 Label("Advanced Configuration", systemImage: "gearshape.2.fill")
             } footer: {
-                Text("URL calibration, TRUE DETECTION protocol, pattern strategies, and all automation parameters.")
+                Text("URL calibration, pattern strategies, and all automation parameters.")
             }
         }
         .listStyle(.insetGrouped)
