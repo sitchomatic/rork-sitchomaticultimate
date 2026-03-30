@@ -458,8 +458,8 @@ class DualFindViewModel {
                 let cal = calibrations[i]
                 let fillResult = await session.fillPasswordCalibrated(password, calibration: cal)
                 if !fillResult.success {
-                    let tdResult = await session.fillPassword(password)
-                    if !tdResult.success {
+                    let fallbackResult = await session.fillPassword(password)
+                    if !fallbackResult.success {
                         log("[\(label)] Password fill failed — trying legacy", level: .warning)
                         _ = await session.fillPassword(password)
                     }
@@ -566,8 +566,8 @@ class DualFindViewModel {
             let cal = getCalibration(site: site, index: sessionIndex)
             let emailFillResult = await session.fillUsernameCalibrated(email, calibration: cal)
             if !emailFillResult.success {
-                let tdResult = await session.fillUsername(email)
-                if !tdResult.success {
+                let fallbackResult = await session.fillUsername(email)
+                if !fallbackResult.success {
                     log("V5.2 [\(label)] Email fill failed for \(email) — trying legacy", level: .warning)
                     _ = await session.fillUsername(email)
                 }
@@ -989,8 +989,8 @@ class DualFindViewModel {
         let cal = getCalibration(site: site, index: sessionIndex)
         let fillResult = await session.fillUsernameCalibrated(email, calibration: cal)
         if !fillResult.success {
-            let tdResult = await session.fillUsername(email)
-            if !tdResult.success {
+            let fallbackResult = await session.fillUsername(email)
+            if !fallbackResult.success {
                 _ = await session.fillUsername(email)
             }
         }
