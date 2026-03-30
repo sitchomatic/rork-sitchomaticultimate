@@ -80,8 +80,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var contentChangeDetection: Bool = true
     var evaluationStrictness: EvaluationStrictness = .strict
     var capturePageContent: Bool = true
-    // Kept for backward compat but unused by True Detection eval
-    var welcomeTextDetection: Bool = false
 
     // MARK: - Retry / Requeue
     var requeueOnTimeout: Bool = true
@@ -171,20 +169,9 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var loginButtonHoverDurationMs: Int = 200
     var loginButtonClickOffsetJitter: Bool = true
     var loginButtonClickOffsetMaxPx: Int = 5
-    var loginButtonEnterKeyFallback: Bool = true
-    var loginButtonFormSubmitFallback: Bool = true
-    var loginButtonVisionMLFallback: Bool = true
-    var loginButtonOCRFallback: Bool = true
-    var loginButtonCoordinateFallback: Bool = true
     var loginButtonMinSizePx: Int = 20
     var loginButtonMaxCandidates: Int = 5
     var loginButtonConfidenceThreshold: Double = 0.5
-    // Legacy DOM settings — kept for backward compat, not used by True Detection
-    var loginButtonAriaLabelMatch: Bool = true
-    var loginButtonRoleMatch: Bool = true
-    var loginButtonImageButtonDetection: Bool = true
-    var loginButtonShadowDOMSearch: Bool = true
-    var loginButtonIframeSearch: Bool = false
 
     // MARK: - Time Delays
     var globalPreActionDelayMs: Int = 0
@@ -309,12 +296,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
 
     // MARK: - AI Telemetry
     var aiTelemetryEnabled: Bool = true
-
-    // MARK: - Speed Optimization (legacy)
-    var speedOptimizationEnabled: Bool = false
-    var autoTuneConcurrency: Bool = false
-    var autoTuneDelays: Bool = false
-    var speedProfileApplied: Bool = false
 
     // MARK: - Recorded Flow Override
     var urlFlowAssignments: [URLFlowAssignment] = []

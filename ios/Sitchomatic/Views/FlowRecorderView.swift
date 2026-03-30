@@ -532,9 +532,6 @@ struct RecorderSettingsView: View {
                 Stepper("Post-Click Delay: \(settings.loginButtonPostClickDelayMs)ms", value: $settings.loginButtonPostClickDelayMs, in: 0...5000, step: 50)
                 Toggle("Hover Before Click", isOn: $settings.loginButtonHoverBeforeClick)
                 Toggle("Focus Before Click", isOn: $settings.loginButtonFocusBeforeClick)
-                Toggle("OCR Fallback", isOn: $settings.loginButtonOCRFallback)
-                Toggle("Vision ML Fallback", isOn: $settings.loginButtonVisionMLFallback)
-                Toggle("Coordinate Fallback", isOn: $settings.loginButtonCoordinateFallback)
             }
 
             Section("Stealth") {

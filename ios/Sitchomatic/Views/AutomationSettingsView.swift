@@ -1391,18 +1391,6 @@ struct AutomationSettingsView: View {
             } header: {
                 Label("Click Behavior", systemImage: "cursorarrow.click.2")
             }
-
-            Section {
-                Toggle("Enter Key Fallback", isOn: $vm.automationSettings.loginButtonEnterKeyFallback).tint(.orange)
-                Toggle("Form Submit Fallback", isOn: $vm.automationSettings.loginButtonFormSubmitFallback).tint(.orange)
-                Toggle("Vision ML Fallback", isOn: $vm.automationSettings.loginButtonVisionMLFallback).tint(.cyan)
-                Toggle("OCR Text Fallback", isOn: $vm.automationSettings.loginButtonOCRFallback).tint(.cyan)
-                Toggle("Coordinate Fallback", isOn: $vm.automationSettings.loginButtonCoordinateFallback).tint(.cyan)
-            } header: {
-                Label("Fallback Chain", systemImage: "arrow.triangle.branch")
-            } footer: {
-                Text("Non-selector fallbacks: Vision ML → OCR → Coordinate Tap. All avoid DOM queries detectable by anti-bot systems.")
-            }
         }
     }
 
