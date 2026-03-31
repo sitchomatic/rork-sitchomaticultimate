@@ -38,6 +38,7 @@ jobs:
             -target SitchomaticUITests \
             CODE_SIGNING_ALLOWED=NO \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            SWIFT_SUPPRESS_WARNINGS=NO \
             GCC_TREAT_WARNINGS_AS_ERRORS=YES \
             OTHER_SWIFT_FLAGS="-warnings-as-errors" \
             clean build
