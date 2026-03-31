@@ -9,7 +9,7 @@ class ServiceContainer {
     lazy var deviceProxy: DeviceProxyService = .shared
     lazy var debugLogger: DebugLogger = .shared
     lazy var fingerprintValidation: FingerprintValidationService = .shared
-    lazy var screenshotCache: ScreenshotCacheService = .shared
+    lazy var screenshotCache: ScreenshotCache = .shared
 
     lazy var socks5Manager: SOCKS5ProxyManager = SOCKS5ProxyManager()
     lazy var jsBuilder: LoginJSBuilder = LoginJSBuilder()

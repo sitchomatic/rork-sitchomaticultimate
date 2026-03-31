@@ -20,7 +20,7 @@ class PPSRAutomationEngine {
     var speedMultiplier: Double = 1.0
     var screenshotCropRect: CGRect = .zero
     private let logger = DebugLogger.shared
-    var onScreenshot: ((PPSRDebugScreenshot) -> Void)?
+    var onScreenshot: ((CapturedScreenshot) -> Void)?
     var onConnectionFailure: ((String) -> Void)?
     var onUnusualFailure: ((String) -> Void)?
     var onLog: ((String, PPSRLogEntry.Level) -> Void)?
@@ -503,7 +503,7 @@ class PPSRAutomationEngine {
         check.responseSnippet = String(pageContent.prefix(500))
         logger.log("PPSR evaluation: \(finalEvaluation.outcome) score=\(finalEvaluation.score) — \(finalEvaluation.reason)", category: .evaluation, level: finalEvaluation.outcome == .pass ? .success : .warning, sessionId: sessionId)
 
-        let autoResult: PPSRDebugScreenshot.AutoDetectedResult
+        let autoResult: CapturedScreenshot.AutoDetectedResult
         switch finalEvaluation.outcome {
         case .failInstitution: autoResult = .noAcc
         case .pass: autoResult = .success
@@ -726,14 +726,14 @@ class PPSRAutomationEngine {
         check.logs.append(PPSRLogEntry(message: "ERROR: \(message)", level: .error))
     }
 
-    private func captureScreenshotForCheck(session: some ScreenshotCapableSession, check: PPSRCheck, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult = .unknown) async {
+    private func captureScreenshotForCheck(session: some ScreenshotCapableSession, check: PPSRCheck, step: String, note: String, autoResult: CapturedScreenshot.AutoDetectedResult = .unknown) async {
         let cropRect = screenshotCropRect == .zero ? nil : screenshotCropRect
         let result = await session.captureScreenshotWithCrop(cropRect: cropRect)
         guard let fullImage = result.full else { return }
 
         check.responseSnapshot = fullImage
 
-        let screenshot = PPSRDebugScreenshot(
+        let screenshot = CapturedScreenshot(
             stepName: step, cardDisplayNumber: check.card.displayNumber, cardId: check.card.id,
             vin: check.vin, email: check.email, image: fullImage, croppedImage: result.cropped,
             note: note, autoDetectedResult: autoResult

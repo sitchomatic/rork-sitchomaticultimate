@@ -36,7 +36,7 @@ class PPSRAutomationViewModel {
     var lastDiagnostics: String = ""
     var activeTestCount: Int = 0
     var debugMode: Bool = true
-    var debugScreenshots: [PPSRDebugScreenshot] = []
+    var debugScreenshots: [CapturedScreenshot] { UnifiedScreenshotManager.shared.screenshots }
     var appearanceMode: AppAppearanceMode = .dark
     var useEmailRotation: Bool = true
     var stealthEnabled: Bool = true
@@ -625,47 +625,32 @@ class PPSRAutomationViewModel {
     }
 
     private let maxInMemoryScreenshots: Int = 200
+    private let screenshotManager = UnifiedScreenshotManager.shared
 
-    func addScreenshot(_ screenshot: PPSRDebugScreenshot) {
-        if isRunning && CrashProtectionService.shared.isMemoryCritical {
-            ScreenshotCacheService.shared.storeData(screenshot.imageData, forKey: screenshot.id)
-            return
-        }
-        debugScreenshots.insert(screenshot, at: 0)
-        let effectiveLimit = isRunning ? min(15, maxInMemoryScreenshots) : maxInMemoryScreenshots
-        if debugScreenshots.count > effectiveLimit {
-            let overflow = Array(debugScreenshots.suffix(from: effectiveLimit))
-            for ss in overflow {
-                ScreenshotCacheService.shared.storeData(ss.imageData, forKey: ss.id)
+    func addScreenshot(_ screenshot: CapturedScreenshot) {
+        if !screenshotManager.screenshots.contains(where: { $0.id == screenshot.id }) {
+            screenshotManager.screenshots.insert(screenshot, at: 0)
+            if screenshotManager.screenshots.count > maxInMemoryScreenshots {
+                let overflow = screenshotManager.screenshots.count - maxInMemoryScreenshots
+                screenshotManager.screenshots.removeLast(overflow)
             }
-            debugScreenshots.removeLast(debugScreenshots.count - effectiveLimit)
         }
     }
 
     func clearDebugScreenshots() {
-        let count = debugScreenshots.count
-        debugScreenshots.removeAll()
-        log("Cleared \(count) debug screenshots")
+        screenshotManager.clearAll()
+        log("Cleared all debug screenshots via unified manager")
     }
 
     func handleMemoryPressure() {
-        let before = debugScreenshots.count
-        let keep = min(50, maxInMemoryScreenshots / 4)
-        if debugScreenshots.count > keep {
-            let overflow = Array(debugScreenshots.suffix(from: keep))
-            for ss in overflow {
-                ScreenshotCacheService.shared.storeData(ss.imageData, forKey: ss.id)
-            }
-            debugScreenshots.removeLast(debugScreenshots.count - keep)
-            log("Memory pressure: flushed \(before - keep) screenshots to disk cache", level: .warning)
-        }
+        screenshotManager.handleMemoryPressure()
         if globalLogs.count > 200 {
             globalLogs = Array(globalLogs.prefix(200))
         }
     }
 
-    func correctResult(for screenshot: PPSRDebugScreenshot, override: UserResultOverride) {
-        screenshot.userOverride = override
+    func correctResult(for screenshot: CapturedScreenshot, override: UserResultOverride) {
+        screenshotManager.correctResult(for: screenshot, override: override)
 
         guard let card = cards.first(where: { $0.id == screenshot.cardId }) else {
             log("Correction: could not find card \(screenshot.cardDisplayNumber)", level: .warning)
@@ -679,12 +664,12 @@ class PPSRAutomationViewModel {
         persistCards()
     }
 
-    func resetScreenshotOverride(_ screenshot: PPSRDebugScreenshot) {
-        screenshot.userOverride = .none
+    func resetScreenshotOverride(_ screenshot: CapturedScreenshot) {
+        screenshotManager.resetScreenshotOverride(screenshot)
         log("Reset override for screenshot at \(screenshot.formattedTime)")
     }
 
-    func requeueCardFromScreenshot(_ screenshot: PPSRDebugScreenshot) {
+    func requeueCardFromScreenshot(_ screenshot: CapturedScreenshot) {
         guard let card = cards.first(where: { $0.id == screenshot.cardId }) else {
             log("Requeue: could not find card \(screenshot.cardDisplayNumber)", level: .warning)
             return
@@ -1419,13 +1404,13 @@ class PPSRAutomationViewModel {
     var rotationEmailCount: Int { emailRotation.count }
     var rotationEmails: [String] { emailRotation.emails }
 
-    func screenshotsForCard(_ cardId: String) -> [PPSRDebugScreenshot] {
-        debugScreenshots.filter { $0.cardId == cardId }
+    func screenshotsForCard(_ cardId: String) -> [CapturedScreenshot] {
+        screenshotManager.screenshotsForCard(cardId)
     }
 
-    func screenshotsForCheck(_ check: PPSRCheck) -> [PPSRDebugScreenshot] {
+    func screenshotsForCheck(_ check: PPSRCheck) -> [CapturedScreenshot] {
         let ids = Set(check.screenshotIds)
-        return debugScreenshots.filter { ids.contains($0.id) }
+        return screenshotManager.screenshotsForIds(ids)
     }
 
     private var pendingLogs: [PPSRLogEntry] = []

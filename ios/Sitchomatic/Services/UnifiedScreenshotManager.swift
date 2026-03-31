@@ -8,12 +8,13 @@ import SwiftUI
 class UnifiedScreenshotManager {
     static let shared = UnifiedScreenshotManager()
 
-    var screenshots: [UnifiedScreenshot] = []
+    var screenshots: [CapturedScreenshot] = []
     var analysisStats: AnalysisStats = AnalysisStats()
     private let maxScreenshots: Int = 200
     private let visionCrop = VisionTextCropService.shared
     private let dedup = ScreenshotDedupService.shared
     private let logger = DebugLogger.shared
+    private let captureService = ScreenshotCaptureService.shared
 
     struct AnalysisStats {
         var totalCaptured: Int = 0
@@ -32,7 +33,16 @@ class UnifiedScreenshotManager {
         step: ScreenshotStep,
         attemptNumber: Int,
         clickPriority: Int = 0,
-        runVisionAnalysis: Bool = true
+        runVisionAnalysis: Bool = true,
+        stepName: String = "",
+        cardDisplayNumber: String = "",
+        cardId: String = "",
+        vin: String = "",
+        note: String = "",
+        password: String = "",
+        url: String = "",
+        autoDetectedResult: CapturedScreenshot.AutoDetectedResult = .unknown,
+        croppedImage: UIImage? = nil
     ) async {
         analysisStats.totalCaptured += 1
 
@@ -42,11 +52,11 @@ class UnifiedScreenshotManager {
             return
         }
 
-        let compressedData = compressToData(image)
+        let compressedData = captureService.scaleAndCompress(image)
         let compressedImage = UIImage(data: compressedData) ?? image
 
         var analysis: VisionTextCropService.AnalysisResult?
-        var croppedData: Data?
+        var croppedData: Data? = croppedImage.flatMap { captureService.compressed($0) }
 
         if runVisionAnalysis {
             analysisStats.totalAnalyzed += 1
@@ -58,7 +68,7 @@ class UnifiedScreenshotManager {
                 let crop = await visionCrop.smartCrop(compressedImage, analysis: analysisValue)
                 if crop.cropRect != .zero {
                     analysisStats.smartCrops += 1
-                    croppedData = crop.croppedImage.jpegData(compressionQuality: 0.4)
+                    croppedData = captureService.compressed(crop.croppedImage)
                 }
             }
 
@@ -66,7 +76,7 @@ class UnifiedScreenshotManager {
             analysisStats.outcomeBreakdown[outcomeKey, default: 0] += 1
         }
 
-        let screenshot = UnifiedScreenshot(
+        let screenshot = CapturedScreenshot(
             sessionId: sessionId,
             credentialEmail: credentialEmail,
             site: site,
@@ -79,7 +89,15 @@ class UnifiedScreenshotManager {
             crucialKeywords: analysis?.crucialMatches ?? [],
             allDetectedText: analysis?.allText ?? "",
             visionConfidence: analysis?.confidence ?? 0,
-            analysisTimeMs: analysis?.processingTimeMs ?? 0
+            analysisTimeMs: analysis?.processingTimeMs ?? 0,
+            stepName: stepName.isEmpty ? step.rawValue : stepName,
+            cardDisplayNumber: cardDisplayNumber.isEmpty ? credentialEmail : cardDisplayNumber,
+            cardId: cardId,
+            vin: vin,
+            note: note,
+            password: password,
+            url: url,
+            autoDetectedResult: autoDetectedResult
         )
 
         screenshots.insert(screenshot, at: 0)
@@ -93,20 +111,28 @@ class UnifiedScreenshotManager {
         logger.log("UnifiedScreenshots: captured \(step.rawValue) for \(credentialEmail) site=\(site) attempt=\(attemptNumber)\(crucialInfo)", category: .screenshot, level: crucialInfo.isEmpty ? .debug : .info)
     }
 
-    func screenshotsForSession(_ sessionId: String) -> [UnifiedScreenshot] {
+    func screenshotsForSession(_ sessionId: String) -> [CapturedScreenshot] {
         screenshots.filter { $0.sessionId == sessionId }
     }
 
-    func screenshotsForCredential(_ email: String) -> [UnifiedScreenshot] {
+    func screenshotsForCredential(_ email: String) -> [CapturedScreenshot] {
         screenshots.filter { $0.credentialEmail == email }
     }
 
-    func crucialScreenshots() -> [UnifiedScreenshot] {
+    func crucialScreenshots() -> [CapturedScreenshot] {
         screenshots.filter { !$0.crucialKeywords.isEmpty }
     }
 
-    func screenshotsBySite(_ site: String) -> [UnifiedScreenshot] {
+    func screenshotsBySite(_ site: String) -> [CapturedScreenshot] {
         screenshots.filter { $0.site == site }
+    }
+
+    func screenshotsForCard(_ cardId: String) -> [CapturedScreenshot] {
+        screenshots.filter { $0.cardId == cardId }
+    }
+
+    func screenshotsForIds(_ ids: Set<String>) -> [CapturedScreenshot] {
+        screenshots.filter { ids.contains($0.id) }
     }
 
     func clearAll() {
@@ -128,7 +154,7 @@ class UnifiedScreenshotManager {
         let terminalSteps: Set<ScreenshotStep> = [.terminalState, .successDetected, .crucialResponse, .errorBanner, .smsDetected, .finalState]
         let terminalShots = sessionShots.filter { terminalSteps.contains($0.step) }
 
-        var kept: [UnifiedScreenshot] = []
+        var kept: [CapturedScreenshot] = []
         let joeFinal = terminalShots.first(where: { $0.site == "joe" }) ?? sessionShots.filter({ $0.site == "joe" }).last
         let ignFinal = terminalShots.first(where: { $0.site == "ignition" }) ?? sessionShots.filter({ $0.site == "ignition" }).last
         if let j = joeFinal { kept.append(j) }
@@ -169,21 +195,33 @@ class UnifiedScreenshotManager {
         }
     }
 
+    func correctResult(for screenshot: CapturedScreenshot, override: UserResultOverride) {
+        screenshot.userOverride = override
+        let allRelated = screenshots.filter { $0.cardId == screenshot.cardId && !screenshot.cardId.isEmpty }
+        for s in allRelated where s.id != screenshot.id {
+            s.userOverride = override
+        }
+        logger.log("UnifiedScreenshots: user override \(override.displayLabel) applied to \(screenshot.cardDisplayNumber)", category: .screenshot, level: .info)
+    }
+
+    func resetScreenshotOverride(_ screenshot: CapturedScreenshot) {
+        screenshot.userOverride = .none
+        logger.log("UnifiedScreenshots: reset override for screenshot at \(screenshot.formattedTime)", category: .screenshot, level: .debug)
+    }
+
     func handleMemoryPressure() {
         let keep = min(screenshots.count, 100)
         if screenshots.count > keep {
             screenshots = Array(screenshots.prefix(keep))
         }
-        ScreenshotImageCache.shared.clearAll()
-    }
-
-    private func compressToData(_ image: UIImage) -> Data {
-        image.jpegData(compressionQuality: 0.4) ?? Data()
+        ScreenshotCache.shared.clearDecodedImages()
     }
 }
 
+// MARK: - Unified Screenshot Model (replaces PPSRDebugScreenshot, DualFindLiveScreenshot, and UnifiedScreenshot)
+
 @Observable
-class UnifiedScreenshot: Identifiable {
+class CapturedScreenshot: Identifiable {
     let id: String
     let timestamp: Date
     let sessionId: String
@@ -192,7 +230,7 @@ class UnifiedScreenshot: Identifiable {
     let step: ScreenshotStep
     let attemptNumber: Int
     let fullImageData: Data
-    let croppedImageData: Data?
+    var croppedImageData: Data?
     let detectedOutcome: VisionTextCropService.DetectedOutcome
     let crucialKeywords: [String]
     let allDetectedText: String
@@ -201,13 +239,92 @@ class UnifiedScreenshot: Identifiable {
     let clickPriority: Int
     var userOverride: UserResultOverride = .none
 
+    // Fields from PPSRDebugScreenshot
+    let stepName: String
+    let cardDisplayNumber: String
+    let cardId: String
+    let vin: String
+    var note: String
+    var userNote: String = ""
+    var correctionReason: String = ""
+
+    // Fields from DualFindLiveScreenshot
+    let password: String
+    let url: String
+
+    // Auto-detected result (from PPSRDebugScreenshot)
+    var autoDetectedResult: AutoDetectedResult = .unknown
+
+    nonisolated enum AutoDetectedResult: String, Sendable {
+        case success
+        case noAcc
+        case permDisabled
+        case tempDisabled
+        case unsure
+        case unknown
+
+        var displayLabel: String {
+            switch self {
+            case .success: "Success"
+            case .noAcc: "No Acc"
+            case .permDisabled: "Perm Disabled"
+            case .tempDisabled: "Temp Disabled"
+            case .unsure: "Unsure"
+            case .unknown: "Unknown"
+            }
+        }
+
+        var toOverride: UserResultOverride {
+            switch self {
+            case .success: .success
+            case .noAcc: .noAcc
+            case .permDisabled: .permDisabled
+            case .tempDisabled: .tempDisabled
+            case .unsure: .unsure
+            case .unknown: .none
+            }
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    var imageData: Data { fullImageData }
+
+    var albumKey: String {
+        "\(cardId.isEmpty ? cardDisplayNumber : cardId)"
+    }
+
+    var albumTitle: String {
+        cardDisplayNumber
+    }
+
+    var effectiveResult: UserResultOverride {
+        if userOverride != .none { return userOverride }
+        return autoDetectedResult.toOverride
+    }
+
+    var image: UIImage {
+        fullImage
+    }
+
     var fullImage: UIImage {
-        ScreenshotImageCache.shared.image(forKey: "\(id)_full", data: fullImageData)
+        ScreenshotCache.shared.decodedImage(forKey: "\(id)_full", data: fullImageData)
     }
 
     var croppedImage: UIImage? {
-        guard let data = croppedImageData else { return nil }
-        return ScreenshotImageCache.shared.image(forKey: "\(id)_crop", data: data)
+        get {
+            guard let data = croppedImageData else { return nil }
+            return ScreenshotCache.shared.decodedImage(forKey: "\(id)_crop", data: data)
+        }
+        set {
+            if let img = newValue {
+                croppedImageData = img.jpegData(compressionQuality: 0.5)
+                ScreenshotCache.shared.removeDecodedImage(forKey: "\(id)_crop")
+            } else {
+                croppedImageData = nil
+                ScreenshotCache.shared.removeDecodedImage(forKey: "\(id)_crop")
+            }
+        }
     }
 
     var displayImage: UIImage {
@@ -222,7 +339,16 @@ class UnifiedScreenshot: Identifiable {
         !crucialKeywords.isEmpty
     }
 
+    var isJoe: Bool { site.lowercased().contains("joe") }
+    var isIgnition: Bool { site.lowercased().contains("ign") }
+    var siteLabel: String { isJoe ? "JoePoint" : isIgnition ? "Ignition Lite" : "Unknown" }
+    var siteIcon: String { isJoe ? "suit.spade.fill" : isIgnition ? "flame.fill" : "globe" }
+    var siteColor: SwiftUI.Color { isJoe ? .green : isIgnition ? .orange : .gray }
+    var platform: String { site }
+    var email: String { credentialEmail }
+
     var outcomeColor: SwiftUI.Color {
+        if userOverride != .none { return userOverride.color }
         switch detectedOutcome {
         case .success: .green
         case .incorrectPassword, .noAccount: .secondary
@@ -235,6 +361,7 @@ class UnifiedScreenshot: Identifiable {
     }
 
     var outcomeLabel: String {
+        if userOverride != .none { return userOverride.displayLabel.uppercased() }
         switch detectedOutcome {
         case .success: "SUCCESS"
         case .incorrectPassword: "INCORRECT"
@@ -251,20 +378,40 @@ class UnifiedScreenshot: Identifiable {
         DateFormatters.timeOnly.string(from: timestamp)
     }
 
+    var hasUserOverride: Bool {
+        self.userOverride != .none
+    }
+
+    var overrideLabel: String {
+        userOverride == .none ? "Auto" : "Override: \(userOverride.displayLabel)"
+    }
+
+    var outcome: String {
+        outcomeLabel
+    }
+
     init(
-        sessionId: String,
-        credentialEmail: String,
-        site: String,
-        step: ScreenshotStep,
-        attemptNumber: Int,
+        sessionId: String = "",
+        credentialEmail: String = "",
+        site: String = "",
+        step: ScreenshotStep = .postAttempt,
+        attemptNumber: Int = 0,
         clickPriority: Int = 0,
         fullImageData: Data,
-        croppedImageData: Data?,
-        detectedOutcome: VisionTextCropService.DetectedOutcome,
-        crucialKeywords: [String],
-        allDetectedText: String,
-        visionConfidence: Double,
-        analysisTimeMs: Int
+        croppedImageData: Data? = nil,
+        detectedOutcome: VisionTextCropService.DetectedOutcome = .unknown,
+        crucialKeywords: [String] = [],
+        allDetectedText: String = "",
+        visionConfidence: Double = 0,
+        analysisTimeMs: Int = 0,
+        stepName: String = "",
+        cardDisplayNumber: String = "",
+        cardId: String = "",
+        vin: String = "",
+        note: String = "",
+        password: String = "",
+        url: String = "",
+        autoDetectedResult: AutoDetectedResult = .unknown
     ) {
         self.id = UUID().uuidString
         self.timestamp = Date()
@@ -281,8 +428,50 @@ class UnifiedScreenshot: Identifiable {
         self.allDetectedText = allDetectedText
         self.visionConfidence = visionConfidence
         self.analysisTimeMs = analysisTimeMs
+        self.stepName = stepName.isEmpty ? step.rawValue : stepName
+        self.cardDisplayNumber = cardDisplayNumber.isEmpty ? credentialEmail : cardDisplayNumber
+        self.cardId = cardId
+        self.vin = vin
+        self.note = note
+        self.password = password
+        self.url = url
+        self.autoDetectedResult = autoDetectedResult
+    }
+
+    /// Convenience initializer matching PPSRDebugScreenshot's original init
+    convenience init(
+        stepName: String,
+        cardDisplayNumber: String,
+        cardId: String = "",
+        vin: String,
+        email: String = "",
+        image: UIImage,
+        croppedImage: UIImage? = nil,
+        note: String = "",
+        site: String = "",
+        autoDetectedResult: AutoDetectedResult = .unknown
+    ) {
+        let fullData = ScreenshotCaptureService.shared.scaleAndCompress(image)
+        let croppedData = croppedImage.flatMap { ScreenshotCaptureService.shared.compressed($0) }
+        self.init(
+            credentialEmail: email,
+            site: site,
+            fullImageData: fullData,
+            croppedImageData: croppedData,
+            stepName: stepName,
+            cardDisplayNumber: cardDisplayNumber,
+            cardId: cardId,
+            vin: vin,
+            note: note,
+            autoDetectedResult: autoDetectedResult
+        )
     }
 }
+
+// MARK: - Backward compatibility type aliases
+typealias UnifiedScreenshot = CapturedScreenshot
+typealias PPSRDebugScreenshot = CapturedScreenshot
+typealias DualFindLiveScreenshot = CapturedScreenshot
 
 nonisolated enum ScreenshotStep: String, Sendable {
     case pageLoad = "page_load"
