@@ -774,7 +774,7 @@ struct DeveloperSettingsView: View {
         } header: {
             Label("NodeMaven Proxy", systemImage: "cloud.fill")
         } footer: {
-            Text("Persist key: nodemaven_config_v1. ⚠️ Hardcoded defaults exist for mobile/residential usernames and password.")
+            Text("Persist key: nodemaven_config_v1. ⚠️ Hardcoded defaults exist for mobile/residential usernames and passwords.")
         }
     }
 
