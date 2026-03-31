@@ -7,6 +7,8 @@ import UIKit
 @Observable
 @MainActor
 class DualFindViewModel {
+    static let shared = DualFindViewModel()
+
     /// ContiguousArray for zero-latency email access on A19 Pro silicon.
     var emails: ContiguousArray<String> = []
     var passwordInputText: String = ""
@@ -1283,6 +1285,7 @@ class DualFindViewModel {
     }
 
     func persistDualFindSettings() {
+        automationSettings = automationSettings.normalizedTimeouts()
         if let data = try? JSONEncoder().encode(automationSettings) {
             UserDefaults.standard.set(data, forKey: dualFindSettingsKey)
         }
