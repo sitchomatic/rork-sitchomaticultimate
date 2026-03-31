@@ -114,15 +114,6 @@ class LogPersistenceService {
         return fileURL
     }
 
-    func exportCompleteLogToFile(content: String) -> URL? {
-        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        let fileName = "complete_log_\(DateFormatters.exportTimestamp.string(from: Date()).replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: ":", with: "-")).txt"
-        let fileURL = tempDir.appendingPathComponent(fileName)
-        try? content.write(to: fileURL, atomically: true, encoding: .utf8)
-        return fileURL
-    }
-
     private func pruneArchiveFiles(in directory: URL) {
         let fm = FileManager.default
         guard let files = try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey]) else { return }
