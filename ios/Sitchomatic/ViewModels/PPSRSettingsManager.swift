@@ -4,7 +4,7 @@ import SwiftUI
 @MainActor
 class PPSRSettingsManager {
     var testEmail: String = "dev@test.ppsr.gov.au"
-    var maxConcurrency: Int = 8
+    var maxConcurrency: Int = AutomationSettings.defaultMaxConcurrency
     var debugMode: Bool = true
     var appearanceMode: AppAppearanceMode = .dark
     var useEmailRotation: Bool = true

@@ -155,9 +155,9 @@ class PPSRPersistenceService {
         }
         return (
             email: dict["email"] as? String ?? "dev@test.ppsr.gov.au",
-            maxConcurrency: dict["maxConcurrency"] as? Int ?? 8,
+            maxConcurrency: dict["maxConcurrency"] as? Int ?? AutomationSettings.defaultMaxConcurrency,
             debugMode: dict["debugMode"] as? Bool ?? true,
-            appearanceMode: dict["appearanceMode"] as? String ?? "Dark",
+            appearanceMode: dict["appearanceMode"] as? String ?? AppAppearanceMode.dark.rawValue,
             useEmailRotation: dict["useEmailRotation"] as? Bool ?? true,
             stealthEnabled: dict["stealthEnabled"] as? Bool ?? true,
             retrySubmitOnFail: dict["retrySubmitOnFail"] as? Bool ?? false,

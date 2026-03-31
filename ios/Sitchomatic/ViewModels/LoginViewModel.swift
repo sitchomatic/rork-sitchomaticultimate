@@ -1180,7 +1180,7 @@ class LoginViewModel {
         var id: String { rawValue }
     }
 
-    private let maxInMemoryScreenshots: Int = 200
+    private let maxInMemoryScreenshots: Int = AutomationSettings.defaultMaxScreenshotRetention
     private let screenshotManager = UnifiedScreenshotManager.shared
 
     func addScreenshot(_ screenshot: CapturedScreenshot) {

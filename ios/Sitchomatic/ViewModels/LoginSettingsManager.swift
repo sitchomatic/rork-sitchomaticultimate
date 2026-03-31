@@ -8,7 +8,7 @@ class LoginSettingsManager {
     var targetSite: LoginTargetSite = .joefortune
     var appearanceMode: AppAppearanceMode = .dark
     var testTimeout: TimeInterval = 90
-    var maxConcurrency: Int = 8
+    var maxConcurrency: Int = AutomationSettings.defaultMaxConcurrency
     var savedCropRect: CGRect? = nil
     var automationSettings: AutomationSettings = AutomationSettings()
     let urlRotation = LoginURLRotationService.shared

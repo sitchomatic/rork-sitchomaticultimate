@@ -332,9 +332,9 @@ struct UnifiedSessionSettingsView: View {
                     get: { Int(vm.automationSettings.waitForResponseSeconds) },
                     set: { vm.automationSettings.waitForResponseSeconds = Double($0) }
                 )) {
-                    Text("60s").tag(60)
                     Text("90s").tag(90)
                     Text("120s").tag(120)
+                    Text("150s").tag(150)
                     Text("180s").tag(180)
                 }
                 .pickerStyle(.menu)

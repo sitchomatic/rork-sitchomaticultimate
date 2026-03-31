@@ -1370,6 +1370,7 @@ struct AutomationSettingsView: View {
                     Text("90s").tag(90.0)
                     Text("120s").tag(120.0)
                     Text("150s").tag(150.0)
+                    Text("180s").tag(180.0)
                 }
                 .pickerStyle(.menu)
             }
