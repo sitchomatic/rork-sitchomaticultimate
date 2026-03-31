@@ -4,6 +4,7 @@ import UIKit
 struct SettingsAndTestingView: View {
     @State private var vm = PPSRAutomationViewModel.shared
     @State private var showCopiedToast: Bool = false
+    @State private var toastMessage: String = "Copied to clipboard"
     @State private var shareFileURL: URL?
     @State private var nordService = NordVPNService.shared
     @State private var showCompleteLogConfirm: Bool = false
@@ -32,7 +33,7 @@ struct SettingsAndTestingView: View {
         .preferredColorScheme(CentralSettingsService.shared.effectiveColorScheme)
         .overlay(alignment: .bottom) {
             if showCopiedToast {
-                Text("Copied to clipboard")
+                Text(toastMessage)
                     .font(.subheadline.bold()).foregroundStyle(.white)
                     .padding(.horizontal, 20).padding(.vertical, 12)
                     .background(.green.gradient, in: Capsule())
@@ -301,6 +302,7 @@ struct SettingsAndTestingView: View {
                             automationSettings: vm.automationSettings
                         )
                         UIPasteboard.general.string = text
+                        toastMessage = "Copied to clipboard"
                         withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
                         Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
                     }
@@ -339,14 +341,57 @@ struct SettingsAndTestingView: View {
 
     private var dataManagementSection: some View {
         Section {
+            Button {
+                let currentSettings = CentralSettingsService.shared.loginAutomationSettings
+                CentralSettingsService.shared.persistLoginAutomationSettings(currentSettings)
+                CentralSettingsService.shared.persistUnifiedAutomationSettings(currentSettings)
+                CentralSettingsService.shared.persistDualFindAutomationSettings(currentSettings)
+                toastMessage = "Saved as new defaults"
+                withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+            } label: {
+                settingsRow(
+                    icon: "square.and.arrow.down.on.square.fill",
+                    title: "Save as New Defaults",
+                    subtitle: "Save current settings as defaults for all modes",
+                    color: .green
+                )
+            }
+
+            Button {
+                let json = AppDataExportService.shared.exportJSON()
+                UIPasteboard.general.string = json
+                toastMessage = "Copied to clipboard"
+                withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+            } label: {
+                settingsRow(
+                    icon: "square.and.arrow.up.fill",
+                    title: "Export All Settings",
+                    subtitle: "Copy comprehensive settings JSON to clipboard",
+                    color: .blue
+                )
+            }
+
+            NavigationLink {
+                ImportSettingsView()
+            } label: {
+                settingsRow(
+                    icon: "square.and.arrow.down.fill",
+                    title: "Import Settings",
+                    subtitle: "Restore settings from JSON backup",
+                    color: .purple
+                )
+            }
+
             NavigationLink {
                 ConsolidatedImportExportView()
             } label: {
                 settingsRow(
                     icon: "arrow.up.arrow.down.circle.fill",
-                    title: "Import / Export",
-                    subtitle: "Full backup & restore of all data",
-                    color: .blue
+                    title: "Advanced Import / Export",
+                    subtitle: "Full backup & restore with preview",
+                    color: .cyan
                 )
             }
 
@@ -363,7 +408,7 @@ struct SettingsAndTestingView: View {
         } header: {
             Label("Data Management", systemImage: "tray.2.fill")
         } footer: {
-            Text("Comprehensive backup covering all settings, credentials, cards, URLs, proxies, VPN, DNS, blacklist, emails, recorded flows, and button configs.")
+            Text("Save as New Defaults copies your current automation settings to all modes. Export All Settings includes everything: settings, credentials, cards, URLs, proxies, VPN/WG, DNS, blacklist, emails, flows, and button configs.")
         }
     }
 
