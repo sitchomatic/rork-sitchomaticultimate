@@ -1,21 +1,120 @@
 import SwiftUI
+import UIKit
 
 struct SettingsAndTestingView: View {
+    @State private var vm = PPSRAutomationViewModel.shared
+    @State private var showCopiedToast: Bool = false
+    @State private var shareFileURL: URL?
+    @State private var nordService = NordVPNService.shared
     private let proxyService = ProxyRotationService.shared
 
     var body: some View {
         NavigationStack {
             List {
+                automationQuickControlsSection
+                appearanceSection
                 testingToolsSection
                 networkAndVPNSection
-                advancedSettingsLinkSection
+                debugAndDiagnosticsSection
+                dataManagementSection
+                developerSettingsLinkSection
+                aboutSection
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("Settings & Testing")
+            .navigationTitle("Settings")
+            .onDisappear {
+                vm.persistSettings()
+            }
         }
         .withMainMenuButton()
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(CentralSettingsService.shared.effectiveColorScheme)
+        .overlay(alignment: .bottom) {
+            if showCopiedToast {
+                Text("Copied to clipboard")
+                    .font(.subheadline.bold()).foregroundStyle(.white)
+                    .padding(.horizontal, 20).padding(.vertical, 12)
+                    .background(.green.gradient, in: Capsule())
+                    .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 20)
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { shareFileURL != nil },
+            set: { if !$0 { shareFileURL = nil } }
+        )) {
+            if let url = shareFileURL {
+                ShareSheetView(items: [url])
+            }
+        }
     }
+
+    // MARK: - Automation Quick Controls
+
+    private var automationQuickControlsSection: some View {
+        Section {
+            Toggle(isOn: $vm.stealthEnabled) {
+                settingsRow(
+                    icon: "eye.slash.fill",
+                    title: "Ultra Stealth Mode",
+                    subtitle: "Hide automation fingerprints",
+                    color: .purple
+                )
+            }
+
+            Toggle(isOn: $vm.debugMode) {
+                settingsRow(
+                    icon: "ladybug.fill",
+                    title: "Debug Mode",
+                    subtitle: "Verbose logging & screenshots",
+                    color: .orange
+                )
+            }
+
+            Toggle(isOn: $vm.autoRetryEnabled) {
+                settingsRow(
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    title: "Auto-Retry Failed",
+                    subtitle: "Automatically retry failed attempts",
+                    color: .mint
+                )
+            }
+
+            Picker("Max Sessions", selection: $vm.maxConcurrency) {
+                ForEach(1...7, id: \.self) { value in
+                    Text("\(value)").tag(value)
+                }
+            }
+        } header: {
+            Label("Automation Quick Controls", systemImage: "bolt.circle.fill")
+        } footer: {
+            Text("Quick toggles for the most commonly adjusted automation settings.")
+        }
+    }
+
+    // MARK: - Appearance
+
+    private var appearanceSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { CentralSettingsService.shared.appearanceMode },
+                set: { newMode in
+                    CentralSettingsService.shared.appearanceMode = newMode
+                    vm.appearanceMode = newMode
+                }
+            )) {
+                ForEach(AppAppearanceMode.allCases, id: \.self) { mode in
+                    Label(mode.rawValue, systemImage: mode.icon).tag(mode)
+                }
+            } label: {
+                HStack(spacing: 10) { Image(systemName: "paintbrush.fill").foregroundStyle(.purple); Text("Appearance") }
+            }
+        } header: {
+            Label("App Settings", systemImage: "gearshape.fill")
+        }
+    }
+
+    // MARK: - Testing Tools
 
     private var testingToolsSection: some View {
         Section {
@@ -46,6 +145,8 @@ struct SettingsAndTestingView: View {
             Text("Run full infrastructure tests and IP quality checks.")
         }
     }
+
+    // MARK: - Network & VPN
 
     private var networkAndVPNSection: some View {
         Section {
@@ -121,44 +222,146 @@ struct SettingsAndTestingView: View {
         }
     }
 
-    private var advancedSettingsLinkSection: some View {
-        Section {
-            NavigationLink {
-                GrokAIStatusView()
-            } label: {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(GrokAISetup.isConfigured ? Color.green.opacity(0.12) : Color.orange.opacity(0.12))
-                            .frame(width: 40, height: 40)
-                        Image(systemName: "brain.head.profile.fill")
-                            .font(.body)
-                            .foregroundStyle(GrokAISetup.isConfigured ? .green : .orange)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Grok AI Status")
-                            .font(.subheadline.bold())
-                        Text(GrokAISetup.isConfigured ? "Connected — vision + reasoning active" : "Not configured — heuristic mode")
-                            .font(.caption2).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: GrokAISetup.isConfigured ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                        .foregroundStyle(GrokAISetup.isConfigured ? .green : .orange)
-                        .font(.caption)
+    // MARK: - Debug & Diagnostics
+
+    private var debugAndDiagnosticsSection: some View {
+        Group {
+            Section {
+                NavigationLink {
+                    DebugLogView()
+                } label: {
+                    settingsRow(
+                        icon: "doc.text.magnifyingglass",
+                        title: "Full Debug Log",
+                        subtitle: "View all debug entries",
+                        color: .purple
+                    )
                 }
+
+                NavigationLink {
+                    SettingsConsoleView()
+                } label: {
+                    settingsRow(
+                        icon: "terminal.fill",
+                        title: "Console",
+                        subtitle: "Live log output",
+                        color: .green
+                    )
+                }
+
+                NavigationLink {
+                    NoticesView()
+                } label: {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.orange.opacity(0.12))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "exclamationmark.bubble.fill")
+                                .font(.body)
+                                .foregroundStyle(.orange)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Notices").font(.subheadline.bold())
+                            Text("Failure log & auto-retry history")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        let count = NoticesService.shared.unreadCount
+                        if count > 0 {
+                            Text("\(count)")
+                                .font(.system(.caption2, design: .monospaced, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Color.orange, in: Capsule())
+                        }
+                    }
+                }
+            } header: {
+                Label("Debug & Diagnostics", systemImage: "stethoscope")
             }
 
+            Section {
+                Button {
+                    let text = DebugLogger.shared.exportDiagnosticReport(
+                        credentials: [],
+                        automationSettings: vm.automationSettings
+                    )
+                    UIPasteboard.general.string = text
+                    withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                    Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+                } label: {
+                    settingsRow(
+                        icon: "stethoscope",
+                        title: "Export Diagnostic Report",
+                        subtitle: "Copy full report to clipboard",
+                        color: .red
+                    )
+                }
+
+                Button {
+                    shareFileURL = DebugLogger.shared.exportLogToFile()
+                } label: {
+                    settingsRow(
+                        icon: "square.and.arrow.up",
+                        title: "Share Debug Log File",
+                        subtitle: "Export full log as shareable .txt file",
+                        color: .purple
+                    )
+                }
+
+                Button {
+                    shareFileURL = DebugLogger.shared.exportDiagnosticReportToFile(credentials: [], automationSettings: vm.automationSettings)
+                } label: {
+                    settingsRow(
+                        icon: "stethoscope.circle",
+                        title: "Share Diagnostic File",
+                        subtitle: "Export diagnostic report as shareable .txt",
+                        color: .indigo
+                    )
+                }
+            } header: {
+                Label("Diagnostic Reports", systemImage: "doc.badge.gearshape")
+            }
+        }
+    }
+
+    // MARK: - Data Management
+
+    private var dataManagementSection: some View {
+        Section {
             NavigationLink {
-                AdvancedSettingsView()
+                ConsolidatedImportExportView()
             } label: {
                 settingsRow(
-                    icon: "gearshape.2.fill",
-                    title: "Advanced Settings",
-                    subtitle: "Debug, diagnostics, data, app settings & about",
-                    color: .gray
+                    icon: "arrow.up.arrow.down.circle.fill",
+                    title: "Import / Export",
+                    subtitle: "Full backup & restore of all data",
+                    color: .blue
                 )
             }
 
+            NavigationLink {
+                StorageFileBrowserView()
+            } label: {
+                settingsRow(
+                    icon: "externaldrive.fill",
+                    title: "Vault",
+                    subtitle: "Browse persistent file storage",
+                    color: .teal
+                )
+            }
+        } header: {
+            Label("Data Management", systemImage: "tray.2.fill")
+        } footer: {
+            Text("Comprehensive backup covering all settings, credentials, cards, URLs, proxies, VPN, DNS, blacklist, emails, recorded flows, and button configs.")
+        }
+    }
+
+    // MARK: - Developer Settings Link
+
+    private var developerSettingsLinkSection: some View {
+        Section {
             NavigationLink {
                 DeveloperSettingsView()
             } label: {
@@ -170,9 +373,32 @@ struct SettingsAndTestingView: View {
                 )
             }
         } header: {
-            Label("Advanced", systemImage: "ellipsis.circle.fill")
+            Label("Developer", systemImage: "hammer.fill")
         }
     }
+
+    // MARK: - About
+
+    private var aboutSection: some View {
+        Section {
+            LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")
+            LabeledContent("Profile") {
+                Text(nordService.hasSelectedProfile ? nordService.activeKeyProfile.rawValue : "Not Selected")
+                    .foregroundStyle(nordService.activeKeyProfile == .nick ? .blue : .purple)
+            }
+            LabeledContent("Engine", value: "WKWebView Live")
+            LabeledContent("Storage", value: "Unlimited · Local + iCloud")
+            LabeledContent("Connection") {
+                Text(proxyService.unifiedConnectionMode.label)
+                    .foregroundStyle(proxyService.unifiedConnectionMode == .proxy ? .blue : .cyan)
+            }
+            LabeledContent("Mode") { Text("Live — Real Transactions").foregroundStyle(.orange) }
+        } header: {
+            Text("About")
+        }
+    }
+
+    // MARK: - Helpers
 
     private func settingsRow(icon: String, title: String, subtitle: String, color: Color) -> some View {
         HStack(spacing: 12) {
