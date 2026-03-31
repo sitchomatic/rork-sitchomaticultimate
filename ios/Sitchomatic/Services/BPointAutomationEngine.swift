@@ -408,7 +408,7 @@ class BPointAutomationEngine {
 
         check.responseSnippet = String(pageContent.prefix(500))
 
-        let autoResult: PPSRDebugScreenshot.AutoDetectedResult
+        let autoResult: CapturedScreenshot.AutoDetectedResult
         switch evaluation.outcome {
         case .failInstitution: autoResult = .noAcc
         case .pass: autoResult = .success

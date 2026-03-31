@@ -503,7 +503,7 @@ class PPSRAutomationEngine {
         check.responseSnippet = String(pageContent.prefix(500))
         logger.log("PPSR evaluation: \(finalEvaluation.outcome) score=\(finalEvaluation.score) — \(finalEvaluation.reason)", category: .evaluation, level: finalEvaluation.outcome == .pass ? .success : .warning, sessionId: sessionId)
 
-        let autoResult: PPSRDebugScreenshot.AutoDetectedResult
+        let autoResult: CapturedScreenshot.AutoDetectedResult
         switch finalEvaluation.outcome {
         case .failInstitution: autoResult = .noAcc
         case .pass: autoResult = .success

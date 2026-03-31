@@ -1148,7 +1148,7 @@ class LoginAutomationEngine {
                 logger.log("  Signal: \(signal)", category: .evaluation, level: .trace, sessionId: sessionId)
             }
 
-            let autoResult: PPSRDebugScreenshot.AutoDetectedResult
+            let autoResult: CapturedScreenshot.AutoDetectedResult
             switch evaluation.outcome {
             case .success: autoResult = .success
             case .noAcc: autoResult = .noAcc
@@ -1369,7 +1369,7 @@ class LoginAutomationEngine {
         return attempt.screenshotIds.count < limit
     }
 
-    private func captureAlwaysScreenshot(session: LoginSiteWebSession, attempt: LoginAttempt, cycle: Int, maxCycles: Int, welcomeTextFound: Bool, redirected: Bool, evaluationReason: String, currentURL: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult) async {
+    private func captureAlwaysScreenshot(session: LoginSiteWebSession, attempt: LoginAttempt, cycle: Int, maxCycles: Int, welcomeTextFound: Bool, redirected: Bool, evaluationReason: String, currentURL: String, autoResult: CapturedScreenshot.AutoDetectedResult) async {
         guard shouldCaptureScreenshot(attempt: attempt) else {
             logger.log("Screenshot skipped (limit=\(automationSettings.screenshotsPerAttempt.limit), captured=\(attempt.screenshotIds.count))", category: .screenshot, level: .trace)
             return
@@ -1406,7 +1406,7 @@ class LoginAutomationEngine {
             noteExtra = " | OCR_DISABLED: \(ocrDisabledCheck.type.rawValue) '\(ocrDisabledCheck.matchedText ?? "")'"
         }
 
-        let screenshot = PPSRDebugScreenshot(
+        let screenshot = CapturedScreenshot(
             stepName: "post_login_cycle_\(cycle)",
             cardDisplayNumber: attempt.credential.username,
             cardId: attempt.credential.id,
