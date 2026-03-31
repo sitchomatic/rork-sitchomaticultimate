@@ -1,18 +1,24 @@
 import Foundation
 
-nonisolated final class ContinuationGuard: @unchecked Sendable {
+/// Thread-safe continuation guard using Swift 6 concurrency primitives
+actor ContinuationGuard {
     private var consumed = false
-    private let lock = NSLock()
 
     init() {
         consumed = false
     }
 
     func tryConsume() -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
         if consumed { return false }
         consumed = true
         return true
+    }
+
+    func isConsumed() -> Bool {
+        consumed
+    }
+
+    func reset() {
+        consumed = false
     }
 }
