@@ -40,7 +40,7 @@ class LoginViewModel {
     var autoRetryMaxAttempts: Int = 3
     private var autoRetryBackoffCounts: [String: Int] = [:]
     var consecutiveConnectionFailures: Int = 0
-    var debugScreenshots: [PPSRDebugScreenshot] = []
+    var debugScreenshots: [CapturedScreenshot] { UnifiedScreenshotManager.shared.screenshots }
     var fingerprintPassRate: String { FingerprintValidationService.shared.formattedPassRate }
     var fingerprintAvgScore: Double { FingerprintValidationService.shared.averageScore }
     var fingerprintHistory: [FingerprintValidationService.FingerprintScore] { FingerprintValidationService.shared.scoreHistory }
@@ -1181,40 +1181,28 @@ class LoginViewModel {
     }
 
     private let maxInMemoryScreenshots: Int = 200
+    private let screenshotManager = UnifiedScreenshotManager.shared
 
-    func addScreenshot(_ screenshot: PPSRDebugScreenshot) {
-        if isRunning && CrashProtectionService.shared.isMemoryCritical {
-            ScreenshotCacheService.shared.storeData(screenshot.imageData, forKey: screenshot.id)
-            return
-        }
-        debugScreenshots.insert(screenshot, at: 0)
-        let effectiveLimit = isRunning ? min(15, maxInMemoryScreenshots) : maxInMemoryScreenshots
-        if debugScreenshots.count > effectiveLimit {
-            let overflow = Array(debugScreenshots.suffix(from: effectiveLimit))
-            for ss in overflow {
-                ScreenshotCacheService.shared.storeData(ss.imageData, forKey: ss.id)
+    func addScreenshot(_ screenshot: CapturedScreenshot) {
+        // Screenshots are now stored directly in the unified manager.
+        // The addScreenshot call from engines creates the screenshot and the manager handles storage.
+        // For backward compatibility, insert into the unified manager if not already present.
+        if !screenshotManager.screenshots.contains(where: { $0.id == screenshot.id }) {
+            screenshotManager.screenshots.insert(screenshot, at: 0)
+            if screenshotManager.screenshots.count > maxInMemoryScreenshots {
+                let overflow = screenshotManager.screenshots.count - maxInMemoryScreenshots
+                screenshotManager.screenshots.removeLast(overflow)
             }
-            debugScreenshots.removeLast(debugScreenshots.count - effectiveLimit)
         }
     }
 
     func clearDebugScreenshots() {
-        let count = debugScreenshots.count
-        debugScreenshots.removeAll()
-        log("Cleared \(count) debug screenshots")
+        screenshotManager.clearAll()
+        log("Cleared all debug screenshots via unified manager")
     }
 
     func handleMemoryPressure() {
-        let before = debugScreenshots.count
-        let keep = min(50, maxInMemoryScreenshots / 4)
-        if debugScreenshots.count > keep {
-            let overflow = Array(debugScreenshots.suffix(from: keep))
-            for ss in overflow {
-                ScreenshotCacheService.shared.store(ss.image, forKey: ss.id)
-            }
-            debugScreenshots.removeLast(debugScreenshots.count - keep)
-            log("Memory pressure: flushed \(before - keep) screenshots to disk cache", level: .warning)
-        }
+        screenshotManager.handleMemoryPressure()
         if globalLogs.count > 200 {
             globalLogs = Array(globalLogs.prefix(200))
         }
@@ -1280,13 +1268,8 @@ class LoginViewModel {
         log("Added \(emails.count) disabled accounts to blacklist", level: .success)
     }
 
-    func correctResult(for screenshot: PPSRDebugScreenshot, override: UserResultOverride) {
-        screenshot.userOverride = override
-
-        let allCredScreenshots = debugScreenshots.filter { $0.cardId == screenshot.cardId }
-        for s in allCredScreenshots where s.id != screenshot.id {
-            s.userOverride = override
-        }
+    func correctResult(for screenshot: CapturedScreenshot, override: UserResultOverride) {
+        screenshotManager.correctResult(for: screenshot, override: override)
 
         guard let cred = credentials.first(where: { $0.id == screenshot.cardId }) else {
             log("Correction: could not find credential \(screenshot.cardDisplayNumber)", level: .warning)
@@ -1321,16 +1304,16 @@ class LoginViewModel {
             actionTaken: "user_override_credential_pair"
         )
 
-        log("Debug correction: \(cred.username) marked as \(override.displayLabel) by user (applied to \(allCredScreenshots.count) screenshots)", level: isSuccess ? .success : .warning)
+        log("Debug correction: \(cred.username) marked as \(override.displayLabel) by user", level: isSuccess ? .success : .warning)
         persistCredentials()
     }
 
-    func resetScreenshotOverride(_ screenshot: PPSRDebugScreenshot) {
-        screenshot.userOverride = .none
+    func resetScreenshotOverride(_ screenshot: CapturedScreenshot) {
+        screenshotManager.resetScreenshotOverride(screenshot)
         log("Reset override for screenshot at \(screenshot.formattedTime)")
     }
 
-    func requeueCredentialFromScreenshot(_ screenshot: PPSRDebugScreenshot) {
+    func requeueCredentialFromScreenshot(_ screenshot: CapturedScreenshot) {
         guard let cred = credentials.first(where: { $0.id == screenshot.cardId }) else {
             log("Requeue: could not find credential \(screenshot.cardDisplayNumber)", level: .warning)
             return
@@ -1340,13 +1323,13 @@ class LoginViewModel {
         persistCredentials()
     }
 
-    func screenshotsForCredential(_ credId: String) -> [PPSRDebugScreenshot] {
-        debugScreenshots.filter { $0.cardId == credId }
+    func screenshotsForCredential(_ credId: String) -> [CapturedScreenshot] {
+        screenshotManager.screenshotsForCard(credId)
     }
 
-    func screenshotsForAttempt(_ attempt: LoginAttempt) -> [PPSRDebugScreenshot] {
+    func screenshotsForAttempt(_ attempt: LoginAttempt) -> [CapturedScreenshot] {
         let ids = Set(attempt.screenshotIds)
-        return debugScreenshots.filter { ids.contains($0.id) }
+        return screenshotManager.screenshotsForIds(ids)
     }
 
     private func requeueCredentialToBottom(_ credential: LoginCredential) {

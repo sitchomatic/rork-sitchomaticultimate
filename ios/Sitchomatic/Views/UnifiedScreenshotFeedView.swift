@@ -3,11 +3,22 @@ import UIKit
 
 struct UnifiedScreenshotFeedView: View {
     @State private var manager = UnifiedScreenshotManager.shared
-    @State private var selectedScreenshot: UnifiedScreenshot?
+    @State private var selectedScreenshot: CapturedScreenshot?
     @State private var filterOption: ScreenshotFilterOption = .all
     @State private var showStats: Bool = false
     @State private var showClearConfirm: Bool = false
     @State private var showFullImage: Bool = false
+    @State private var viewMode: ViewMode = .all
+    @State private var showFlipbook: Bool = false
+    @State private var flipbookStartIndex: Int = 0
+    @State private var showCorrectionSheet: Bool = false
+    @State private var correctionScreenshot: CapturedScreenshot?
+    @State private var selectedAlbum: ScreenshotAlbum?
+
+    enum ViewMode: String, CaseIterable {
+        case all = "All"
+        case albums = "Albums"
+    }
 
     nonisolated enum ScreenshotFilterOption: String, CaseIterable, Identifiable, Sendable {
         case all = "All"
@@ -17,6 +28,7 @@ struct UnifiedScreenshotFeedView: View {
         case tempDisabled = "Temp"
         case incorrect = "Incorrect"
         case unknown = "Unknown"
+        case overridden = "Override"
         var id: String { rawValue }
 
         var color: Color {
@@ -28,6 +40,7 @@ struct UnifiedScreenshotFeedView: View {
             case .tempDisabled: .orange
             case .incorrect: .secondary
             case .unknown: .gray
+            case .overridden: .purple
             }
         }
 
@@ -40,19 +53,21 @@ struct UnifiedScreenshotFeedView: View {
             case .tempDisabled: "clock.badge.exclamationmark"
             case .incorrect: "xmark.circle.fill"
             case .unknown: "questionmark.circle"
+            case .overridden: "pencil.circle.fill"
             }
         }
     }
 
-    private var filteredScreenshots: [UnifiedScreenshot] {
+    private var filteredScreenshots: [CapturedScreenshot] {
         switch filterOption {
         case .all: manager.screenshots
         case .crucial: manager.crucialScreenshots()
-        case .success: manager.screenshots.filter { $0.detectedOutcome == .success }
-        case .permDisabled: manager.screenshots.filter { $0.detectedOutcome == .permDisabled }
-        case .tempDisabled: manager.screenshots.filter { $0.detectedOutcome == .tempDisabled }
-        case .incorrect: manager.screenshots.filter { $0.detectedOutcome == .incorrectPassword || $0.detectedOutcome == .noAccount }
-        case .unknown: manager.screenshots.filter { $0.detectedOutcome == .unknown }
+        case .success: manager.screenshots.filter { $0.detectedOutcome == .success || $0.userOverride == .success }
+        case .permDisabled: manager.screenshots.filter { $0.detectedOutcome == .permDisabled || $0.userOverride == .permDisabled }
+        case .tempDisabled: manager.screenshots.filter { $0.detectedOutcome == .tempDisabled || $0.userOverride == .tempDisabled }
+        case .incorrect: manager.screenshots.filter { $0.detectedOutcome == .incorrectPassword || $0.detectedOutcome == .noAccount || $0.userOverride == .noAcc }
+        case .unknown: manager.screenshots.filter { $0.detectedOutcome == .unknown && $0.userOverride == .none }
+        case .overridden: manager.screenshots.filter { $0.hasUserOverride }
         }
     }
 
@@ -60,18 +75,36 @@ struct UnifiedScreenshotFeedView: View {
         switch option {
         case .all: manager.screenshots.count
         case .crucial: manager.crucialScreenshots().count
-        case .success: manager.screenshots.filter { $0.detectedOutcome == .success }.count
-        case .permDisabled: manager.screenshots.filter { $0.detectedOutcome == .permDisabled }.count
-        case .tempDisabled: manager.screenshots.filter { $0.detectedOutcome == .tempDisabled }.count
-        case .incorrect: manager.screenshots.filter { $0.detectedOutcome == .incorrectPassword || $0.detectedOutcome == .noAccount }.count
-        case .unknown: manager.screenshots.filter { $0.detectedOutcome == .unknown }.count
+        case .success: manager.screenshots.filter { $0.detectedOutcome == .success || $0.userOverride == .success }.count
+        case .permDisabled: manager.screenshots.filter { $0.detectedOutcome == .permDisabled || $0.userOverride == .permDisabled }.count
+        case .tempDisabled: manager.screenshots.filter { $0.detectedOutcome == .tempDisabled || $0.userOverride == .tempDisabled }.count
+        case .incorrect: manager.screenshots.filter { $0.detectedOutcome == .incorrectPassword || $0.detectedOutcome == .noAccount || $0.userOverride == .noAcc }.count
+        case .unknown: manager.screenshots.filter { $0.detectedOutcome == .unknown && $0.userOverride == .none }.count
+        case .overridden: manager.screenshots.filter { $0.hasUserOverride }.count
         }
+    }
+
+    // MARK: - Album Grouping
+
+    private var albums: [ScreenshotAlbum] {
+        let grouped = Dictionary(grouping: filteredScreenshots) { $0.albumKey }
+        return grouped.map { key, screenshots in
+            let sorted = screenshots.sorted { $0.timestamp > $1.timestamp }
+            return ScreenshotAlbum(
+                id: key,
+                cardDisplayNumber: sorted.first?.cardDisplayNumber ?? key,
+                cardId: sorted.first?.cardId ?? "",
+                screenshots: sorted,
+                title: sorted.first?.albumTitle ?? key,
+                latestTimestamp: sorted.first?.timestamp ?? Date()
+            )
+        }.sorted { $0.latestTimestamp > $1.latestTimestamp }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             if !manager.screenshots.isEmpty {
-                filterBar
+                viewModeAndFilterBar
             }
 
             if showStats {
@@ -84,12 +117,35 @@ struct UnifiedScreenshotFeedView: View {
                         emptyState
                     } else if filteredScreenshots.isEmpty {
                         noMatchesState
+                    } else if viewMode == .albums {
+                        ForEach(albums) { album in
+                            Button { selectedAlbum = album } label: {
+                                AlbumCardView(album: album)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     } else {
-                        ForEach(filteredScreenshots) { screenshot in
-                            Button { selectedScreenshot = screenshot } label: {
+                        ForEach(Array(filteredScreenshots.enumerated()), id: \.element.id) { index, screenshot in
+                            Button {
+                                selectedScreenshot = screenshot
+                            } label: {
                                 ScreenshotTile(screenshot: screenshot)
                             }
                             .buttonStyle(.plain)
+                            .contextMenu {
+                                Button {
+                                    flipbookStartIndex = index
+                                    showFlipbook = true
+                                } label: {
+                                    Label("Open Flipbook", systemImage: "book.pages")
+                                }
+                                Button {
+                                    correctionScreenshot = screenshot
+                                    showCorrectionSheet = true
+                                } label: {
+                                    Label("Override Result", systemImage: "pencil.circle")
+                                }
+                            }
                         }
                     }
                 }
@@ -119,6 +175,25 @@ struct UnifiedScreenshotFeedView: View {
         .sheet(item: $selectedScreenshot) { screenshot in
             ScreenshotDetailSheet(screenshot: screenshot, showFullImage: $showFullImage)
         }
+        .sheet(item: $selectedAlbum) { album in
+            NavigationStack {
+                AlbumDetailSheet(album: album, manager: manager)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showCorrectionSheet) {
+            if let screenshot = correctionScreenshot {
+                NavigationStack {
+                    ScreenshotCorrectionSheet(screenshot: screenshot, manager: manager)
+                }
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+            }
+        }
+        .fullScreenCover(isPresented: $showFlipbook) {
+            ScreenshotFlipbookView(screenshots: filteredScreenshots, startIndex: flipbookStartIndex)
+        }
         .alert("Clear All Screenshots?", isPresented: $showClearConfirm) {
             Button("Clear All", role: .destructive) { manager.clearAll() }
             Button("Cancel", role: .cancel) {}
@@ -127,8 +202,30 @@ struct UnifiedScreenshotFeedView: View {
         }
     }
 
-    private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+    private var viewModeAndFilterBar: some View {
+        VStack(spacing: 4) {
+            // View mode toggle (Albums / All)
+            HStack(spacing: 8) {
+                ForEach(ViewMode.allCases, id: \.rawValue) { mode in
+                    let isSelected = viewMode == mode
+                    Button {
+                        withAnimation(.spring(duration: 0.25)) { viewMode = mode }
+                    } label: {
+                        Text(mode.rawValue)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundStyle(isSelected ? .white : .secondary)
+                            .padding(.horizontal, 12).padding(.vertical, 4)
+                            .background(isSelected ? Color.accentColor.opacity(0.75) : Color(.tertiarySystemGroupedBackground))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16).padding(.top, 6)
+
+            // Filter bar
+            ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
                 ForEach(ScreenshotFilterOption.allCases) { option in
                     let count = countFor(option)
@@ -160,6 +257,7 @@ struct UnifiedScreenshotFeedView: View {
             .padding(.horizontal, 16).padding(.vertical, 8)
         }
         .sensoryFeedback(.selection, trigger: filterOption)
+        }
     }
 
     private var analysisStatsCard: some View {
@@ -567,5 +665,220 @@ struct AIStatPill: View {
         .padding(.vertical, 6)
         .background(color.opacity(0.08))
         .clipShape(.rect(cornerRadius: 6))
+    }
+}
+
+// MARK: - Album Model
+
+struct ScreenshotAlbum: Identifiable {
+    let id: String
+    let cardDisplayNumber: String
+    let cardId: String
+    let screenshots: [CapturedScreenshot]
+    let title: String
+    let latestTimestamp: Date
+
+    var successCount: Int { screenshots.filter { $0.effectiveResult == .success }.count }
+    var noAccCount: Int { screenshots.filter { $0.effectiveResult == .noAcc }.count }
+    var unsureCount: Int { screenshots.filter { $0.effectiveResult == .unsure }.count }
+    var overallResult: UserResultOverride {
+        if successCount > 0 { return .success }
+        if noAccCount > 0 { return .noAcc }
+        if unsureCount > 0 { return .unsure }
+        return screenshots.first?.effectiveResult ?? .none
+    }
+}
+
+// MARK: - Album Card View
+
+struct AlbumCardView: View {
+    let album: ScreenshotAlbum
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(album.title)
+                    .font(.system(.subheadline, design: .monospaced, weight: .bold))
+                    .lineLimit(1)
+                Spacer()
+                Text("\(album.screenshots.count)")
+                    .font(.system(.caption2, design: .monospaced, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(album.overallResult.color.opacity(0.75))
+                    .clipShape(Capsule())
+            }
+
+            if let first = album.screenshots.first {
+                Color(.secondarySystemBackground)
+                    .frame(height: 100)
+                    .overlay {
+                        Image(uiImage: first.displayImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .allowsHitTesting(false)
+                    }
+                    .clipShape(.rect(cornerRadius: 8))
+            }
+
+            HStack(spacing: 8) {
+                if album.successCount > 0 {
+                    Label("\(album.successCount)", systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.green)
+                }
+                if album.noAccCount > 0 {
+                    Label("\(album.noAccCount)", systemImage: "xmark.circle.fill")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.red)
+                }
+                Spacer()
+                Text(album.latestTimestamp, style: .time)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(.rect(cornerRadius: 12))
+    }
+}
+
+// MARK: - Album Detail Sheet
+
+struct AlbumDetailSheet: View {
+    let album: ScreenshotAlbum
+    let manager: UnifiedScreenshotManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var showFlipbook: Bool = false
+
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Text(album.title).font(.headline)
+                    Spacer()
+                    Text("\(album.screenshots.count) screenshots")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Screenshots") {
+                ForEach(album.screenshots) { screenshot in
+                    HStack(spacing: 10) {
+                        Color.clear
+                            .frame(width: 50, height: 36)
+                            .overlay {
+                                Image(uiImage: screenshot.displayImage)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .allowsHitTesting(false)
+                            }
+                            .clipShape(.rect(cornerRadius: 4))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(screenshot.stepName.replacingOccurrences(of: "_", with: " ").uppercased())
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            Text(screenshot.formattedTime)
+                                .font(.system(size: 9, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                        }
+                        Spacer()
+                        Text(screenshot.effectiveResult.displayLabel)
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(screenshot.effectiveResult.color)
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle(album.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") { dismiss() }
+            }
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showFlipbook = true
+                } label: {
+                    Image(systemName: "book.pages")
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showFlipbook) {
+            ScreenshotFlipbookView(screenshots: album.screenshots, startIndex: 0)
+        }
+    }
+}
+
+// MARK: - Correction Sheet
+
+struct ScreenshotCorrectionSheet: View {
+    let screenshot: CapturedScreenshot
+    let manager: UnifiedScreenshotManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var editingNote: String = ""
+
+    var body: some View {
+        List {
+            Section("Current Result") {
+                HStack {
+                    Label(screenshot.outcomeLabel, systemImage: screenshot.effectiveResult.icon)
+                        .foregroundStyle(screenshot.outcomeColor)
+                    Spacer()
+                    if screenshot.hasUserOverride {
+                        Text("User Override")
+                            .font(.caption2)
+                            .foregroundStyle(.purple)
+                    }
+                }
+            }
+
+            Section("Override Result") {
+                ForEach(UserResultOverride.overrideable, id: \.rawValue) { override_ in
+                    Button {
+                        manager.correctResult(for: screenshot, override: override_)
+                        dismiss()
+                    } label: {
+                        Label(override_.displayLabel, systemImage: override_.icon)
+                            .foregroundStyle(override_.color)
+                    }
+                }
+            }
+
+            if screenshot.hasUserOverride {
+                Section {
+                    Button(role: .destructive) {
+                        manager.resetScreenshotOverride(screenshot)
+                        dismiss()
+                    } label: {
+                        Label("Reset to Auto", systemImage: "arrow.uturn.backward")
+                    }
+                }
+            }
+
+            Section("Note") {
+                TextField("Add a note...", text: $editingNote, axis: .vertical)
+                    .lineLimit(3)
+                    .onSubmit {
+                        screenshot.userNote = editingNote
+                    }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Override Result")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") {
+                    if !editingNote.isEmpty {
+                        screenshot.userNote = editingNote
+                    }
+                    dismiss()
+                }
+            }
+        }
+        .onAppear { editingNote = screenshot.userNote }
     }
 }

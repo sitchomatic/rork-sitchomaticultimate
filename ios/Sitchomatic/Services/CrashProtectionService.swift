@@ -183,10 +183,10 @@ final class CrashProtectionService {
 
 
         if let limits = tier.screenshotCacheLimits {
-            ScreenshotCacheService.shared.setMaxCacheCounts(memory: limits.memory, disk: limits.disk)
+            ScreenshotCache.shared.setMaxCacheCounts(memory: limits.memory, disk: limits.disk)
         }
         if tier.clearScreenshots {
-            ScreenshotCacheService.shared.clearAll()
+            ScreenshotCache.shared.clearAll()
         }
 
         if tier.aggressiveCleanup {

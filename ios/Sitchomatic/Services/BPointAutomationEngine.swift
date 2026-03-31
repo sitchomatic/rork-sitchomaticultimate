@@ -13,7 +13,7 @@ class BPointAutomationEngine {
     var automationSettings: AutomationSettings = AutomationSettings()
     private let logger = DebugLogger.shared
     private let billerPool = BPointBillerPoolService.shared
-    var onScreenshot: ((PPSRDebugScreenshot) -> Void)?
+    var onScreenshot: ((CapturedScreenshot) -> Void)?
     var onConnectionFailure: ((String) -> Void)?
     var onUnusualFailure: ((String) -> Void)?
     var onLog: ((String, PPSRLogEntry.Level) -> Void)?
@@ -576,13 +576,13 @@ class BPointAutomationEngine {
         check.logs.append(PPSRLogEntry(message: "ERROR: \(message)", level: .error))
     }
 
-    private func captureScreenshotForCheck(session: some ScreenshotCapableSession, check: PPSRCheck, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult = .unknown) async {
+    private func captureScreenshotForCheck(session: some ScreenshotCapableSession, check: PPSRCheck, step: String, note: String, autoResult: CapturedScreenshot.AutoDetectedResult = .unknown) async {
         let cropRect = screenshotCropRect == .zero ? nil : screenshotCropRect
         let result = await session.captureScreenshotWithCrop(cropRect: cropRect)
         guard let fullImage = result.full else { return }
         check.responseSnapshot = fullImage
 
-        let screenshot = PPSRDebugScreenshot(
+        let screenshot = CapturedScreenshot(
             stepName: step, cardDisplayNumber: check.card.displayNumber, cardId: check.card.id,
             vin: check.vin, email: check.email, image: fullImage, croppedImage: result.cropped,
             note: note, autoDetectedResult: autoResult

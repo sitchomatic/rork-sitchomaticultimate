@@ -50,7 +50,7 @@ class LoginAutomationEngine {
     private let activityMonitor = SessionActivityMonitor.shared
     private let liveSpeed = LiveSpeedAdaptationService.shared
     private let strictDetection = StrictLoginDetectionEngine.shared
-    var onScreenshot: ((PPSRDebugScreenshot) -> Void)?
+    var onScreenshot: ((CapturedScreenshot) -> Void)?
     var onPurgeScreenshots: (([String]) -> Void)?
     var onConnectionFailure: ((String) -> Void)?
     var onUnusualFailure: ((String) -> Void)?
@@ -1607,7 +1607,7 @@ class LoginAutomationEngine {
         return await visionML.detectSuccessIndicators(in: screenshot)
     }
 
-    private func captureDebugScreenshot(session: LoginSiteWebSession, attempt: LoginAttempt, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult = .unknown) async {
+    private func captureDebugScreenshot(session: LoginSiteWebSession, attempt: LoginAttempt, step: String, note: String, autoResult: CapturedScreenshot.AutoDetectedResult = .unknown) async {
         guard shouldCaptureScreenshot(attempt: attempt) else {
             logger.log("Debug screenshot skipped (limit=\(automationSettings.screenshotsPerAttempt.limit), captured=\(attempt.screenshotIds.count))", category: .screenshot, level: .trace)
             return
@@ -1616,20 +1616,13 @@ class LoginAutomationEngine {
 
         attempt.responseSnapshot = fullImage
 
-        let compressed: UIImage
-        if let jpegData = fullImage.jpegData(compressionQuality: 0.4), let ci = UIImage(data: jpegData) {
-            compressed = ci
-        } else {
-            compressed = fullImage
-        }
-
-        let screenshot = PPSRDebugScreenshot(
+        let screenshot = CapturedScreenshot(
             stepName: step,
             cardDisplayNumber: attempt.credential.username,
             cardId: attempt.credential.id,
             vin: "",
             email: attempt.credential.username,
-            image: compressed,
+            image: fullImage,
             note: note,
             autoDetectedResult: autoResult
         )

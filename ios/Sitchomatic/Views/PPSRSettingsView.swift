@@ -445,7 +445,7 @@ struct PPSRSettingsView: View {
 
             if vm.debugMode {
                 NavigationLink {
-                    PPSRDebugScreenshotsView(vm: vm)
+                    UnifiedScreenshotFeedView()
                 } label: {
                     HStack {
                         Image(systemName: "photo.stack").foregroundStyle(.orange)
@@ -456,7 +456,7 @@ struct PPSRSettingsView: View {
                 }
 
                 if !vm.debugScreenshots.isEmpty {
-                    Button(role: .destructive) { vm.debugScreenshots.removeAll() } label: { Label("Clear All Screenshots", systemImage: "trash") }
+                    Button(role: .destructive) { vm.clearDebugScreenshots() } label: { Label("Clear All Screenshots", systemImage: "trash") }
                 }
             }
             NavigationLink {
