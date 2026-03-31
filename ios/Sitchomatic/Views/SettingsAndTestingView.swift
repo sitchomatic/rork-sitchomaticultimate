@@ -158,6 +158,17 @@ struct SettingsAndTestingView: View {
                     color: .gray
                 )
             }
+
+            NavigationLink {
+                DeveloperSettingsView()
+            } label: {
+                settingsRow(
+                    icon: "wrench.and.screwdriver.fill",
+                    title: "Developer Settings",
+                    subtitle: "All configurable values & conflict resolution",
+                    color: .red
+                )
+            }
         } header: {
             Label("Advanced", systemImage: "ellipsis.circle.fill")
         }

@@ -188,6 +188,21 @@ struct AdvancedSettingsView: View {
             }
 
             Section {
+                NavigationLink {
+                    DeveloperSettingsView()
+                } label: {
+                    settingsRow(
+                        icon: "wrench.and.screwdriver.fill",
+                        title: "Developer Settings",
+                        subtitle: "All configurable values & conflict resolution",
+                        color: .red
+                    )
+                }
+            } header: {
+                Label("Developer", systemImage: "hammer.fill")
+            }
+
+            Section {
                 LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")
                 LabeledContent("Profile") {
                     Text(nordService.hasSelectedProfile ? nordService.activeKeyProfile.rawValue : "Not Selected")
