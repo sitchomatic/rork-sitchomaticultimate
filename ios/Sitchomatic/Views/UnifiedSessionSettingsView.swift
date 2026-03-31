@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct UnifiedSessionSettingsView: View {
     @Bindable var vm: UnifiedSessionViewModel

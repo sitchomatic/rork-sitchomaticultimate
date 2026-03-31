@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DualFindSettingsView: View {
     @Bindable var vm: DualFindViewModel
