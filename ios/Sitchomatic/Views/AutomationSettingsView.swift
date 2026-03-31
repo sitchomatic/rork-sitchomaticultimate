@@ -13,7 +13,6 @@ struct AutomationSettingsView: View {
     @State private var showButtonTextEditor: Bool = false
     @State private var showMFAKeywordEditor: Bool = false
     @State private var showCaptchaKeywordEditor: Bool = false
-    @State private var showTemplates: Bool = false
     @State private var showCalibrationSheet: Bool = false
     @State private var calibrationURL: String = ""
     @State private var isAutoCalibrating: Bool = false
@@ -34,6 +33,9 @@ struct AutomationSettingsView: View {
     @State private var autoSaveEnabled: Bool = true
     @State private var lastSaveTime: Date? = nil
     @State private var showSavedToast: Bool = false
+    @State private var showSettingsImportSheet: Bool = false
+    @State private var settingsImportText: String = ""
+    @State private var importError: String?
 
     private var automationSettingsHash: String {
         (try? String(data: JSONEncoder().encode(vm.automationSettings), encoding: .utf8)) ?? ""
@@ -42,7 +44,7 @@ struct AutomationSettingsView: View {
     var body: some View {
         List {
             autoSaveSection
-            templateQuickSection
+            settingsTransferSection
             urlCalibrationSection
             pageLoadingSection
             fieldDetectionSection
@@ -97,12 +99,6 @@ struct AutomationSettingsView: View {
                 .padding(.bottom, 20)
             }
         }
-        .sheet(isPresented: $showTemplates) {
-            NavigationStack { AutomationTemplateView(vm: vm) }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
-        }
         .sheet(isPresented: $showFlowAssignment) {
             NavigationStack { URLFlowAssignmentView(vm: vm) }
                 .presentationDetents([.large])
@@ -142,6 +138,17 @@ struct AutomationSettingsView: View {
         }
         .sheet(isPresented: $showProxyImport) {
             unifiedProxyImportSheet
+        }
+        .sheet(isPresented: $showSettingsImportSheet) {
+            settingsImportSheet
+        }
+        .alert("Import Failed", isPresented: Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
         }
         .fileImporter(
             isPresented: Binding(
@@ -216,38 +223,127 @@ struct AutomationSettingsView: View {
         }
     }
 
-    // MARK: - Templates
+    // MARK: - Settings Transfer
 
-    private var templateQuickSection: some View {
+    private var settingsTransferSection: some View {
         Section {
             Button {
-                showTemplates = true
+                let normalized = vm.automationSettings.normalizedTimeouts()
+                CentralSettingsService.shared.saveDefaultAutomationSettings(normalized, for: .login)
+                vm.log("Saved automation defaults", level: .success)
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "rectangle.stack.fill")
+                    Image(systemName: "star.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(.purple)
+                        .foregroundStyle(.yellow)
                         .frame(width: 36, height: 36)
-                        .background(.purple.opacity(0.12))
+                        .background(Color.yellow.opacity(0.14))
                         .clipShape(.rect(cornerRadius: 8))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Automation Templates")
+                        Text("Save as New Defaults")
                             .font(.subheadline.weight(.bold))
-                        Text("\(AutomationTemplate.builtInTemplates.count) built-in + custom presets")
+                        Text("Future resets use this profile")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            Button {
+                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
+                UIPasteboard.general.string = exported
+                vm.log("Exported automation settings to clipboard", level: .success)
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.up.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.teal)
+                        .frame(width: 36, height: 36)
+                        .background(Color.teal.opacity(0.14))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export All Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Copy full automation JSON")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                settingsImportText = UIPasteboard.general.string ?? ""
+                showSettingsImportSheet = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.green)
+                        .frame(width: 36, height: 36)
+                        .background(Color.green.opacity(0.14))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Paste JSON to override")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
                 }
             }
         } header: {
-            Label("Quick Apply", systemImage: "bolt.fill")
+            Label("Settings Transfer", systemImage: "arrow.left.arrow.right.circle.fill")
         } footer: {
-            Text("Apply a pre-configured template for Vision ML, Coordinate, Stealth, Speed, or Resilient automation.")
+            Text("Save your current automation profile as the new default, or move settings by exporting/importing JSON.")
         }
+    }
+
+    private var settingsImportSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Import Settings JSON") {
+                    TextEditor(text: $settingsImportText)
+                        .font(.system(.callout, design: .monospaced))
+                        .frame(minHeight: 220)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+
+                Section {
+                    Button {
+                        applyImportedSettings()
+                    } label: {
+                        Label("Apply Settings", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                    }
+                    .disabled(settingsImportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .navigationTitle("Import Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showSettingsImportSheet = false }
+                }
+            }
+        }
+    }
+
+    private func applyImportedSettings() {
+        guard let imported = AutomationSettingsTransfer.importSettings(from: settingsImportText) else {
+            importError = "Could not parse automation settings JSON."
+            return
+        }
+        importError = nil
+        let normalized = imported.normalizedTimeouts()
+        vm.automationSettings = normalized
+        vm.persistAutomationSettings()
+        vm.log("Imported automation settings", level: .success)
+        showSettingsImportSheet = false
+        settingsImportText = ""
     }
 
     // MARK: - URL Calibration
@@ -1947,7 +2043,7 @@ struct AutomationSettingsView: View {
             }
 
             Button(role: .destructive) {
-                vm.automationSettings = AutomationSettings()
+                vm.automationSettings = CentralSettingsService.shared.defaultAutomationSettings(for: .login)
                 vm.persistAutomationSettings()
             } label: {
                 Label("Reset All to Defaults", systemImage: "arrow.counterclockwise")

@@ -283,8 +283,7 @@ struct SettingsAndTestingView: View {
 
             Section {
                 Button {
-                    let text = DebugLogger.shared.exportDiagnosticReport(
-                        credentials: [],
+                    let text = DebugLogger.shared.exportCompleteLog(
                         automationSettings: vm.automationSettings
                     )
                     UIPasteboard.general.string = text
@@ -292,36 +291,27 @@ struct SettingsAndTestingView: View {
                     Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
                 } label: {
                     settingsRow(
-                        icon: "stethoscope",
-                        title: "Export Diagnostic Report",
-                        subtitle: "Copy full report to clipboard",
-                        color: .red
-                    )
-                }
-
-                Button {
-                    shareFileURL = DebugLogger.shared.exportLogToFile()
-                } label: {
-                    settingsRow(
-                        icon: "square.and.arrow.up",
-                        title: "Share Debug Log File",
-                        subtitle: "Export full log as shareable .txt file",
-                        color: .purple
-                    )
-                }
-
-                Button {
-                    shareFileURL = DebugLogger.shared.exportDiagnosticReportToFile(credentials: [], automationSettings: vm.automationSettings)
-                } label: {
-                    settingsRow(
-                        icon: "stethoscope.circle",
-                        title: "Share Diagnostic File",
-                        subtitle: "Export diagnostic report as shareable .txt",
+                        icon: "doc.badge.gearshape",
+                        title: "Export Complete Log",
+                        subtitle: "Copy diagnostics + data snapshot",
                         color: .indigo
                     )
                 }
+
+                Button {
+                    shareFileURL = DebugLogger.shared.exportCompleteLogToFile(
+                        automationSettings: vm.automationSettings
+                    )
+                } label: {
+                    settingsRow(
+                        icon: "square.and.arrow.up",
+                        title: "Share Complete Log File",
+                        subtitle: "Full debug, diagnostics, and data export",
+                        color: .purple
+                    )
+                }
             } header: {
-                Label("Diagnostic Reports", systemImage: "doc.badge.gearshape")
+                Label("Complete Log", systemImage: "doc.badge.gearshape")
             }
         }
     }

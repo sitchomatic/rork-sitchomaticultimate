@@ -44,7 +44,6 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
     var ppsrCropRect: ExportRect?
 
     var calibrations: [String: LoginCalibrationService.URLCalibration]?
-    var customTemplates: [AutomationTemplate]?
     var speedProfile: ConcurrentSpeedOptimizer.SpeedProfile?
     var nordVPNAccessKey: String?
     var nordVPNPrivateKey: String?
@@ -347,11 +346,6 @@ class AppDataExportService {
             config.calibrations = calService.calibrations
         }
 
-        let customTemplates = TemplatePersistenceService.shared.loadCustomTemplates()
-        if !customTemplates.isEmpty {
-            config.customTemplates = customTemplates
-        }
-
         if let speedProfile = ConcurrentSpeedOptimizer.shared.loadProfile() {
             config.speedProfile = speedProfile
         }
@@ -390,7 +384,6 @@ class AppDataExportService {
         var loginSettingsImported: Bool = false
         var ppsrSettingsImported: Bool = false
         var calibrationsImported: Int = 0
-        var templatesImported: Int = 0
         var speedProfileImported: Bool = false
         var nordKeysImported: Bool = false
         var tempDisabledSettingsImported: Bool = false
@@ -413,7 +406,6 @@ class AppDataExportService {
             if loginSettingsImported { parts.append("login app settings") }
             if ppsrSettingsImported { parts.append("PPSR app settings") }
             if calibrationsImported > 0 { parts.append("\(calibrationsImported) calibrations") }
-            if templatesImported > 0 { parts.append("\(templatesImported) templates") }
             if speedProfileImported { parts.append("speed profile") }
             if nordKeysImported { parts.append("NordVPN keys") }
             if tempDisabledSettingsImported { parts.append("temp disabled settings") }
@@ -711,20 +703,6 @@ class AppDataExportService {
                 calService.saveCalibration(cal, forURL: "https://\(key)")
                 result.calibrationsImported += 1
             }
-        }
-
-        if let templates = config.customTemplates, !templates.isEmpty {
-            var existing = TemplatePersistenceService.shared.loadCustomTemplates()
-            let existingIds = Set(existing.map(\.id))
-            var added = 0
-            for t in templates where !existingIds.contains(t.id) {
-                existing.append(t)
-                added += 1
-            }
-            if added > 0 {
-                TemplatePersistenceService.shared.saveTemplates(existing)
-            }
-            result.templatesImported = added
         }
 
         if let profile = config.speedProfile {

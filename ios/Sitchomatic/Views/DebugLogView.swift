@@ -57,6 +57,9 @@ struct DebugLogView: View {
                 }
 
                 Menu {
+                    Button { exportCompleteLog() } label: {
+                        Label("Export Complete Log", systemImage: "doc.richtext")
+                    }
                     Button { exportFullLog() } label: {
                         Label("Export Full Log", systemImage: "doc.text")
                     }
@@ -64,6 +67,9 @@ struct DebugLogView: View {
                         Label("Export Filtered Log", systemImage: "doc.text.magnifyingglass")
                     }
                     Divider()
+                    Button { exportCompleteLogAsFile() } label: {
+                        Label("Export Complete Log File", systemImage: "doc.badge.gearshape")
+                    }
                     Button { exportAsFile() } label: {
                         Label("Export as File", systemImage: "square.and.arrow.up")
                     }
@@ -491,6 +497,15 @@ struct DebugLogView: View {
             }
         }
         .presentationDetents([.medium])
+    }
+
+    private func exportCompleteLog() {
+        exportText = logger.exportCompleteLog()
+        showExportSheet = true
+    }
+
+    private func exportCompleteLogAsFile() {
+        shareFileURL = logger.exportCompleteLogToFile()
     }
 
     private func exportAsFile() {
