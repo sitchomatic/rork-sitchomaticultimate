@@ -475,6 +475,8 @@ class TestDebugViewModel {
             session.status = .failed
         case .unsure, .redBannerError, .smsDetected:
             session.status = .unsure
+        case .cancelled:
+            session.status = .unsure
         case .timeout:
             session.status = .timeout
         case .connectionFailure:

@@ -2,12 +2,15 @@ import SwiftUI
 
 struct DeveloperSettingsView: View {
     @State private var vm = PPSRAutomationViewModel.shared
+    @State private var unifiedVM = UnifiedSessionViewModel.shared
+    @State private var dualFindVM = DualFindViewModel.shared
     @State private var proxyHealth = ProxyHealthMonitor.shared
     @State private var deviceProxy = DeviceProxyService.shared
     @State private var nordService = NordVPNService.shared
     @State private var nodeMaven = NodeMavenService.shared
     @State private var blacklist = BlacklistService.shared
     @State private var liveDebug = LiveWebViewDebugService.shared
+    @State private var showSyncToast: Bool = false
     private let proxyService = ProxyRotationService.shared
     private let dnsPool = DNSPoolService.shared
     private let urlRotation = LoginURLRotationService.shared
@@ -17,6 +20,7 @@ struct DeveloperSettingsView: View {
     var body: some View {
         List {
             conflictSummarySection
+            syncAllModesSection
             appModeSection
             appearanceSection
             automationSettingsLinkSection
@@ -40,6 +44,141 @@ struct DeveloperSettingsView: View {
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Developer Settings")
+        .overlay(alignment: .bottom) {
+            if showSyncToast {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("All modes synced")
+                        .font(.subheadline.bold())
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.green.gradient, in: Capsule())
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .padding(.bottom, 20)
+            }
+        }
+    }
+
+    // MARK: - Sync All Modes
+
+    private var syncAllModesSection: some View {
+        Section {
+            Button {
+                let source = vm.automationSettings
+                let central = CentralSettingsService.shared
+                central.persistLoginAutomationSettings(source)
+                central.persistUnifiedAutomationSettings(source)
+                central.persistDualFindAutomationSettings(source)
+                withAnimation(.spring(duration: 0.3)) { showSyncToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    withAnimation { showSyncToast = false }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(colors: [.green.opacity(0.3), .cyan.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.body.bold())
+                            .foregroundStyle(.green)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sync All Modes")
+                            .font(.subheadline.bold())
+                        Text("Push PPSR settings → Login, Unified & DualFind")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            Button {
+                let source = unifiedVM.automationSettings
+                let central = CentralSettingsService.shared
+                central.persistLoginAutomationSettings(source)
+                central.persistUnifiedAutomationSettings(source)
+                central.persistDualFindAutomationSettings(source)
+                vm.automationSettings = central.loginAutomationSettings
+                vm.persistSettings()
+                withAnimation(.spring(duration: 0.3)) { showSyncToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    withAnimation { showSyncToast = false }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(colors: [.cyan.opacity(0.3), .green.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.body.bold())
+                            .foregroundStyle(.cyan)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sync from Unified")
+                            .font(.subheadline.bold())
+                        Text("Push Unified settings → PPSR, Login & DualFind")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            Button {
+                let source = dualFindVM.automationSettings
+                let central = CentralSettingsService.shared
+                central.persistLoginAutomationSettings(source)
+                central.persistUnifiedAutomationSettings(source)
+                central.persistDualFindAutomationSettings(source)
+                vm.automationSettings = central.loginAutomationSettings
+                vm.persistSettings()
+                withAnimation(.spring(duration: 0.3)) { showSyncToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    withAnimation { showSyncToast = false }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(colors: [.purple.opacity(0.3), .pink.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.body.bold())
+                            .foregroundStyle(.purple)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sync from DualFind")
+                            .font(.subheadline.bold())
+                        Text("Push DualFind settings → PPSR, Login & Unified")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        } header: {
+            Label("Cross-Mode Sync", systemImage: "arrow.triangle.2.circlepath.circle.fill")
+        } footer: {
+            Text("Copies all automation settings from one mode to all others. Each mode persists independently.")
+        }
     }
 
     // MARK: - Conflict Summary
@@ -287,35 +426,50 @@ struct DeveloperSettingsView: View {
 
     private var unifiedSessionLinkSection: some View {
         Section {
-            LabeledContent("System Version") {
-                Text("4.2")
+            NavigationLink {
+                UnifiedSessionSettingsView(vm: unifiedVM)
+            } label: {
+                devRow(
+                    icon: "rectangle.stack.fill",
+                    title: "Unified Session Settings",
+                    subtitle: "V\(unifiedVM.config.systemVersion) dual-site session config",
+                    color: .cyan
+                )
             }
-            LabeledContent("Concurrency Limit") {
-                Text("4")
+
+            LabeledContent("System Version") {
+                Text("V\(unifiedVM.config.systemVersion)")
+                    .foregroundStyle(.cyan)
+            }
+            LabeledContent("Concurrency") {
+                Text("\(unifiedVM.automationSettings.maxConcurrency)")
             }
             LabeledContent("Max Attempts Per Site") {
-                Text("4")
+                Text("\(unifiedVM.config.maxAttemptsPerSite)")
             }
-            LabeledContent("Typing Speed Range") {
-                Text("60–150 WPM")
+            LabeledContent("Typing Speed") {
+                Text("\(unifiedVM.automationSettings.typingSpeedMinMs)–\(unifiedVM.automationSettings.typingSpeedMaxMs)ms")
             }
             LabeledContent("Click Jitter") {
-                Text("3px")
+                Text("\(unifiedVM.automationSettings.v42ClickJitterPx)px")
             }
-            LabeledContent("Post Error Delay") {
-                Text("400–700ms")
+            LabeledContent("Stealth") {
+                Image(systemName: unifiedVM.stealthEnabled ? "checkmark.circle.fill" : "xmark.circle")
+                    .foregroundStyle(unifiedVM.stealthEnabled ? .green : .red)
             }
-            LabeledContent("Pause Duration") {
-                Text("60s")
+            LabeledContent("Settlement Gate") {
+                Image(systemName: unifiedVM.automationSettings.v42SettlementGateEnabled ? "checkmark.circle.fill" : "xmark.circle")
+                    .foregroundStyle(unifiedVM.automationSettings.v42SettlementGateEnabled ? .green : .red)
             }
-            LabeledContent("Force-Stop Timeout") {
-                Text("30s")
-            }
-            LabeledContent("Session Save Debounce") {
-                Text("500ms")
+            LabeledContent("Strategy") {
+                Text(unifiedVM.automationSettings.concurrencyStrategy.label)
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
             }
         } header: {
             Label("Unified Session Config", systemImage: "rectangle.stack.fill")
+        } footer: {
+            Text("Live values from UnifiedSessionViewModel. Tap to configure. Persist key: unified_automation_settings_v1")
         }
     }
 
@@ -323,38 +477,50 @@ struct DeveloperSettingsView: View {
 
     private var dualFindLinkSection: some View {
         Section {
+            NavigationLink {
+                DualFindSettingsView(vm: dualFindVM)
+            } label: {
+                devRow(
+                    icon: "person.2.fill",
+                    title: "DualFind Settings",
+                    subtitle: "V5.2 email × password dual-site scan",
+                    color: .purple
+                )
+            }
+
             LabeledContent("Auto Advance") {
-                Text("true").foregroundStyle(.green)
+                Image(systemName: dualFindVM.autoAdvanceEnabled ? "checkmark.circle.fill" : "xmark.circle")
+                    .foregroundStyle(dualFindVM.autoAdvanceEnabled ? .green : .red)
             }
-            LabeledContent("Session Count Default") {
-                Text("3")
+            LabeledContent("Session Count") {
+                Text(dualFindVM.sessionCount.label)
             }
-            LabeledContent("Screenshot Count Default") {
-                Text("3")
+            LabeledContent("Screenshot Count") {
+                Text(dualFindVM.screenshotCount.label)
             }
-            LabeledContent("Show Live Feed") {
-                Text("false").foregroundStyle(.red)
+            LabeledContent("Stealth") {
+                Image(systemName: dualFindVM.stealthEnabled ? "checkmark.circle.fill" : "xmark.circle")
+                    .foregroundStyle(dualFindVM.stealthEnabled ? .green : .red)
             }
-            LabeledContent("Max Live Screenshots") {
-                Text("200")
+            LabeledContent("Debug Mode") {
+                Image(systemName: dualFindVM.debugMode ? "checkmark.circle.fill" : "xmark.circle")
+                    .foregroundStyle(dualFindVM.debugMode ? .green : .red)
             }
-            LabeledContent("Stealth Default") {
-                Text("true").foregroundStyle(.green)
-            }
-            LabeledContent("Debug Mode Default") {
-                Text("true").foregroundStyle(.green)
-            }
-            LabeledContent("Timeout Default") {
-                Text("90s")
+            LabeledContent("Timeout") {
+                Text("\(Int(dualFindVM.testTimeout))s")
             }
             LabeledContent("Max Concurrency") {
-                Text("\(AutomationSettings.defaultMaxConcurrency)")
+                Text("\(dualFindVM.automationSettings.maxConcurrency)")
             }
-            LabeledContent("Password Chunk Size") {
-                Text("3")
+            LabeledContent("Strategy") {
+                Text(dualFindVM.automationSettings.concurrencyStrategy.label)
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
             }
         } header: {
-            Label("DualFind Defaults", systemImage: "person.2.fill")
+            Label("DualFind Config", systemImage: "person.2.fill")
+        } footer: {
+            Text("Live values from DualFindViewModel. Tap to configure. Persist key: dual_find_automation_settings_v1")
         }
     }
 

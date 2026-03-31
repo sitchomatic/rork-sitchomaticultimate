@@ -10,6 +10,7 @@ nonisolated enum LoginOutcome: Sendable {
     case unsure
     case connectionFailure
     case timeout
+    case cancelled
     case redBannerError
     case smsDetected
 }
@@ -62,6 +63,15 @@ class LoginAutomationEngine {
 
     var canStartSession: Bool {
         activeSessions < maxConcurrency
+    }
+
+    private func cancellationOutcomeIfNeeded(_ attempt: LoginAttempt, sessionId: String, context: String) -> LoginOutcome? {
+        guard Task.isCancelled else { return nil }
+        let message = "Cancelled during \(context) — exiting early"
+        attempt.logs.append(PPSRLogEntry(message: message, level: .warning))
+        logger.log(message, category: .automation, level: .warning, sessionId: sessionId)
+        replayLogger.log(sessionId: sessionId, action: "cancelled", detail: context, level: "warning")
+        return .cancelled
     }
 
     func runLoginTest(_ attempt: LoginAttempt, targetURL: URL, timeout: TimeInterval = 180) async -> LoginOutcome {
@@ -493,6 +503,9 @@ class LoginAutomationEngine {
     // MARK: - performLoginTest Orchestrator
 
     private func performLoginTest(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String = "") async -> LoginOutcome {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "login orchestrator start") {
+            return cancelled
+        }
         advanceTo(.loadingPage, attempt: attempt, message: "Loading login page: \(session.targetURL.absoluteString)")
         logger.log("Phase: LOAD PAGE → \(session.targetURL.absoluteString)", category: .automation, level: .info, sessionId: sessionId)
         replayLogger.log(sessionId: sessionId, action: "page_load", detail: session.targetURL.absoluteString)
@@ -510,6 +523,9 @@ class LoginAutomationEngine {
         if let earlyReturn = readinessResult { return earlyReturn }
 
         let calibration = await phaseCalibrate(session: session, attempt: attempt, sessionId: sessionId)
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "post-calibration") {
+            return cancelled
+        }
 
         let (finalOutcome, lastEvaluation, maxSubmitCycles) = await phasePatternCycleLoop(
             session: session,
@@ -526,8 +542,14 @@ class LoginAutomationEngine {
     // MARK: - Phase 1: Load Page
 
     private func phaseLoadPage(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginOutcome? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page load") {
+            return cancelled
+        }
         var loaded = false
         for attemptNum in 1...3 {
+            if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page load attempt \(attemptNum)") {
+                return cancelled
+            }
             logger.startTimer(key: "\(sessionId)_pageload_\(attemptNum)")
             loaded = await session.loadPage(timeout: automationSettings.pageLoadTimeout)
             let loadMs = logger.stopTimer(key: "\(sessionId)_pageload_\(attemptNum)")
@@ -544,11 +566,17 @@ class LoginAutomationEngine {
                 attempt.logs.append(PPSRLogEntry(message: "Retrying in \(Int(waitTime))s...", level: .info))
                 logger.log("Retry wait \(Int(waitTime))s before attempt \(attemptNum + 1)", category: .automation, level: .trace, sessionId: sessionId)
                 try? await Task.sleep(for: .seconds(waitTime))
+                if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page load retry wait \(attemptNum)") {
+                    return cancelled
+                }
                 if attemptNum == 2 {
                     logger.log("Full session reset before final attempt", category: .webView, level: .debug, sessionId: sessionId)
                     session.tearDown(wipeAll: true)
                     session.stealthEnabled = stealthEnabled
                     await session.setUp(wipeAll: true)
+                    if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page load session reset") {
+                        return cancelled
+                    }
                 }
             }
         }
@@ -582,6 +610,9 @@ class LoginAutomationEngine {
     // MARK: - Phase 2: Handle Challenges
 
     private func phaseHandleChallenges(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginOutcome? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "challenge handling") {
+            return cancelled
+        }
         let challengeStart = Date()
         let challengeHost = session.targetURL.host ?? session.targetURL.absoluteString
         let challengeResult = await challengeClassifier.classify(session: session)
@@ -607,6 +638,9 @@ class LoginAutomationEngine {
                 let waitMs = aiRec?.waitTimeMs ?? 5000
                 attempt.logs.append(PPSRLogEntry(message: "AI: waiting \(waitMs)ms before retrying due to \(challengeResult.type.rawValue)", level: .info))
                 try? await Task.sleep(for: .milliseconds(waitMs))
+                if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "challenge waitAndRetry sleep") {
+                    return cancelled
+                }
                 challengeBypassed = true
             case "rotateProxy", "switchNetwork":
                 attempt.logs.append(PPSRLogEntry(message: "AI: network rotation recommended — proceeding with caution", level: .warning))
@@ -628,6 +662,9 @@ class LoginAutomationEngine {
                 session.tearDown(wipeAll: true)
                 session.stealthEnabled = stealthEnabled
                 await session.setUp(wipeAll: true)
+                if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "challenge fullSessionReset setUp") {
+                    return cancelled
+                }
                 let reloaded = await session.loadPage(timeout: automationSettings.pageLoadTimeout)
                 challengeBypassed = reloaded
                 if !reloaded {
@@ -643,6 +680,9 @@ class LoginAutomationEngine {
                 case .waitAndRetry:
                     attempt.logs.append(PPSRLogEntry(message: "Waiting 5s before retrying due to \(challengeResult.type.rawValue)", level: .info))
                     try? await Task.sleep(for: .seconds(5))
+                    if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "challenge fallback waitAndRetry sleep") {
+                        return cancelled
+                    }
                     challengeBypassed = true
                 case .rotateProxy, .switchNetwork, .rotateURL:
                     attempt.logs.append(PPSRLogEntry(message: "Challenge suggests network change — proceeding with caution", level: .warning))
@@ -653,6 +693,9 @@ class LoginAutomationEngine {
             }
 
             let latencyMs = Int(Date().timeIntervalSince(challengeStart) * 1000)
+            if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "challenge recording") {
+                return cancelled
+            }
             aiChallengeSolver.recordEncounter(host: challengeHost, challengeType: challengeResult.type, signals: challengeResult.signals, bypassUsed: resolvedStrategy, success: challengeBypassed, latencyMs: latencyMs)
         }
         return nil
@@ -661,6 +704,9 @@ class LoginAutomationEngine {
     // MARK: - Phase 3: Validate Page Readiness
 
     private func phaseValidatePageReadiness(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String, pageHost: String) async -> LoginOutcome? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page readiness validation") {
+            return cancelled
+        }
         let _ = await hostFingerprint.captureSignature(from: session, host: pageHost)
 
         await session.injectSettlementMonitor()
@@ -671,6 +717,9 @@ class LoginAutomationEngine {
             attempt.logs.append(PPSRLogEntry(message: "Dynamic readiness: TIMEOUT after \(fullReadiness.durationMs)ms — \(fullReadiness.reason) (proceeding with 1s buffer)", level: .warning))
         }
         logger.log("PageReadiness: \(fullReadiness.ready ? "ready" : "timeout") in \(fullReadiness.durationMs)ms — js:\(fullReadiness.jsSettled) form:\(fullReadiness.formReady) btn:\(fullReadiness.buttonReady)", category: .automation, level: fullReadiness.ready ? .success : .warning, sessionId: sessionId, durationMs: fullReadiness.durationMs)
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "post page readiness wait") {
+            return cancelled
+        }
 
         let pageTitle = await session.getPageTitle()
         attempt.logs.append(PPSRLogEntry(message: "Page loaded: \"\(pageTitle)\"", level: .info))
@@ -689,6 +738,9 @@ class LoginAutomationEngine {
                     self?.onLog?(msg, level)
                 }
             )
+            if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "blank page wait") {
+                return cancelled
+            }
             if appeared {
                 attempt.logs.append(PPSRLogEntry(message: "Page content appeared within blank page timeout", level: .success))
             } else {
@@ -707,6 +759,9 @@ class LoginAutomationEngine {
                         self?.onLog?(msg, level)
                     }
                 )
+                if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "blank page recovery") {
+                    return cancelled
+                }
 
                 if !recoveryResult.recovered {
                     await captureDebugScreenshot(session: session, attempt: attempt, step: "blank_page_load", note: "BLANK PAGE — recovery failed after \(recoveryResult.attemptsUsed) steps: \(recoveryResult.detail)", autoResult: .unknown)
@@ -837,6 +892,9 @@ class LoginAutomationEngine {
         let priorityPatterns: [LoginFormPattern] = [.visionMLCoordinate, .calibratedTyping, .calibratedDirect, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
 
         for cycle in 1...maxSubmitCycles {
+            if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "pattern cycle \(cycle)") {
+                return (cancelled, lastEvaluation, maxSubmitCycles)
+            }
             logger.log("Phase: HUMAN PATTERN CYCLE \(cycle)/\(maxSubmitCycles)", category: .automation, level: .info, sessionId: sessionId)
             logger.startTimer(key: "\(sessionId)_cycle_\(cycle)")
 

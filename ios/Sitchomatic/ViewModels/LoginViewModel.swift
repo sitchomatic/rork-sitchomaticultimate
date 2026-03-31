@@ -710,6 +710,10 @@ class LoginViewModel {
             } else {
                 log("\(credential.username) — max requeue reached, not requeuing (\(reason))", level: .error)
             }
+
+        case .cancelled:
+            credential.status = .untested
+            log("\(credential.username) — task cancelled — not requeuing", level: .warning)
         }
     }
 
@@ -865,6 +869,7 @@ class LoginViewModel {
         case .tempDisabled: outcomeLabel = "tempDisabled"
         case .unsure: outcomeLabel = "unsure"
         case .timeout: outcomeLabel = "timeout"
+        case .cancelled: outcomeLabel = "cancelled"
         case .connectionFailure: outcomeLabel = "connectionFailure"
         case .redBannerError: outcomeLabel = "redBannerError"
         case .smsDetected: outcomeLabel = "smsDetected"
@@ -873,7 +878,7 @@ class LoginViewModel {
         switch outcome {
         case .success, .noAcc, .permDisabled, .tempDisabled:
             recoveryService.markCompleted(credentialId: credential.id)
-        case .unsure, .timeout, .connectionFailure, .redBannerError, .smsDetected:
+        case .unsure, .timeout, .cancelled, .connectionFailure, .redBannerError, .smsDetected:
             let screenshotHash = attempt.screenshotIds.last
             recoveryService.updateSnapshot(
                 credentialId: credential.id,

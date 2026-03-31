@@ -394,6 +394,8 @@ final class AIAutomationCoordinator {
             return AIAnalysisResult(decision: .rotateProxy, confidence: 0.7, reasoning: "Connection failure during login", suggestedDelay: 3.0, fallbackDecision: .waitAndRetry, metadata: ["username": username])
         case .timeout:
             return AIAnalysisResult(decision: .waitAndRetry, confidence: 0.6, reasoning: "Login timeout", suggestedDelay: 5.0, fallbackDecision: .rotateProxy, metadata: ["username": username])
+        case .cancelled:
+            return AIAnalysisResult(decision: .abort, confidence: 1.0, reasoning: "Task cancelled — no retry", suggestedDelay: 0, fallbackDecision: nil, metadata: ["username": username])
         case .redBannerError:
             return AIAnalysisResult(decision: .switchPattern, confidence: 0.7, reasoning: "Red banner error — try different pattern", suggestedDelay: 2.0, fallbackDecision: .retry, metadata: ["username": username])
         case .smsDetected:

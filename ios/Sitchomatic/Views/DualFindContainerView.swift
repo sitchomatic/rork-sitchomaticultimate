@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DualFindContainerView: View {
-    @State private var vm = DualFindViewModel()
+    @State private var vm = DualFindViewModel.shared
     @State private var showSettings: Bool = false
 
     var body: some View {
