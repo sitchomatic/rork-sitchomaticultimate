@@ -398,7 +398,7 @@ class NordServerIntelligence {
             let queue = DispatchQueue(label: "nord-intel-validate.\(UUID().uuidString.prefix(6))")
             let guard_ = ContinuationGuard()
             let timeoutTask = Task.detached(priority: .utility) {
-                try? await Task.sleep(for: .seconds(5))
+                do { try await Task.sleep(for: .seconds(5)) } catch { return }
                 if guard_.tryConsume() {
                     connection.cancel()
                     continuation.resume(returning: (false, false))
@@ -427,8 +427,10 @@ class NordServerIntelligence {
 
                         connection.receive(minimumIncompleteLength: 2, maximumLength: 16) { data, _, _, recvError in
                             timeoutTask.cancel()
-                            connection.cancel()
+                            // Do not cancel the connection here: the auth path (authMethod == 0x02)
+                            // still needs it for the username/password sub-handshake.
                             guard recvError == nil, let data, data.count >= 2, data[0] == 0x05 else {
+                                connection.cancel()
                                 if guard_.tryConsume() {
                                     continuation.resume(returning: (true, false))
                                 }
@@ -446,12 +448,14 @@ class NordServerIntelligence {
 
                                 connection.send(content: authPacket, completion: .contentProcessed { authSendError in
                                     if authSendError != nil {
+                                        connection.cancel()
                                         if guard_.tryConsume() {
                                             continuation.resume(returning: (true, false))
                                         }
                                         return
                                     }
                                     connection.receive(minimumIncompleteLength: 2, maximumLength: 4) { authData, _, _, authRecvError in
+                                        connection.cancel()
                                         if guard_.tryConsume() {
                                             guard authRecvError == nil, let authData, authData.count >= 2 else {
                                                 continuation.resume(returning: (true, false))
@@ -462,14 +466,17 @@ class NordServerIntelligence {
                                     }
                                 })
                             } else if authMethod == 0x00 {
+                                connection.cancel()
                                 if guard_.tryConsume() {
                                     continuation.resume(returning: (true, true))
                                 }
                             } else if authMethod == 0xFF {
+                                connection.cancel()
                                 if guard_.tryConsume() {
                                     continuation.resume(returning: (true, false))
                                 }
                             } else {
+                                connection.cancel()
                                 if guard_.tryConsume() {
                                     continuation.resume(returning: (true, true))
                                 }

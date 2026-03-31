@@ -382,7 +382,7 @@ class DNSPoolService {
 
         return await withCheckedContinuation { continuation in
             let timeoutTask = Task.detached(priority: .utility) {
-                try? await Task.sleep(for: .seconds(10))
+                do { try await Task.sleep(for: .seconds(10)) } catch { return }
                 if guard_.tryConsume() {
                     connection.cancel()
                     continuation.resume(returning: nil)

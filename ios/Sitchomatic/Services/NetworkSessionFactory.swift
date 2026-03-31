@@ -507,7 +507,7 @@ class NetworkSessionFactory {
             let queue = DispatchQueue(label: "preflight-socks5")
             let guard_ = ContinuationGuard()
             let timeoutTask = Task.detached(priority: .utility) {
-                try? await Task.sleep(for: .milliseconds(2500))
+                do { try await Task.sleep(for: .milliseconds(2500)) } catch { return }
                 if guard_.tryConsume() {
                     connection.cancel()
                     continuation.resume(returning: false)
