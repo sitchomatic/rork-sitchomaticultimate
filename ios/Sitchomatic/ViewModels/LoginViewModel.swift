@@ -46,7 +46,10 @@ class LoginViewModel {
     var fingerprintHistory: [FingerprintValidationService.FingerprintScore] { FingerprintValidationService.shared.scoreHistory }
     var lastFingerprintScore: FingerprintValidationService.FingerprintScore? { FingerprintValidationService.shared.lastScore }
     var savedCropRect: CGRect? = nil
-    var automationSettings: AutomationSettings = AutomationSettings()
+    var automationSettings: AutomationSettings {
+        get { CentralSettingsService.shared.loginAutomationSettings }
+        set { CentralSettingsService.shared.persistLoginAutomationSettings(newValue); syncAutomationSettingsToEngine() }
+    }
     var isSlowDebugModeEnabled: Bool {
         automationSettings.slowDebugMode
     }
@@ -255,30 +258,21 @@ class LoginViewModel {
         }
     }
 
-    private let automationSettingsKey = "automation_settings_v1"
-
     func persistAutomationSettings() {
-        automationSettings = automationSettings.normalizedTimeouts()
-        if let data = try? JSONEncoder().encode(automationSettings) {
-            UserDefaults.standard.set(data, forKey: automationSettingsKey)
-        }
+        CentralSettingsService.shared.persistLoginAutomationSettings(automationSettings)
         syncAutomationSettingsToEngine()
     }
 
     private func loadAutomationSettings() {
-        if let data = UserDefaults.standard.data(forKey: automationSettingsKey),
-           let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            automationSettings = loaded.normalizedTimeouts()
-        }
+        CentralSettingsService.shared.loadLoginAutomationSettings()
         syncAutomationSettingsToEngine()
     }
 
     private func syncAutomationSettingsToEngine() {
-        automationSettings = automationSettings.normalizedTimeouts()
-        maxConcurrency = automationSettings.maxConcurrency
-        PPSRStealthService.shared.applySettings(automationSettings)
-        engine.automationSettings = automationSettings
-        secondaryEngine.automationSettings = automationSettings
+        let current = automationSettings
+        maxConcurrency = current.maxConcurrency
+        engine.automationSettings = current
+        secondaryEngine.automationSettings = current
     }
 
     func flowAssignment(for urlString: String) -> URLFlowAssignment? {

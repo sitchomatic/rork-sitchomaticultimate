@@ -47,10 +47,10 @@ struct DeveloperSettingsView: View {
     private var conflictSummarySection: some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
-                Label("Timeout Normalization", systemImage: "clock.badge.exclamationmark")
+                Label("Timeout Normalization", systemImage: "clock.badge.checkmark")
                     .font(.subheadline.bold())
-                    .foregroundStyle(.orange)
-                Text("UI pickers may show 60/90/120s but runtime enforces minimum \(Int(AutomationSettings.minimumTimeoutSeconds))s via normalizedTimeouts().")
+                    .foregroundStyle(.green)
+                Text("All timeouts enforced via CentralSettingsService.normalizedTimeouts(). Minimum: \(Int(AutomationSettings.minimumTimeoutSeconds))s. UI pickers only offer values ≥ \(Int(AutomationSettings.minimumTimeoutSeconds))s.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -59,8 +59,8 @@ struct DeveloperSettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Appearance Defaults", systemImage: "paintbrush.fill")
                     .font(.subheadline.bold())
-                    .foregroundStyle(.purple)
-                Text("LoginVM, PPSR VM, DualFind VM all default to .dark. AdvancedSettings uses \"System\" fallback. Persistence services use \"Dark\". This section unifies them.")
+                    .foregroundStyle(.green)
+                Text("Unified via CentralSettingsService. All modes default to .dark. Single UserDefaults key: \"appearance_mode\".")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -69,8 +69,8 @@ struct DeveloperSettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Concurrency Defaults", systemImage: "arrow.triangle.branch")
                     .font(.subheadline.bold())
-                    .foregroundStyle(.blue)
-                Text("ViewModels default to 4, AutomationSettings.maxConcurrency=\(AutomationSettings.defaultMaxConcurrency). AutomationThrottler caps at 7. Central constant: AutomationSettings.defaultMaxConcurrency=\(AutomationSettings.defaultMaxConcurrency).")
+                    .foregroundStyle(.green)
+                Text("Central constant: AutomationSettings.defaultMaxConcurrency=\(AutomationSettings.defaultMaxConcurrency). AutomationThrottler caps at 7.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -79,16 +79,26 @@ struct DeveloperSettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Screenshot Retention", systemImage: "photo.stack")
                     .font(.subheadline.bold())
-                    .foregroundStyle(.teal)
-                Text("UnifiedScreenshotManager=200, AutomationSettings.maxScreenshotRetention=\(vm.automationSettings.maxScreenshotRetention), defaultMaxScreenshotRetention=\(AutomationSettings.defaultMaxScreenshotRetention). Memory pressure trims to 100.")
+                    .foregroundStyle(.green)
+                Text("Default: \(AutomationSettings.defaultMaxScreenshotRetention). Memory pressure trims to 100.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Settings Architecture", systemImage: "cpu.fill")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.blue)
+                Text("All automation settings persist/load via CentralSettingsService. Per-mode keys: login (automation_settings_v1), unified (unified_automation_settings_v1), dualFind (dual_find_automation_settings_v1).")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
         } header: {
-            Label("Known Conflicts & Inconsistencies", systemImage: "exclamationmark.triangle.fill")
+            Label("Settings Status (Consolidated)", systemImage: "checkmark.seal.fill")
         } footer: {
-            Text("These are areas where defaults differ across subsystems. Review and reconcile as needed.")
+            Text("All previous conflicts have been resolved via CentralSettingsService. Settings are persisted centrally with normalized timeouts.")
         }
     }
 
@@ -138,9 +148,9 @@ struct DeveloperSettingsView: View {
     private var appearanceSection: some View {
         Section {
             Picker("Global Appearance", selection: Binding(
-                get: { AppAppearanceMode(rawValue: UserDefaults.standard.string(forKey: "appearance_mode") ?? AppAppearanceMode.dark.rawValue) ?? .dark },
+                get: { CentralSettingsService.shared.appearanceMode },
                 set: { mode in
-                    UserDefaults.standard.set(mode.rawValue, forKey: "appearance_mode")
+                    CentralSettingsService.shared.appearanceMode = mode
                     vm.appearanceMode = mode
                 }
             )) {
@@ -153,14 +163,14 @@ struct DeveloperSettingsView: View {
                 Text(vm.appearanceMode.rawValue)
             }
 
-            LabeledContent("UserDefaults Value") {
-                Text(UserDefaults.standard.string(forKey: "appearance_mode") ?? "Not Set")
+            LabeledContent("Central Service Value") {
+                Text(CentralSettingsService.shared.appearanceMode.rawValue)
                     .foregroundStyle(.secondary)
             }
         } header: {
             Label("Appearance Mode (Unified)", systemImage: "paintbrush.fill")
         } footer: {
-            Text("Sets the global default appearance (stored in UserDefaults) and PPSR VM mode. Other view models may override this. Default: Dark.")
+            Text("Sets the global default appearance via CentralSettingsService and PPSR VM mode. Default: Dark.")
         }
     }
 
@@ -174,11 +184,7 @@ struct DeveloperSettingsView: View {
                     set: { newSettings in
                         vm.automationSettings = newSettings
                         vm.persistSettings()
-                        // Persist automation settings to the shared automation_settings_v1 key
-                        let normalized = newSettings.normalizedTimeouts()
-                        if let data = try? JSONEncoder().encode(normalized) {
-                            UserDefaults.standard.set(data, forKey: "automation_settings_v1")
-                        }
+                        CentralSettingsService.shared.persistLoginAutomationSettings(newSettings)
                     }
                 ))
             } label: {

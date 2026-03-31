@@ -240,9 +240,7 @@ class TestDebugViewModel {
         var settings = snapshot.toAutomationSettings(base: AutomationSettings())
         settings = settings.normalizedTimeouts()
 
-        if let data = try? JSONEncoder().encode(settings) {
-            UserDefaults.standard.set(data, forKey: "automation_settings_v1")
-        }
+        CentralSettingsService.shared.persistLoginAutomationSettings(settings)
 
         showAppliedToast = true
         logger.log("TestDebug: Applied winner settings from session #\(winner.index) — \(winner.differentiator)", category: .login, level: .success)

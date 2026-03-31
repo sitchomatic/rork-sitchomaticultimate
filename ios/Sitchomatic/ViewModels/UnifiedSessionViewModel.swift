@@ -14,7 +14,10 @@ class UnifiedSessionViewModel {
     let adaptiveEngine = AdaptiveConcurrencyEngine.shared
     var config: UnifiedSystemConfig = .defaultConfig
     var stealthEnabled: Bool = true
-    var automationSettings: AutomationSettings = AutomationSettings()
+    var automationSettings: AutomationSettings {
+        get { CentralSettingsService.shared.unifiedAutomationSettings }
+        set { CentralSettingsService.shared.persistUnifiedAutomationSettings(newValue) }
+    }
     var globalLogs: [PPSRLogEntry] = []
     var showBatchResultPopup: Bool = false
     var batchStartTime: Date?
@@ -27,7 +30,6 @@ class UnifiedSessionViewModel {
     private let notifications = PPSRNotificationService.shared
     private let backgroundService = BackgroundTaskService.shared
     private let persistenceKey = "unified_sessions_v1"
-    private let automationSettingsKey = "unified_automation_settings_v1"
     private var saveDebouncerTask: Task<Void, Never>?
 
     var activeSessions: [DualSiteSession] {
@@ -85,19 +87,11 @@ class UnifiedSessionViewModel {
     }
 
     func persistAutomationSettings() {
-        automationSettings = automationSettings.normalizedTimeouts()
-        PPSRStealthService.shared.applySettings(automationSettings)
-        if let data = try? JSONEncoder().encode(automationSettings) {
-            UserDefaults.standard.set(data, forKey: automationSettingsKey)
-        }
+        CentralSettingsService.shared.persistUnifiedAutomationSettings(automationSettings)
     }
 
     private func loadAutomationSettings() {
-        if let data = UserDefaults.standard.data(forKey: automationSettingsKey),
-           let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            automationSettings = loaded.normalizedTimeouts()
-        }
-        PPSRStealthService.shared.applySettings(automationSettings)
+        CentralSettingsService.shared.loadUnifiedAutomationSettings()
     }
 
     func importCredentials(_ text: String) {

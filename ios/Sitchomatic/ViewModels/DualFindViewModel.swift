@@ -61,12 +61,14 @@ class DualFindViewModel {
     var debugMode: Bool = true
     var testTimeout: TimeInterval = 90
     var maxConcurrency: Int = AutomationSettings.defaultMaxConcurrency
-    var automationSettings: AutomationSettings = AutomationSettings()
+    var automationSettings: AutomationSettings {
+        get { CentralSettingsService.shared.dualFindAutomationSettings }
+        set { CentralSettingsService.shared.persistDualFindAutomationSettings(newValue) }
+    }
 
     private var resumePoint: DualFindResumePoint?
     private var runTask: Task<Void, Never>?
     private let persistKey = "dual_find_resume_v3"
-    private let dualFindSettingsKey = "dual_find_automation_settings_v1"
 
     private var joePersistentSessions: [LoginSiteWebSession] = []
     private var ignPersistentSessions: [LoginSiteWebSession] = []
@@ -202,9 +204,7 @@ class DualFindViewModel {
 
         reloadAllSettings()
 
-        if let data = try? JSONEncoder().encode(automationSettings) {
-            UserDefaults.standard.set(data, forKey: "automation_settings_v1")
-        }
+        CentralSettingsService.shared.persistLoginAutomationSettings(automationSettings)
 
         emails = ContiguousArray(parsed)
         totalEmails = parsed.count
@@ -1283,19 +1283,11 @@ class DualFindViewModel {
     }
 
     func persistDualFindSettings() {
-        if let data = try? JSONEncoder().encode(automationSettings) {
-            UserDefaults.standard.set(data, forKey: dualFindSettingsKey)
-        }
+        CentralSettingsService.shared.persistDualFindAutomationSettings(automationSettings)
     }
 
     private func loadSettings() {
-        if let data = UserDefaults.standard.data(forKey: dualFindSettingsKey),
-           let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            automationSettings = loaded.normalizedTimeouts()
-        } else if let data = UserDefaults.standard.data(forKey: "automation_settings_v1"),
-                  let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            automationSettings = loaded.normalizedTimeouts()
-        }
+        CentralSettingsService.shared.loadDualFindAutomationSettings()
         maxConcurrency = automationSettings.maxConcurrency
     }
 

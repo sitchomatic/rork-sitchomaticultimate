@@ -255,10 +255,7 @@ class AppDataExportService {
             autoBlacklistNoAcc: blacklistService.autoBlacklistNoAcc
         )
 
-        if let data = UserDefaults.standard.data(forKey: "automation_settings_v1"),
-           let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            config.automationSettings = loaded.normalizedTimeouts()
-        }
+        config.automationSettings = CentralSettingsService.shared.loginAutomationSettings
 
         let loginCredentials = LoginPersistenceService.shared.loadCredentials()
         config.loginCredentials = loginCredentials.map { cred in
@@ -583,10 +580,8 @@ class AppDataExportService {
         blacklistService.autoBlacklistNoAcc = config.settings.autoBlacklistNoAcc
 
         if let automation = config.automationSettings {
-            if let data = try? JSONEncoder().encode(automation.normalizedTimeouts()) {
-                UserDefaults.standard.set(data, forKey: "automation_settings_v1")
-                result.settingsImported = true
-            }
+            CentralSettingsService.shared.persistLoginAutomationSettings(automation)
+            result.settingsImported = true
         }
 
         if !config.loginCredentials.isEmpty {

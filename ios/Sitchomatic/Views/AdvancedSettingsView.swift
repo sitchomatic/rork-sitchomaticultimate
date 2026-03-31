@@ -173,8 +173,8 @@ struct AdvancedSettingsView: View {
         Group {
             Section {
                 Picker(selection: Binding(
-                    get: { AppAppearanceMode(rawValue: UserDefaults.standard.string(forKey: "appearance_mode") ?? "System") ?? .system },
-                    set: { UserDefaults.standard.set($0.rawValue, forKey: "appearance_mode") }
+                    get: { CentralSettingsService.shared.appearanceMode },
+                    set: { CentralSettingsService.shared.appearanceMode = $0 }
                 )) {
                     ForEach(AppAppearanceMode.allCases, id: \.self) { mode in
                         Label(mode.rawValue, systemImage: mode.icon).tag(mode)

@@ -10,13 +10,7 @@ enum TimeoutResolver {
         if let cached = cachedSettings, now.timeIntervalSince(cachedSettingsTimestamp) < 5.0 {
             return cached
         }
-        let settings: AutomationSettings
-        if let data = UserDefaults.standard.data(forKey: "automation_settings_v1"),
-           let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            settings = loaded.normalizedTimeouts()
-        } else {
-            settings = AutomationSettings().normalizedTimeouts()
-        }
+        let settings = CentralSettingsService.shared.loginAutomationSettings
         cachedSettings = settings
         cachedSettingsTimestamp = now
         return settings
