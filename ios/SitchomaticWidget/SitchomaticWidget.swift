@@ -1,7 +1,7 @@
 import WidgetKit
 import SwiftUI
 
-nonisolated struct Provider: TimelineProvider {
+struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: .now)
     }
@@ -16,7 +16,7 @@ nonisolated struct Provider: TimelineProvider {
     }
 }
 
-nonisolated struct SimpleEntry: TimelineEntry {
+struct SimpleEntry: TimelineEntry {
     let date: Date
 }
 
