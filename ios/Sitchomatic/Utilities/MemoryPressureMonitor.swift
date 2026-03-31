@@ -33,8 +33,8 @@ final class MemoryPressureMonitor {
                 named: UIApplication.didReceiveMemoryWarningNotification
             )
             for await _ in notifications {
-                guard !Task.isCancelled else { break }
-                self?.handleMemoryWarning(tier: .critical)
+                guard !Task.isCancelled, let self else { break }
+                self.handleMemoryWarning(tier: .critical)
             }
         }
     }

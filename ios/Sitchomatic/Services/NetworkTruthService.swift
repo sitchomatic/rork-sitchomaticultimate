@@ -115,8 +115,8 @@ class NetworkTruthService {
         pathMonitor?.start(queue: monitorQueue)
 
         refreshTimer = Task { [weak self] in
-            let interval = self?.adaptiveInterval ?? 5
             while !Task.isCancelled {
+                let interval = self?.adaptiveInterval ?? 5
                 try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled else { break }
                 self?.refreshSnapshot()
@@ -138,8 +138,8 @@ class NetworkTruthService {
             adaptiveInterval = newInterval
             refreshTimer?.cancel()
             refreshTimer = Task { [weak self] in
-                let interval = self?.adaptiveInterval ?? 5
                 while !Task.isCancelled {
+                    let interval = self?.adaptiveInterval ?? 5
                     try? await Task.sleep(for: .seconds(interval))
                     guard !Task.isCancelled else { break }
                     self?.refreshSnapshot()

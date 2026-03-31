@@ -93,8 +93,8 @@ class ProxyRotationManager {
         rotationTimer = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
-                guard !Task.isCancelled else { break }
-                onRotate("Timer (\(self?.rotationCountdownLabel ?? ""))")
+                guard !Task.isCancelled, let self else { break }
+                onRotate("Timer (\(self.rotationCountdownLabel))")
             }
         }
     }

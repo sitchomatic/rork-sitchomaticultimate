@@ -5,7 +5,9 @@ import Foundation
 @MainActor
 enum TimeoutResolver {
     private static var cachedSettings: AutomationSettings?
-    private static var cachedSettingsTimestamp: ContinuousClock.Instant = .now - .seconds(10)
+    /// Timestamp for cache expiry using monotonic clock. Initialized to far past
+    /// so the first access always refreshes the cache.
+    private static var cachedSettingsTimestamp: ContinuousClock.Instant = .now - .seconds(3600)
     private static let cacheTTL: Duration = .seconds(5)
 
     static var shared: AutomationSettings {
@@ -29,7 +31,7 @@ enum TimeoutResolver {
     /// updated (e.g., saved to UserDefaults) to ensure the next access retrieves fresh data.
     static func invalidateCache() {
         cachedSettings = nil
-        cachedSettingsTimestamp = .now - .seconds(10)
+        cachedSettingsTimestamp = .now - .seconds(3600)
     }
 
     static var userTestTimeout: TimeInterval {
