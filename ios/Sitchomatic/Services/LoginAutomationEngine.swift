@@ -64,6 +64,15 @@ class LoginAutomationEngine {
         activeSessions < maxConcurrency
     }
 
+    private func cancellationOutcomeIfNeeded(_ attempt: LoginAttempt, sessionId: String, context: String) -> LoginOutcome? {
+        guard Task.isCancelled else { return nil }
+        let message = "Cancelled during \(context) — exiting early"
+        attempt.logs.append(PPSRLogEntry(message: message, level: .warning))
+        logger.log(message, category: .automation, level: .warning, sessionId: sessionId)
+        replayLogger.log(sessionId: sessionId, action: "cancelled", detail: context, level: "warning")
+        return .timeout
+    }
+
     func runLoginTest(_ attempt: LoginAttempt, targetURL: URL, timeout: TimeInterval = 180) async -> LoginOutcome {
         let timeout = TimeoutResolver.resolveTestTimeout(timeout, userSetting: automationSettings.pageLoadTimeout)
         activeSessions += 1
@@ -493,6 +502,9 @@ class LoginAutomationEngine {
     // MARK: - performLoginTest Orchestrator
 
     private func performLoginTest(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String = "") async -> LoginOutcome {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "login orchestrator start") {
+            return cancelled
+        }
         advanceTo(.loadingPage, attempt: attempt, message: "Loading login page: \(session.targetURL.absoluteString)")
         logger.log("Phase: LOAD PAGE → \(session.targetURL.absoluteString)", category: .automation, level: .info, sessionId: sessionId)
         replayLogger.log(sessionId: sessionId, action: "page_load", detail: session.targetURL.absoluteString)
@@ -526,8 +538,14 @@ class LoginAutomationEngine {
     // MARK: - Phase 1: Load Page
 
     private func phaseLoadPage(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginOutcome? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page load") {
+            return cancelled
+        }
         var loaded = false
         for attemptNum in 1...3 {
+            if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page load attempt \(attemptNum)") {
+                return cancelled
+            }
             logger.startTimer(key: "\(sessionId)_pageload_\(attemptNum)")
             loaded = await session.loadPage(timeout: automationSettings.pageLoadTimeout)
             let loadMs = logger.stopTimer(key: "\(sessionId)_pageload_\(attemptNum)")
@@ -582,6 +600,9 @@ class LoginAutomationEngine {
     // MARK: - Phase 2: Handle Challenges
 
     private func phaseHandleChallenges(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginOutcome? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "challenge handling") {
+            return cancelled
+        }
         let challengeStart = Date()
         let challengeHost = session.targetURL.host ?? session.targetURL.absoluteString
         let challengeResult = await challengeClassifier.classify(session: session)
@@ -661,6 +682,9 @@ class LoginAutomationEngine {
     // MARK: - Phase 3: Validate Page Readiness
 
     private func phaseValidatePageReadiness(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String, pageHost: String) async -> LoginOutcome? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "page readiness validation") {
+            return cancelled
+        }
         let _ = await hostFingerprint.captureSignature(from: session, host: pageHost)
 
         await session.injectSettlementMonitor()
@@ -784,6 +808,9 @@ class LoginAutomationEngine {
     // MARK: - Phase 4: Calibrate
 
     private func phaseCalibrate(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginCalibrationService.URLCalibration? {
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "calibration") {
+            return nil
+        }
         let calibrationService = LoginCalibrationService.shared
         let targetURLString = session.targetURL.absoluteString
 
@@ -837,6 +864,9 @@ class LoginAutomationEngine {
         let priorityPatterns: [LoginFormPattern] = [.visionMLCoordinate, .calibratedTyping, .calibratedDirect, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
 
         for cycle in 1...maxSubmitCycles {
+            if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "pattern cycle \(cycle)") {
+                return (cancelled, lastEvaluation, maxSubmitCycles)
+            }
             logger.log("Phase: HUMAN PATTERN CYCLE \(cycle)/\(maxSubmitCycles)", category: .automation, level: .info, sessionId: sessionId)
             logger.startTimer(key: "\(sessionId)_cycle_\(cycle)")
 
