@@ -12,7 +12,7 @@ struct DeveloperSettingsView: View {
     private let dnsPool = DNSPoolService.shared
     private let urlRotation = LoginURLRotationService.shared
     private let grokStats = GrokUsageStats.shared
-    private let screenshotManager = UnifiedScreenshotManager.shared
+
 
     var body: some View {
         List {
@@ -138,7 +138,7 @@ struct DeveloperSettingsView: View {
     private var appearanceSection: some View {
         Section {
             Picker("Global Appearance", selection: Binding(
-                get: { AppAppearanceMode(rawValue: UserDefaults.standard.string(forKey: "appearance_mode") ?? "Dark") ?? .dark },
+                get: { AppAppearanceMode(rawValue: UserDefaults.standard.string(forKey: "appearance_mode") ?? AppAppearanceMode.dark.rawValue) ?? .dark },
                 set: { mode in
                     UserDefaults.standard.set(mode.rawValue, forKey: "appearance_mode")
                     vm.appearanceMode = mode
@@ -160,7 +160,7 @@ struct DeveloperSettingsView: View {
         } header: {
             Label("Appearance Mode (Unified)", systemImage: "paintbrush.fill")
         } footer: {
-            Text("Central appearance control. Changes propagate to all view models. Default: Dark.")
+            Text("Sets the global default appearance (stored in UserDefaults) and PPSR VM mode. Other view models may override this. Default: Dark.")
         }
     }
 
@@ -171,7 +171,15 @@ struct DeveloperSettingsView: View {
             NavigationLink {
                 DeveloperAutomationSettingsView(settings: Binding(
                     get: { vm.automationSettings },
-                    set: { vm.automationSettings = $0; vm.persistSettings() }
+                    set: { newSettings in
+                        vm.automationSettings = newSettings
+                        vm.persistSettings()
+                        // Persist automation settings to the shared automation_settings_v1 key
+                        let normalized = newSettings.normalizedTimeouts()
+                        if let data = try? JSONEncoder().encode(normalized) {
+                            UserDefaults.standard.set(data, forKey: "automation_settings_v1")
+                        }
+                    }
                 ))
             } label: {
                 devRow(
@@ -1135,7 +1143,7 @@ struct DeveloperAutomationSettingsView: View {
 
     private var pageLoadingSection: some View {
         Section {
-            stepperRow("Page Load Timeout", value: $settings.pageLoadTimeout, range: 30...300, step: 10, unit: "s")
+            stepperRow("Page Load Timeout", value: $settings.pageLoadTimeout, range: Int(AutomationSettings.minimumTimeoutSeconds)...300, step: 10, unit: "s")
             stepperRow("Page Load Retries", intValue: $settings.pageLoadRetries, range: 1...10)
             stepperDouble("Retry Backoff Multiplier", value: $settings.retryBackoffMultiplier, range: 1.0...5.0, step: 0.5)
             stepperRow("Wait for JS Render", intValue: $settings.waitForJSRenderMs, range: 1000...15000, step: 500, unit: "ms")
@@ -1152,7 +1160,7 @@ struct DeveloperAutomationSettingsView: View {
     private var fieldDetectionSection: some View {
         Section {
             Toggle("Field Verification", isOn: $settings.fieldVerificationEnabled)
-            stepperRow("Field Verification Timeout", value: $settings.fieldVerificationTimeout, range: 30...300, step: 10, unit: "s")
+            stepperRow("Field Verification Timeout", value: $settings.fieldVerificationTimeout, range: Int(AutomationSettings.minimumTimeoutSeconds)...300, step: 10, unit: "s")
             Toggle("Auto Calibration", isOn: $settings.autoCalibrationEnabled)
             Toggle("Vision ML Calibration Fallback", isOn: $settings.visionMLCalibrationFallback)
             stepperDouble("Calibration Confidence", value: $settings.calibrationConfidenceThreshold, range: 0.1...1.0, step: 0.1)
@@ -1223,7 +1231,7 @@ struct DeveloperAutomationSettingsView: View {
     private var submitBehaviorSection: some View {
         Section {
             stepperRow("Submit Retry Count", intValue: $settings.submitRetryCount, range: 1...20)
-            stepperDouble("Wait for Response", value: $settings.waitForResponseSeconds, range: 30...300, step: 10)
+            stepperDouble("Wait for Response", value: $settings.waitForResponseSeconds, range: AutomationSettings.minimumTimeoutSeconds...300, step: 10)
             Toggle("Rapid Poll", isOn: $settings.rapidPollEnabled)
             stepperRow("Rapid Poll Interval", intValue: $settings.rapidPollIntervalMs, range: 50...2000, step: 50, unit: "ms")
         } header: {
@@ -1406,7 +1414,7 @@ struct DeveloperAutomationSettingsView: View {
             stepperRow("Double Click Window", intValue: $settings.loginButtonDoubleClickWindowMs, range: 500...5000, step: 250, unit: "ms")
             Toggle("Scroll Into View", isOn: $settings.loginButtonScrollIntoView)
             Toggle("Wait for Enabled", isOn: $settings.loginButtonWaitForEnabled)
-            stepperRow("Wait for Enabled Timeout", intValue: $settings.loginButtonWaitForEnabledTimeoutMs, range: 5000...180000, step: 5000, unit: "ms")
+            stepperRow("Wait for Enabled Timeout", intValue: $settings.loginButtonWaitForEnabledTimeoutMs, range: AutomationSettings.minimumTimeoutMilliseconds...180000, step: 5000, unit: "ms")
             stepperRow("Page Load Extra Delay", intValue: $settings.pageLoadExtraDelayMs, range: 0...10000, step: 500, unit: "ms")
             stepperRow("Submit Wait Delay", intValue: $settings.submitButtonWaitDelayMs, range: 0...10000, step: 500, unit: "ms")
             Toggle("Visibility Check", isOn: $settings.loginButtonVisibilityCheck)
@@ -1469,7 +1477,7 @@ struct DeveloperAutomationSettingsView: View {
     private var mfaHandlingSection: some View {
         Section {
             Toggle("MFA Detection", isOn: $settings.mfaDetectionEnabled)
-            stepperRow("MFA Wait Timeout", intValue: $settings.mfaWaitTimeoutSeconds, range: 30...300, step: 10, unit: "s")
+            stepperRow("MFA Wait Timeout", intValue: $settings.mfaWaitTimeoutSeconds, range: Int(AutomationSettings.minimumTimeoutSeconds)...300, step: 10, unit: "s")
             Toggle("MFA Auto Skip", isOn: $settings.mfaAutoSkip)
             Toggle("MFA Mark as Temp Disabled", isOn: $settings.mfaMarkAsTempDisabled)
         } header: {
@@ -1495,7 +1503,7 @@ struct DeveloperAutomationSettingsView: View {
             Toggle("CAPTCHA Detection", isOn: $settings.captchaDetectionEnabled)
             Toggle("CAPTCHA Auto Skip", isOn: $settings.captchaAutoSkip)
             Toggle("CAPTCHA Mark as Failed", isOn: $settings.captchaMarkAsFailed)
-            stepperRow("CAPTCHA Wait Timeout", intValue: $settings.captchaWaitTimeoutSeconds, range: 30...300, step: 10, unit: "s")
+            stepperRow("CAPTCHA Wait Timeout", intValue: $settings.captchaWaitTimeoutSeconds, range: Int(AutomationSettings.minimumTimeoutSeconds)...300, step: 10, unit: "s")
             Toggle("CAPTCHA iFrame Detection", isOn: $settings.captchaIframeDetection)
             Toggle("CAPTCHA Image Detection", isOn: $settings.captchaImageDetection)
         } header: {
@@ -1562,7 +1570,7 @@ struct DeveloperAutomationSettingsView: View {
             Toggle("Network Error Auto Retry", isOn: $settings.networkErrorAutoRetry)
             Toggle("SSL Error Auto Retry", isOn: $settings.sslErrorAutoRetry)
             Toggle("HTTP 403 Mark Blocked", isOn: $settings.http403MarkAsBlocked)
-            stepperRow("HTTP 429 Retry After", intValue: $settings.http429RetryAfterSeconds, range: 30...300, step: 10, unit: "s")
+            stepperRow("HTTP 429 Retry After", intValue: $settings.http429RetryAfterSeconds, range: Int(AutomationSettings.minimumTimeoutSeconds)...300, step: 10, unit: "s")
             Toggle("HTTP 5xx Auto Retry", isOn: $settings.http5xxAutoRetry)
             Toggle("Connection Reset Auto Retry", isOn: $settings.connectionResetAutoRetry)
             Toggle("DNS Failure Auto Retry", isOn: $settings.dnsFailureAutoRetry)
