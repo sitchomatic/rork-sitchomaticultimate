@@ -6,23 +6,7 @@ nonisolated enum LoginSelectorConstants {
     static let password = "#login-password"
     static let submit = "#login-submit"
 
-    static let fallbackEmail = [
-        "input[type='email']",
-        "input[type='text'][name*='email' i]",
-        "input#email",
-        "input#username",
-        "input[name='username']",
-        "input[autocomplete='email']",
-        "input[autocomplete='username']",
-    ]
-
-    static let fallbackPassword = [
-        "input[type='password']",
-        "input#password",
-        "input#login-password",
-        "input[name='password']",
-    ]
-
+    /// Ordered fallback selectors for the submit button, used in JS-based click helpers.
     static let fallbackSubmit = [
         "button[type='submit']",
         "#loginSubmit",

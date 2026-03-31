@@ -1114,19 +1114,23 @@ class LoginSiteWebSession: NSObject {
     func tripleClickSubmit() async -> (success: Bool, detail: String) {
         let submitSelector = LoginSelectorConstants.submit
         let clickCount = 4
+        let fallbacks = LoginSelectorConstants.fallbackSubmit
         let escapedSelector = submitSelector
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "'", with: "\\'")
+        let fallbackList = fallbacks
+            .map { "'\($0.replacingOccurrences(of: "'", with: "\\'"))'" }
+            .joined(separator: ", ")
         let js = """
         (function() {
             var btn = document.querySelector('\(escapedSelector)');
             if (!btn) {
-                var fallbacks = ['button[type="submit"]', 'input[type="submit"]', 'button.login-button', '#loginButton'];
+                var fallbacks = [\(fallbackList)];
                 for (var i = 0; i < fallbacks.length; i++) { btn = document.querySelector(fallbacks[i]); if (btn) break; }
             }
             if (!btn) return 'NOT_FOUND';
-            // Triple-click pattern: cycled click protocol
-            // to maximize form submission reliability across different web frameworks
+            // Cycled-click protocol (\(clickCount) clicks per cycle) to maximise form-submission
+            // reliability across different web frameworks.
             for (var c = 0; c < \(clickCount); c++) {
                 btn.click();
                 btn.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}));
@@ -1136,7 +1140,7 @@ class LoginSiteWebSession: NSObject {
         """
         let result = await executeJS(js)
         if result == "CLICKED" {
-            return (true, "Triple-click submit fired")
+            return (true, "Cycled-click submit fired (\(clickCount) clicks)")
         }
         return (false, "Submit failed: \(result ?? "nil")")
     }

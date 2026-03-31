@@ -458,8 +458,7 @@ class DualFindViewModel {
                 if !fillResult.success {
                     let fallbackResult = await session.fillPassword(password)
                     if !fallbackResult.success {
-                        log("[\(label)] Password fill failed — trying legacy", level: .warning)
-                        _ = await session.fillPassword(password)
+                        log("[\(label)] Password fill failed — all fill strategies exhausted", level: .warning)
                     }
                 }
                 log("[\(label)] Password \(pwIdx + 1) entered")
@@ -566,8 +565,7 @@ class DualFindViewModel {
             if !emailFillResult.success {
                 let fallbackResult = await session.fillUsername(email)
                 if !fallbackResult.success {
-                    log("V5.2 [\(label)] Email fill failed for \(email) — trying legacy", level: .warning)
-                    _ = await session.fillUsername(email)
+                    log("V5.2 [\(label)] Email fill failed for \(email) — all fill strategies exhausted", level: .warning)
                 }
             }
 
@@ -989,7 +987,7 @@ class DualFindViewModel {
         if !fillResult.success {
             let fallbackResult = await session.fillUsername(email)
             if !fallbackResult.success {
-                _ = await session.fillUsername(email)
+                log("V5.2 [\(label)] Email fill failed — all fill strategies exhausted", level: .warning)
             }
         }
 

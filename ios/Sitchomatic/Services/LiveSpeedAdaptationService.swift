@@ -89,12 +89,17 @@ class LiveSpeedAdaptationService {
 
     func adaptedDelays(from settings: AutomationSettings) -> AdaptedDelays {
         let m = currentSpeedMultiplier
+        // When miscellaneousDelayEnabled is set, override all mid-tier delays with miscellaneousDelayMs.
+        let miscMs = settings.miscellaneousDelayEnabled ? settings.miscellaneousDelayMs : nil
+        func midTier(_ base: Int) -> Int {
+            clampDelay(Int(Double(miscMs ?? base) * m), min: 200, max: 5000)
+        }
         return AdaptedDelays(
-            pageStabilizationMs: clampDelay(Int(Double(settings.pageStabilizationDelayMs) * m), min: 200, max: 5000),
-            ajaxSettleMs: clampDelay(Int(Double(settings.ajaxSettleDelayMs) * m), min: 200, max: 5000),
+            pageStabilizationMs: midTier(settings.pageStabilizationDelayMs),
+            ajaxSettleMs: midTier(settings.ajaxSettleDelayMs),
             domMutationMs: clampDelay(Int(Double(settings.domMutationSettleMs) * m), min: 100, max: 3000),
             animationSettleMs: clampDelay(Int(Double(settings.animationSettleDelayMs) * m), min: 100, max: 3000),
-            betweenAttemptsMs: clampDelay(Int(Double(settings.betweenAttemptsDelayMs) * m), min: 200, max: 5000),
+            betweenAttemptsMs: midTier(settings.betweenAttemptsDelayMs),
             betweenCredentialsMs: clampDelay(Int(Double(settings.betweenCredentialsDelayMs) * m), min: 150, max: 3000),
             preNavigationMs: clampDelay(Int(Double(settings.preNavigationDelayMs) * m), min: 50, max: 2000),
             postNavigationMs: clampDelay(Int(Double(settings.postNavigationDelayMs) * m), min: 100, max: 3000),
