@@ -306,9 +306,6 @@ class DebugLogger {
             - Submit Retries: \(settings.submitRetryCount)
             - Max Submit Cycles: \(settings.maxSubmitCycles)
             - Pattern Learning: \(settings.patternLearningEnabled)
-            - Vision ML Fallback: \(settings.fallbackToVisionMLClick)
-            - Coordinate Fallback: \(settings.fallbackToCoordinateClick)
-            - OCR Fallback: \(settings.fallbackToOCRClick)
             - URL Flow Assignments: \(settings.urlFlowAssignments.count)
 
             """

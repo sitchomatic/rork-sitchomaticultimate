@@ -20,14 +20,17 @@ struct DualFindSettingsView: View {
         List {
             autoSaveSection
             systemConfigSection
+            quickTemplateSection
             pageLoadingSection
             fieldDetectionSection
             credentialEntrySection
             submitBehaviorSection
             timeDelaysSection
+            miscellaneousDelaySection
             postSubmitEvalSection
             retryRequeueSection
             patternStrategySection
+            settlementGateSection
             stealthSection
             humanSimulationSection
             screenshotDebugSection
@@ -253,6 +256,32 @@ struct DualFindSettingsView: View {
             }
 
             Button {
+                let unifiedVM = UnifiedSessionViewModel.shared
+                let loginVM = LoginViewModel.shared
+                let normalizedSettings = vm.automationSettings.normalizedTimeouts()
+                vm.automationSettings = normalizedSettings
+                vm.persistDualFindSettings()
+                unifiedVM.automationSettings = normalizedSettings
+                unifiedVM.persistAutomationSettings()
+                loginVM.automationSettings = normalizedSettings
+                loginVM.persistAutomationSettings()
+                vm.log("Synced settings → Login & Unified Sessions", level: .success)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(.green)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sync to All Modes")
+                            .font(.subheadline.bold())
+                        Text("Push these settings to Login & Unified")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
                 vm.automationSettings = AutomationSettings()
                 vm.persistDualFindSettings()
                 vm.log("Reset automation settings to defaults", level: .warning)
@@ -271,7 +300,7 @@ struct DualFindSettingsView: View {
                 Text("System")
             }
         } footer: {
-            Text("These settings are independent from Login VM and Unified Sessions. Changes here only affect Dual Find.")
+            Text("These settings are independent from Login VM and Unified Sessions. Import or sync to keep modes aligned.")
         }
     }
 
@@ -478,14 +507,6 @@ struct DualFindSettingsView: View {
                 }
             }
 
-            Toggle("Fallback to Legacy Fill", isOn: $vm.automationSettings.fallbackToLegacyFill)
-                .tint(accentColor)
-            Toggle("Fallback to OCR Click", isOn: $vm.automationSettings.fallbackToOCRClick)
-                .tint(accentColor)
-            Toggle("Fallback to VisionML Click", isOn: $vm.automationSettings.fallbackToVisionMLClick)
-                .tint(accentColor)
-            Toggle("Fallback to Coordinate Click", isOn: $vm.automationSettings.fallbackToCoordinateClick)
-                .tint(accentColor)
         } header: {
             Label("Pattern Strategy", systemImage: "list.bullet.indent")
         }
@@ -577,15 +598,6 @@ struct DualFindSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Toggle(isOn: $vm.automationSettings.postSubmitScreenshotsOnly) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Post-Submit Only")
-                    Text("All screenshots taken after submit triple-click")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(accentColor)
         } header: {
             Label("Screenshot / Debug", systemImage: "camera.viewfinder")
         }
@@ -805,6 +817,110 @@ struct DualFindSettingsView: View {
             }
             Spacer()
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+        }
+    }
+
+    // MARK: - Quick Template
+
+    private var quickTemplateSection: some View {
+        Section {
+            ForEach(AutomationTemplate.builtInTemplates) { template in
+                Button {
+                    vm.automationSettings = template.settings.normalizedTimeouts()
+                    vm.persistDualFindSettings()
+                    vm.log("Applied template: \(template.name)", level: .success)
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: template.icon)
+                            .font(.body)
+                            .foregroundStyle(templateColor(template.color))
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(template.name)
+                                .font(.subheadline.bold())
+                            Text(template.description)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        Spacer()
+                    }
+                }
+            }
+        } header: {
+            Label("Quick Templates", systemImage: "bolt.fill")
+        } footer: {
+            Text("One-tap apply a full preset. Overwrites all current settings.")
+        }
+    }
+
+    // MARK: - Miscellaneous Delay Shortcut
+
+    private var miscellaneousDelaySection: some View {
+        Section {
+            Toggle(isOn: $vm.automationSettings.miscellaneousDelayEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Delay Override")
+                    Text("Replace mid-tier delays with a single value")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(accentColor)
+            if vm.automationSettings.miscellaneousDelayEnabled {
+                Stepper("Delay: \(vm.automationSettings.miscellaneousDelayMs)ms", value: $vm.automationSettings.miscellaneousDelayMs, in: 100...5000, step: 100)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Overrides: betweenAttempts, pageStabilization, ajaxSettle, errorRecovery")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Label("Quick Delay", systemImage: "gauge.with.dots.needle.33percent")
+        } footer: {
+            Text("Simplifies tuning by collapsing multiple delay settings into one.")
+        }
+    }
+
+    // MARK: - V4.2 Settlement Gate
+
+    private var settlementGateSection: some View {
+        Section {
+            Toggle(isOn: $vm.automationSettings.v42SettlementGateEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Settlement Gate")
+                    Text("Human-variance click timing for anti-detection")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(accentColor)
+            if vm.automationSettings.v42SettlementGateEnabled {
+                Stepper("Button Stability: \(vm.automationSettings.v42ButtonStabilityMs)ms", value: $vm.automationSettings.v42ButtonStabilityMs, in: 100...2000, step: 50)
+                Stepper("Hover Dwell: \(vm.automationSettings.v42HoverDwellMs)ms", value: $vm.automationSettings.v42HoverDwellMs, in: 100...2000, step: 50)
+                Stepper("Click Jitter: \(vm.automationSettings.v42ClickJitterPx)px", value: $vm.automationSettings.v42ClickJitterPx, in: 0...20)
+                Toggle("Strict Classification", isOn: $vm.automationSettings.v42StrictClassification)
+                    .tint(accentColor)
+                Toggle("Coordinate Interaction Only", isOn: $vm.automationSettings.v42CoordinateInteractionOnly)
+                    .tint(accentColor)
+            }
+        } header: {
+            Label("Settlement Gate", systemImage: "bolt.badge.clock")
+        } footer: {
+            Text("Anti-detection: enforces button stability checks, hover dwell, and click jitter before every submit.")
+        }
+    }
+
+    private func templateColor(_ name: String) -> Color {
+        switch name {
+        case "purple": return .purple
+        case "red": return .red
+        case "gray": return .gray
+        case "orange": return .orange
+        case "blue": return .blue
+        case "green": return .green
+        case "indigo": return .indigo
+        default: return .accentColor
         }
     }
 }

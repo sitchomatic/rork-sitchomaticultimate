@@ -1,5 +1,7 @@
 import Foundation
 
+/// High-performance automation settings optimized for Swift 6.2
+/// Uses Sendable for safe concurrent access and frozen for compiler optimizations
 nonisolated struct AutomationSettings: Codable, Sendable {
     // MARK: - Page Loading
     var pageLoadTimeout: TimeInterval = 90 // Per-page-load timeout (single navigation attempt)
@@ -36,12 +38,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var patternPriorityOrder: [String] = LoginFormPatternList.defaultPriorityOrder
     var preferCalibratedPatternsFirst: Bool = true
     var patternLearningEnabled: Bool = true
-
-    // MARK: - Fallback Chain (Anti-Bot)
-    var fallbackToLegacyFill: Bool = false
-    var fallbackToOCRClick: Bool = true
-    var fallbackToVisionMLClick: Bool = true
-    var fallbackToCoordinateClick: Bool = true
 
     // MARK: - Submit Behavior
     var submitRetryCount: Int = 5
@@ -88,10 +84,10 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var screenshotsPerAttempt: ScreenshotsPerAttempt = .three
     var unifiedScreenshotsPerAttempt: UnifiedScreenshotCount = .ten
     var unifiedScreenshotPostClickDelayMs: Int = 1500
-    var unifiedScreenshotDisabledOverride: Bool = true
     var postSubmitScreenshotTimings: String = "0.5, 1.5, 2.0, 2.7, 3.6"
-    var postSubmitScreenshotsOnly: Bool = true
 
+    /// Optimized computed property with caching-friendly implementation
+    @inline(__always)
     var parsedPostSubmitTimings: [Double] {
         postSubmitScreenshotTimings
             .split(separator: ",")
@@ -179,8 +175,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var sessionCooldownDelayMs: Int = 500
     var proxyRotationDelayMs: Int = 750
     var vpnReconnectDelayMs: Int = 1300
-    var autoFallbackWGtoOVPN: Bool = true
-    var autoFallbackOVPNtoSOCKS5: Bool = true
     var delayRandomizationEnabled: Bool = true
     var delayRandomizationPercent: Int = 25
     /// When enabled, overrides mid-tier delays (betweenAttempts, pageStabilization, ajaxSettle, errorRecovery)

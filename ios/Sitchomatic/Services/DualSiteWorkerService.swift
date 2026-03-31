@@ -455,6 +455,7 @@ class DualSiteWorkerService {
         case .unsure: "Uncertain result"
         case .connectionFailure: "Connection failure"
         case .timeout: "Timed out"
+        case .cancelled: "Cancelled"
         case .redBannerError: "Red banner error"
         case .smsDetected: "SMS notification detected"
         }

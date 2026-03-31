@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Swift 6.2 optimized concurrency strategy with frozen enum and performance attributes
 @frozen
 nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, Identifiable {
     case rorkAISmart = "rorkAISmart"
@@ -10,6 +11,7 @@ nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, I
 
     nonisolated var id: String { rawValue }
 
+    @inline(__always)
     var label: String {
         switch self {
         case .rorkAISmart: "RorkAI Smart"
@@ -20,6 +22,7 @@ nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, I
         }
     }
 
+    @inline(__always)
     var icon: String {
         switch self {
         case .rorkAISmart: "brain.head.profile.fill"
@@ -45,6 +48,7 @@ nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, I
         }
     }
 
+    @inline(__always)
     var tintColor: Color {
         switch self {
         case .rorkAISmart: .cyan
@@ -55,30 +59,37 @@ nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, I
         }
     }
 
+    @inline(__always)
     var usesAI: Bool {
         self == .rorkAISmart
     }
 
+    @inline(__always)
     var usesHeuristics: Bool {
         self == .rorkAISmart || self == .conservativeSafe
     }
 
+    @inline(__always)
     var allowsRampUp: Bool {
         self == .rorkAISmart || self == .conservativeSafe
     }
 
+    @inline(__always)
     var allowsRampDown: Bool {
         self == .rorkAISmart || self == .conservativeSafe
     }
 
+    @inline(__always)
     var startsAtMax: Bool {
         self == .fullSend
     }
 
+    @inline(__always)
     var isFixed: Bool {
         self == .fixedPairs || self == .fullSend
     }
 
+    @inline(__always)
     var isUserControlled: Bool {
         self == .liveUserAdjustable
     }

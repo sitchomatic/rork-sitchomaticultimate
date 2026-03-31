@@ -1,11 +1,13 @@
 import SwiftUI
 
+/// Swift 6.2 optimized appearance mode with frozen enum for performance
 @frozen
-nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable {
+nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable, Codable {
     case system = "System"
     case light = "Light"
     case dark = "Dark"
 
+    @inline(__always)
     var colorScheme: ColorScheme? {
         switch self {
         case .system: nil
@@ -14,6 +16,7 @@ nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable {
         }
     }
 
+    @inline(__always)
     var icon: String {
         switch self {
         case .system: "circle.lefthalf.filled"
@@ -23,8 +26,9 @@ nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable {
     }
 }
 
+/// Swift 6.2 optimized connection status with frozen enum for performance
 @frozen
-nonisolated enum AppConnectionStatus: String, Sendable {
+nonisolated enum AppConnectionStatus: String, Sendable, Codable {
     case disconnected = "Disconnected"
     case connecting = "Connecting"
     case connected = "Connected"
