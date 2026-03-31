@@ -22,9 +22,12 @@ struct SettingsAndTestingView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Settings")
+            .onDisappear {
+                vm.persistSettings()
+            }
         }
         .withMainMenuButton()
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(CentralSettingsService.shared.effectiveColorScheme)
         .overlay(alignment: .bottom) {
             if showCopiedToast {
                 Text("Copied to clipboard")
@@ -95,7 +98,10 @@ struct SettingsAndTestingView: View {
         Section {
             Picker(selection: Binding(
                 get: { CentralSettingsService.shared.appearanceMode },
-                set: { CentralSettingsService.shared.appearanceMode = $0 }
+                set: { newMode in
+                    CentralSettingsService.shared.appearanceMode = newMode
+                    vm.appearanceMode = newMode
+                }
             )) {
                 ForEach(AppAppearanceMode.allCases, id: \.self) { mode in
                     Label(mode.rawValue, systemImage: mode.icon).tag(mode)
@@ -279,7 +285,7 @@ struct SettingsAndTestingView: View {
                 Button {
                     let text = DebugLogger.shared.exportDiagnosticReport(
                         credentials: [],
-                        automationSettings: AutomationSettings()
+                        automationSettings: vm.automationSettings
                     )
                     UIPasteboard.general.string = text
                     withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
@@ -305,7 +311,7 @@ struct SettingsAndTestingView: View {
                 }
 
                 Button {
-                    shareFileURL = DebugLogger.shared.exportDiagnosticReportToFile(credentials: [], automationSettings: AutomationSettings())
+                    shareFileURL = DebugLogger.shared.exportDiagnosticReportToFile(credentials: [], automationSettings: vm.automationSettings)
                 } label: {
                     settingsRow(
                         icon: "stethoscope.circle",
