@@ -1,12 +1,25 @@
 import UIKit
 
+/// Detects white/bright banners in screenshots, used to identify successful login welcome pages.
 nonisolated struct GreenBannerDetector: Sendable {
     nonisolated struct DetectionResult: Sendable {
         let detected: Bool
         let confidence: Double
         let bannerRect: CGRect?
         let greenRowPercentage: Double
+
+        /// A pre-built empty result for the common "not detected" case.
+        static let notDetected = DetectionResult(detected: false, confidence: 0, bannerRect: nil, greenRowPercentage: 0)
     }
+
+    // MARK: - Detection Constants
+
+    /// Minimum brightness threshold for a pixel to be considered "white/bright".
+    private static let brightnessThreshold: Double = 0.85
+    /// Maximum channel difference for a pixel to be considered neutral (non-colored).
+    private static let maxChannelDifference: Double = 0.15
+    /// Minimum ratio of white pixels in a row to classify it as a "white row".
+    private static let whiteRowRatio: Double = 0.50
 
     static func detectWelcomeText(in pageContent: String) -> (found: Bool, exact: String?) {
         let searchTarget = "Welcome!"
@@ -20,11 +33,11 @@ nonisolated struct GreenBannerDetector: Sendable {
     }
 
     static func detectWhiteBanner(in image: UIImage) -> DetectionResult {
-        guard let cgImage = image.cgImage else { return DetectionResult(detected: false, confidence: 0, bannerRect: nil, greenRowPercentage: 0) }
+        guard let cgImage = image.cgImage else { return .notDetected }
 
         let width = cgImage.width
         let height = cgImage.height
-        guard width > 10, height > 10 else { return DetectionResult(detected: false, confidence: 0, bannerRect: nil, greenRowPercentage: 0) }
+        guard width > 10, height > 10 else { return .notDetected }
 
         let bytesPerPixel = 4
         let bytesPerRow = bytesPerPixel * width
@@ -38,7 +51,7 @@ nonisolated struct GreenBannerDetector: Sendable {
             bytesPerRow: bytesPerRow,
             space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return DetectionResult(detected: false, confidence: 0, bannerRect: nil, greenRowPercentage: 0) }
+        ) else { return .notDetected }
 
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
@@ -60,12 +73,12 @@ nonisolated struct GreenBannerDetector: Sendable {
 
                 let brightness = (r + g + b) / 3.0
                 let maxDiff = max(abs(r - g), max(abs(g - b), abs(r - b)))
-                if brightness > 0.85 && maxDiff < 0.15 {
+                if brightness > Self.brightnessThreshold && maxDiff < Self.maxChannelDifference {
                     whiteCount += 1
                 }
             }
             let ratio = Double(whiteCount) / Double(samplesPerRow)
-            if ratio > 0.50 {
+            if ratio > Self.whiteRowRatio {
                 whiteRows[y] = true
                 for fill in y..<min(y + rowStep, height) {
                     whiteRows[fill] = true
@@ -113,15 +126,16 @@ nonisolated struct GreenBannerDetector: Sendable {
             return DetectionResult(detected: true, confidence: confidence, bannerRect: normalizedRect, greenRowPercentage: pct)
         }
 
-        return DetectionResult(detected: false, confidence: 0, bannerRect: nil, greenRowPercentage: 0)
+        return .notDetected
     }
 
+    @inlinable
     static func detect(in image: UIImage) -> DetectionResult {
-        return detectWhiteBanner(in: image)
+        detectWhiteBanner(in: image)
     }
 
     static func detectInCropRegion(image: UIImage, cropRect: CGRect) -> DetectionResult {
-        guard let cgImage = image.cgImage else { return DetectionResult(detected: false, confidence: 0, bannerRect: nil, greenRowPercentage: 0) }
+        guard let cgImage = image.cgImage else { return .notDetected }
 
         let imgW = CGFloat(cgImage.width)
         let imgH = CGFloat(cgImage.height)

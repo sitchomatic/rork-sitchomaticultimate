@@ -4,7 +4,7 @@ import UIKit
 struct BatchAlertModifier: ViewModifier {
     @Binding var showBatchResult: Bool
     let batchResult: BatchResult?
-    let onDismissBatch: () -> Void
+    let onDismissBatch: @MainActor @Sendable () -> Void
     @Binding var isRunning: Bool
 
     func body(content: Content) -> some View {
@@ -29,7 +29,7 @@ extension View {
         showBatchResult: Binding<Bool>,
         batchResult: BatchResult?,
         isRunning: Binding<Bool>,
-        onDismissBatch: @escaping () -> Void
+        onDismissBatch: @escaping @MainActor @Sendable () -> Void
     ) -> some View {
         modifier(BatchAlertModifier(
             showBatchResult: showBatchResult,

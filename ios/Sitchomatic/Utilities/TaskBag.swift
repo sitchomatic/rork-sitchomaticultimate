@@ -1,15 +1,19 @@
 import Foundation
 
+/// A keyed collection of managed tasks with automatic cancellation on replacement and cleanup.
+/// Generic over key type for type-safe task management.
 @MainActor
-final class TaskBag {
-    private var tasks: [String: Task<Void, Never>] = [:]
+final class TaskBag<Key: Hashable & Sendable> {
+    private var tasks: [Key: Task<Void, Never>] = [:]
 
-    func add(_ key: String, _ task: Task<Void, Never>) {
+    @inlinable
+    func add(_ key: Key, _ task: Task<Void, Never>) {
         tasks[key]?.cancel()
         tasks[key] = task
     }
 
-    func cancel(_ key: String) {
+    @inlinable
+    func cancel(_ key: Key) {
         tasks[key]?.cancel()
         tasks[key] = nil
     }
@@ -21,11 +25,15 @@ final class TaskBag {
         tasks.removeAll()
     }
 
-    var activeKeys: [String] {
+    var activeKeys: [Key] {
         Array(tasks.keys)
     }
 
+    @inlinable
     var count: Int { tasks.count }
+
+    @inlinable
+    var isEmpty: Bool { tasks.isEmpty }
 
     deinit {
         for task in tasks.values {
@@ -33,3 +41,6 @@ final class TaskBag {
         }
     }
 }
+
+/// Backward-compatible String-keyed TaskBag type alias.
+typealias StringTaskBag = TaskBag<String>

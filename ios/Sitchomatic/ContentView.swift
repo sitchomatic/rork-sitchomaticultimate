@@ -4,7 +4,8 @@ struct ContentView: View {
     @State private var vm = PPSRAutomationViewModel.shared
     @State private var selectedTab: AppTab = .dashboard
 
-    nonisolated enum AppTab: String, Sendable {
+    @frozen
+    nonisolated enum AppTab: String, Sendable, CaseIterable {
         case dashboard, savedCards, workingCards, sessions, settings
     }
 

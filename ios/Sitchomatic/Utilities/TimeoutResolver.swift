@@ -1,13 +1,16 @@
 import Foundation
 
+/// Centralized timeout resolution with cached settings and adaptive timeout support.
+/// All timeout values are guaranteed to meet minimum thresholds defined in `AutomationSettings`.
 @MainActor
 enum TimeoutResolver {
     private static var cachedSettings: AutomationSettings?
-    private static var cachedSettingsTimestamp: Date = .distantPast
+    private static var cachedSettingsTimestamp: ContinuousClock.Instant = .now - .seconds(10)
+    private static let cacheTTL: Duration = .seconds(5)
 
     static var shared: AutomationSettings {
-        let now = Date()
-        if let cached = cachedSettings, now.timeIntervalSince(cachedSettingsTimestamp) < 5.0 {
+        let now = ContinuousClock.Instant.now
+        if let cached = cachedSettings, now - cachedSettingsTimestamp < cacheTTL {
             return cached
         }
         let settings: AutomationSettings
@@ -26,7 +29,7 @@ enum TimeoutResolver {
     /// updated (e.g., saved to UserDefaults) to ensure the next access retrieves fresh data.
     static func invalidateCache() {
         cachedSettings = nil
-        cachedSettingsTimestamp = .distantPast
+        cachedSettingsTimestamp = .now - .seconds(10)
     }
 
     static var userTestTimeout: TimeInterval {
@@ -38,6 +41,7 @@ enum TimeoutResolver {
         return AutomationSettings.minimumTimeoutSeconds
     }
 
+    @inlinable
     static func resolveRequestTimeout(_ hardcoded: TimeInterval) -> TimeInterval {
         let pageLoad = shared.pageLoadTimeout
         if pageLoad > 0 {
@@ -46,14 +50,14 @@ enum TimeoutResolver {
         return max(hardcoded, AutomationSettings.minimumTimeoutSeconds)
     }
 
+    @inlinable
     static func resolveResourceTimeout(_ hardcoded: TimeInterval) -> TimeInterval {
         let pageLoad = shared.pageLoadTimeout
-        if pageLoad > 0 {
-            return max(pageLoad, AutomationSettings.minimumTimeoutSeconds) + 30
-        }
-        return max(hardcoded, AutomationSettings.minimumTimeoutSeconds) + 30
+        let base = pageLoad > 0 ? pageLoad : hardcoded
+        return max(base, AutomationSettings.minimumTimeoutSeconds) + 30
     }
 
+    @inlinable
     static func resolvePageLoadTimeout(_ hardcoded: TimeInterval) -> TimeInterval {
         let pageLoad = shared.pageLoadTimeout
         if pageLoad > 0 {
@@ -62,6 +66,7 @@ enum TimeoutResolver {
         return max(hardcoded, AutomationSettings.minimumTimeoutSeconds)
     }
 
+    @inlinable
     static func resolveHeartbeatTimeout(_ hardcoded: TimeInterval) -> TimeInterval {
         let pageLoad = shared.pageLoadTimeout
         let effective = pageLoad > 0 ? pageLoad : hardcoded
@@ -69,16 +74,18 @@ enum TimeoutResolver {
     }
 
     static func resolveTestTimeout(_ hardcoded: TimeInterval, userSetting: TimeInterval) -> TimeInterval {
-        let pageLoad = shared.pageLoadTimeout
+        let minimum = AutomationSettings.minimumTimeoutSeconds
         if userSetting > 0 {
-            return max(userSetting, AutomationSettings.minimumTimeoutSeconds)
+            return max(userSetting, minimum)
         }
+        let pageLoad = shared.pageLoadTimeout
         if pageLoad > 0 {
-            return max(max(hardcoded, pageLoad), AutomationSettings.minimumTimeoutSeconds)
+            return max(max(hardcoded, pageLoad), minimum)
         }
-        return max(hardcoded, AutomationSettings.minimumTimeoutSeconds)
+        return max(hardcoded, minimum)
     }
 
+    @inlinable
     static func resolveAutoHealCap(_ currentTimeout: TimeInterval) -> TimeInterval {
         let pageLoad = shared.pageLoadTimeout
         if pageLoad > 0 {
@@ -87,10 +94,12 @@ enum TimeoutResolver {
         return max(currentTimeout, AutomationSettings.minimumTimeoutSeconds)
     }
 
+    @inlinable
     static func resolveAutomationTimeout(_ hardcoded: TimeInterval) -> TimeInterval {
         max(hardcoded, AutomationSettings.minimumTimeoutSeconds)
     }
 
+    @inlinable
     static func resolveAutomationMilliseconds(_ hardcoded: Int) -> Int {
         max(hardcoded, AutomationSettings.minimumTimeoutMilliseconds)
     }
@@ -104,6 +113,7 @@ enum TimeoutResolver {
         return max(hardcoded, AutomationSettings.minimumTimeoutSeconds)
     }
 
+    @frozen
     nonisolated enum TimeoutReason: Sendable {
         case activeTimeout
         case idleTimeout(secondsIdle: TimeInterval)

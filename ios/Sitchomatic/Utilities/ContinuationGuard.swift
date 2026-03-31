@@ -1,18 +1,17 @@
 import Foundation
+import Synchronization
 
-nonisolated final class ContinuationGuard: @unchecked Sendable {
-    private var consumed = false
-    private let lock = NSLock()
+/// A thread-safe one-shot guard that prevents double-consumption of async continuations.
+/// Uses Swift 6's `Mutex` for lock-free, statically-verified thread safety.
+nonisolated final class ContinuationGuard: Sendable {
+    private let state = Mutex(false)
 
-    init() {
-        consumed = false
-    }
-
+    @inlinable
     func tryConsume() -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        if consumed { return false }
-        consumed = true
-        return true
+        state.withLock { consumed in
+            guard !consumed else { return false }
+            consumed = true
+            return true
+        }
     }
 }

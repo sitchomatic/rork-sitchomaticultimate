@@ -3,6 +3,7 @@ import Observation
 import WebKit
 
 @Observable
+@MainActor
 class FlowRecorderViewModel {
     var targetURL: String = "https://joefortune24.com/login"
     var flowName: String = ""
@@ -41,7 +42,7 @@ class FlowRecorderViewModel {
     private let playbackEngine = FlowPlaybackEngine.shared
     private let logger = DebugLogger.shared
     private var recordingStartTime: Double = 0
-    private var durationTimer: Timer?
+    private var durationTask: Task<Void, Never>?
     weak var activeWebView: WKWebView?
 
     var currentActionCount: Int { currentActions.count }
@@ -88,10 +89,10 @@ class FlowRecorderViewModel {
         lastError = nil
         statusMessage = "Recording..."
 
-        durationTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor [weak self] in
-                guard let self, self.isRecording else { return }
+        durationTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled, let self, self.isRecording else { break }
                 self.recordingDurationMs = ProcessInfo.processInfo.systemUptime * 1000 - self.recordingStartTime
             }
         }
@@ -108,10 +109,10 @@ class FlowRecorderViewModel {
         lastError = nil
         statusMessage = "Recording (continuing from step \(playFromStepIndex))..."
 
-        durationTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor [weak self] in
-                guard let self, self.isRecording else { return }
+        durationTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled, let self, self.isRecording else { break }
                 self.recordingDurationMs = ProcessInfo.processInfo.systemUptime * 1000 - self.recordingStartTime
             }
         }
@@ -122,8 +123,8 @@ class FlowRecorderViewModel {
     func stopRecording() {
         guard isRecording else { return }
         isRecording = false
-        durationTimer?.invalidate()
-        durationTimer = nil
+        durationTask?.cancel()
+        durationTask = nil
         statusMessage = "Recording stopped — \(currentActions.count) actions captured"
 
         logger.endSession("recording", category: .flowRecorder, message: "FlowRecorder: recording stopped — \(currentActions.count) actions", level: currentActions.isEmpty ? .warning : .success)

@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import Synchronization
 
 /// Unified screenshot cache that handles both in-memory (NSCache) and disk-based caching.
 /// Replaces both ScreenshotCacheService and ScreenshotImageCache with a single source of truth.
@@ -21,9 +22,10 @@ class ScreenshotCache {
     private var diskOnlyMode: Bool = false
     private var diskOnlyModeExpiry: Date = .distantPast
 
-    /// Thread-safe NSCache for fast image decoding cache (replaces ScreenshotImageCache)
+    /// Thread-safe NSCache for fast image decoding cache (replaces ScreenshotImageCache).
+    /// Protected by `Mutex` for Swift 6 strict concurrency compliance.
     private let imageDecodeCache = NSCache<NSString, UIImage>()
-    private let decodeLock = NSLock()
+    private let decodeLock = Mutex(())
 
     init() {
         let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
@@ -38,35 +40,32 @@ class ScreenshotCache {
 
     // MARK: - Image Decode Cache (replaces ScreenshotImageCache)
 
-    /// Get a cached decoded image or decode from data. Thread-safe.
+    /// Get a cached decoded image or decode from data. Thread-safe via Mutex.
     nonisolated func decodedImage(forKey key: String, data: Data) -> UIImage {
         let nsKey = key as NSString
-        decodeLock.lock()
-        if let cached = imageDecodeCache.object(forKey: nsKey) {
-            decodeLock.unlock()
+        if let cached = decodeLock.withLock({ imageDecodeCache.object(forKey: nsKey) }) {
             return cached
         }
-        decodeLock.unlock()
         guard let img = UIImage(data: data) else { return UIImage() }
         let cost = Int(img.size.width * img.size.height * img.scale * img.scale * 4)
-        decodeLock.lock()
-        imageDecodeCache.setObject(img, forKey: nsKey, cost: cost)
-        decodeLock.unlock()
+        decodeLock.withLock {
+            imageDecodeCache.setObject(img, forKey: nsKey, cost: cost)
+        }
         return img
     }
 
     /// Remove a decoded image from the fast cache. Thread-safe.
     nonisolated func removeDecodedImage(forKey key: String) {
-        decodeLock.lock()
-        imageDecodeCache.removeObject(forKey: key as NSString)
-        decodeLock.unlock()
+        decodeLock.withLock {
+            imageDecodeCache.removeObject(forKey: key as NSString)
+        }
     }
 
     /// Clear all decoded images from the fast cache. Thread-safe.
     nonisolated func clearDecodedImages() {
-        decodeLock.lock()
-        imageDecodeCache.removeAllObjects()
-        decodeLock.unlock()
+        decodeLock.withLock {
+            imageDecodeCache.removeAllObjects()
+        }
     }
 
     // MARK: - Disk + Memory Cache (replaces ScreenshotCacheService)

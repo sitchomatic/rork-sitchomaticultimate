@@ -2,12 +2,14 @@ import Foundation
 import Observation
 import SwiftUI
 
+@frozen
 nonisolated enum AppAlertSeverity: String, Sendable {
     case info
     case warning
     case critical
 }
 
+@frozen
 nonisolated enum AppAlertSource: String, Sendable {
     case proxy
     case vpn
@@ -25,10 +27,10 @@ struct AppAlert: Identifiable {
     let source: AppAlertSource
     let title: String
     let message: String
-    let retryAction: (@MainActor () async -> Void)?
+    let retryAction: (@MainActor @Sendable () async -> Void)?
     var isDismissed: Bool = false
 
-    init(severity: AppAlertSeverity, source: AppAlertSource, title: String, message: String, retryAction: (@MainActor () async -> Void)? = nil) {
+    init(severity: AppAlertSeverity, source: AppAlertSource, title: String, message: String, retryAction: (@MainActor @Sendable () async -> Void)? = nil) {
         self.severity = severity
         self.source = source
         self.title = title
@@ -68,11 +70,11 @@ final class AppAlertManager {
         push(AppAlert(severity: .info, source: source, title: title, message: message))
     }
 
-    func pushWarning(source: AppAlertSource, title: String, message: String, retryAction: (@MainActor () async -> Void)? = nil) {
+    func pushWarning(source: AppAlertSource, title: String, message: String, retryAction: (@MainActor @Sendable () async -> Void)? = nil) {
         push(AppAlert(severity: .warning, source: source, title: title, message: message, retryAction: retryAction))
     }
 
-    func pushCritical(source: AppAlertSource, title: String, message: String, retryAction: (@MainActor () async -> Void)? = nil) {
+    func pushCritical(source: AppAlertSource, title: String, message: String, retryAction: (@MainActor @Sendable () async -> Void)? = nil) {
         push(AppAlert(severity: .critical, source: source, title: title, message: message, retryAction: retryAction))
     }
 
