@@ -351,7 +351,7 @@ class DebugLogger {
         let appDataService = AppDataExportService.shared
         let urlService = LoginURLRotationService.shared
         let proxyService = ProxyRotationService.shared
-        let dnsService = PPSRDoHService.shared
+        let dnsService = DNSPoolService.shared
         let blacklistService = BlacklistService.shared
         let emailService = PPSREmailRotationService.shared
         let flowService = FlowPersistenceService.shared
