@@ -13,6 +13,7 @@ struct UnifiedSessionSettingsView: View {
     @State private var showSettingsImportSheet: Bool = false
     @State private var settingsImportText: String = ""
     @State private var importError: String?
+    @State private var showExportConfirm: Bool = false
 
     private let accentColor: Color = .cyan
 
@@ -110,6 +111,16 @@ struct UnifiedSessionSettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(importError ?? "")
+        }
+        .alert("Export Contains Sensitive Data", isPresented: $showExportConfirm) {
+            Button("Export Anyway", role: .destructive) {
+                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
+                UIPasteboard.general.string = exported
+                vm.log("Exported unified settings", level: .success)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The exported JSON may include sensitive configuration. Do not share it publicly.")
         }
     }
 
@@ -837,6 +848,7 @@ struct UnifiedSessionSettingsView: View {
             Button {
                 let normalized = vm.automationSettings.normalizedTimeouts()
                 CentralSettingsService.shared.saveDefaultAutomationSettings(normalized, for: .unified)
+                vm.automationSettings = normalized
                 vm.log("Saved unified defaults", level: .success)
             } label: {
                 HStack(spacing: 10) {
@@ -859,9 +871,7 @@ struct UnifiedSessionSettingsView: View {
             }
 
             Button {
-                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
-                UIPasteboard.general.string = exported
-                vm.log("Exported unified settings", level: .success)
+                showExportConfirm = true
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "square.and.arrow.up.fill")
@@ -874,7 +884,7 @@ struct UnifiedSessionSettingsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Export All Settings")
                             .font(.subheadline.bold())
-                        Text("Copy automation JSON")
+                        Text("Copy automation JSON (contains secrets)")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

@@ -354,17 +354,17 @@ class DebugLogger {
         ========================================
         ERROR LOG (last 100):
         ========================================
-        \(entries.filter { $0.level >= .error }.prefix(100).map(\.exportLine).joined(separator: "\n"))
+        \(entries.filter { $0.level >= .error }.prefix(100).reversed().map(\.exportLine).joined(separator: "\n"))
 
         ========================================
         WARNING LOG (last 50):
         ========================================
-        \(entries.filter { $0.level == .warning }.prefix(50).map(\.exportLine).joined(separator: "\n"))
+        \(entries.filter { $0.level == .warning }.prefix(50).reversed().map(\.exportLine).joined(separator: "\n"))
 
         ========================================
         FULL LOG (last 500):
         ========================================
-        \(entries.prefix(500).map(\.exportLine).joined(separator: "\n"))
+        \(entries.prefix(500).reversed().map(\.exportLine).joined(separator: "\n"))
 
         ========================================
         HEALING LOG:

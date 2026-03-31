@@ -36,6 +36,7 @@ struct AutomationSettingsView: View {
     @State private var showSettingsImportSheet: Bool = false
     @State private var settingsImportText: String = ""
     @State private var importError: String?
+    @State private var showExportConfirm: Bool = false
 
     private var automationSettingsHash: String {
         (try? String(data: JSONEncoder().encode(vm.automationSettings), encoding: .utf8)) ?? ""
@@ -150,6 +151,16 @@ struct AutomationSettingsView: View {
         } message: {
             Text(importError ?? "")
         }
+        .alert("Export Contains Sensitive Data", isPresented: $showExportConfirm) {
+            Button("Export Anyway", role: .destructive) {
+                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
+                UIPasteboard.general.string = exported
+                vm.log("Exported automation settings to clipboard", level: .success)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The exported JSON may include sensitive configuration. Do not share it publicly.")
+        }
         .fileImporter(
             isPresented: Binding(
                 get: { activeFileImportType != nil },
@@ -230,6 +241,7 @@ struct AutomationSettingsView: View {
             Button {
                 let normalized = vm.automationSettings.normalizedTimeouts()
                 CentralSettingsService.shared.saveDefaultAutomationSettings(normalized, for: .login)
+                vm.automationSettings = normalized
                 vm.log("Saved automation defaults", level: .success)
             } label: {
                 HStack(spacing: 12) {
@@ -251,9 +263,7 @@ struct AutomationSettingsView: View {
             }
 
             Button {
-                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
-                UIPasteboard.general.string = exported
-                vm.log("Exported automation settings to clipboard", level: .success)
+                showExportConfirm = true
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "square.and.arrow.up.fill")
@@ -265,7 +275,7 @@ struct AutomationSettingsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Export All Settings")
                             .font(.subheadline.weight(.bold))
-                        Text("Copy full automation JSON")
+                        Text("Copy automation JSON (contains secrets)")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

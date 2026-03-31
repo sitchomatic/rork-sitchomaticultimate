@@ -107,10 +107,18 @@ class LogPersistenceService {
 
     private func exportTempFile(prefix: String, content: String) -> URL? {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        } catch {
+            return nil
+        }
         let fileName = "\(prefix)_\(DateFormatters.exportTimestamp.string(from: Date()).replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: ":", with: "-")).txt"
         let fileURL = tempDir.appendingPathComponent(fileName)
-        try? content.write(to: fileURL, atomically: true, encoding: .utf8)
+        do {
+            try content.write(to: fileURL, atomically: true, encoding: .utf8)
+        } catch {
+            return nil
+        }
         return fileURL
     }
 
