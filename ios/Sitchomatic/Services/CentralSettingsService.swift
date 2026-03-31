@@ -6,7 +6,7 @@ import SwiftUI
 ///
 /// Consolidates the previously scattered settings persistence that was spread across
 /// LoginSettingsManager, LoginViewModel, UnifiedSessionViewModel, DualFindViewModel,
-/// TestDebugViewModel, DeveloperSettingsView, AdvancedSettingsView, and TimeoutResolver.
+/// TestDebugViewModel, DeveloperSettingsView, SettingsAndTestingView, and TimeoutResolver.
 ///
 /// **UserDefaults keys managed:**
 /// - `"automation_settings_v1"` — Login / global automation settings
