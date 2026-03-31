@@ -37,12 +37,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var preferCalibratedPatternsFirst: Bool = true
     var patternLearningEnabled: Bool = true
 
-    // MARK: - Fallback Chain (Anti-Bot)
-    var fallbackToLegacyFill: Bool = false
-    var fallbackToOCRClick: Bool = true
-    var fallbackToVisionMLClick: Bool = true
-    var fallbackToCoordinateClick: Bool = true
-
     // MARK: - Submit Behavior
     var submitRetryCount: Int = 5
     var waitForResponseSeconds: Double = 90.0 // Post-submit polling timeout (waiting for server response after form submit)
@@ -88,9 +82,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var screenshotsPerAttempt: ScreenshotsPerAttempt = .three
     var unifiedScreenshotsPerAttempt: UnifiedScreenshotCount = .ten
     var unifiedScreenshotPostClickDelayMs: Int = 1500
-    var unifiedScreenshotDisabledOverride: Bool = true
     var postSubmitScreenshotTimings: String = "0.5, 1.5, 2.0, 2.7, 3.6"
-    var postSubmitScreenshotsOnly: Bool = true
 
     var parsedPostSubmitTimings: [Double] {
         postSubmitScreenshotTimings
@@ -179,8 +171,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var sessionCooldownDelayMs: Int = 500
     var proxyRotationDelayMs: Int = 750
     var vpnReconnectDelayMs: Int = 1300
-    var autoFallbackWGtoOVPN: Bool = true
-    var autoFallbackOVPNtoSOCKS5: Bool = true
     var delayRandomizationEnabled: Bool = true
     var delayRandomizationPercent: Int = 25
     /// When enabled, overrides mid-tier delays (betweenAttempts, pageStabilization, ajaxSettle, errorRecovery)

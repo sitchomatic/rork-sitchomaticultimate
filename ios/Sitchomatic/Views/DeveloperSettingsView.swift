@@ -70,7 +70,7 @@ struct DeveloperSettingsView: View {
                 Label("Concurrency Defaults", systemImage: "arrow.triangle.branch")
                     .font(.subheadline.bold())
                     .foregroundStyle(.blue)
-                Text("ViewModels default to 4, AutomationSettings.maxConcurrency=7, persistence fallback=8, presets vary 2/4/8. Central constant: AutomationSettings.defaultMaxConcurrency=\(AutomationSettings.defaultMaxConcurrency).")
+                Text("ViewModels default to 4, AutomationSettings.maxConcurrency=\(AutomationSettings.defaultMaxConcurrency). AutomationThrottler caps at 7. Central constant: AutomationSettings.defaultMaxConcurrency=\(AutomationSettings.defaultMaxConcurrency).")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -441,10 +441,6 @@ struct DeveloperSettingsView: View {
                 Text(vm.automationSettings.postSubmitScreenshotTimings)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-            }
-            LabeledContent("Disabled Override") {
-                Image(systemName: vm.automationSettings.unifiedScreenshotDisabledOverride ? "checkmark.circle.fill" : "xmark.circle")
-                    .foregroundStyle(vm.automationSettings.unifiedScreenshotDisabledOverride ? .green : .red)
             }
         } header: {
             Label("Screenshot System", systemImage: "camera.fill")
@@ -1109,7 +1105,6 @@ struct DeveloperAutomationSettingsView: View {
             cookieConsentSection
             credentialEntrySection
             patternStrategySection
-            fallbackChainSection
             submitBehaviorSection
             postSubmitEvaluationSection
             retryRequeueSection
@@ -1213,19 +1208,6 @@ struct DeveloperAutomationSettingsView: View {
         }
     }
 
-    // MARK: - Fallback Chain
-
-    private var fallbackChainSection: some View {
-        Section {
-            Toggle("Legacy Fill Fallback", isOn: $settings.fallbackToLegacyFill)
-            Toggle("OCR Click Fallback", isOn: $settings.fallbackToOCRClick)
-            Toggle("Vision ML Click Fallback", isOn: $settings.fallbackToVisionMLClick)
-            Toggle("Coordinate Click Fallback", isOn: $settings.fallbackToCoordinateClick)
-        } header: {
-            Label("Fallback Chain", systemImage: "arrow.triangle.branch")
-        }
-    }
-
     // MARK: - Submit Behavior
 
     private var submitBehaviorSection: some View {
@@ -1314,8 +1296,6 @@ struct DeveloperAutomationSettingsView: View {
                 }
             }
             stepperRow("Post-Click Delay", intValue: $settings.unifiedScreenshotPostClickDelayMs, range: 500...5000, step: 250, unit: "ms")
-            Toggle("Disabled Override", isOn: $settings.unifiedScreenshotDisabledOverride)
-            Toggle("Post-Submit Only", isOn: $settings.postSubmitScreenshotsOnly)
         } header: {
             Label("Screenshot / Debug", systemImage: "camera.viewfinder")
         }
@@ -1460,8 +1440,6 @@ struct DeveloperAutomationSettingsView: View {
                 stepperRow("VPN Reconnect", intValue: $settings.vpnReconnectDelayMs, range: 0...10000, step: 100, unit: "ms")
             }
             Group {
-                Toggle("Auto Fallback WG→OVPN", isOn: $settings.autoFallbackWGtoOVPN)
-                Toggle("Auto Fallback OVPN→SOCKS5", isOn: $settings.autoFallbackOVPNtoSOCKS5)
                 Toggle("Delay Randomization", isOn: $settings.delayRandomizationEnabled)
                 stepperRow("Randomization %", intValue: $settings.delayRandomizationPercent, range: 0...100, step: 5, unit: "%")
                 stepperRow("Misc Delay", intValue: $settings.miscellaneousDelayMs, range: 0...5000, step: 100, unit: "ms")

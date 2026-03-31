@@ -28,10 +28,6 @@ nonisolated struct AutomationTemplate: Codable, Sendable, Identifiable {
             var s = AutomationSettings()
             s.loginButtonDetectionMode = .visionML
             s.loginButtonClickMethod = .dispatchEvent
-            s.fallbackToVisionMLClick = true
-            s.fallbackToOCRClick = true
-            s.fallbackToCoordinateClick = true
-            s.fallbackToLegacyFill = false
             s.autoCalibrationEnabled = false
             s.visionMLCalibrationFallback = true
             s.fieldVerificationEnabled = true
@@ -69,10 +65,6 @@ nonisolated struct AutomationTemplate: Codable, Sendable, Identifiable {
             var s = AutomationSettings()
             s.loginButtonDetectionMode = .coordinateOnly
             s.loginButtonClickMethod = .dispatchEvent
-            s.fallbackToCoordinateClick = true
-            s.fallbackToVisionMLClick = true
-            s.fallbackToOCRClick = false
-            s.fallbackToLegacyFill = false
             s.autoCalibrationEnabled = false
             s.visionMLCalibrationFallback = false
             s.humanMouseMovement = true
@@ -156,10 +148,6 @@ nonisolated struct AutomationTemplate: Codable, Sendable, Identifiable {
             s.delayRandomizationPercent = 40
             s.betweenAttemptsDelayMs = 2000
             s.betweenCredentialsDelayMs = 1500
-            s.fallbackToVisionMLClick = true
-            s.fallbackToOCRClick = true
-            s.fallbackToCoordinateClick = true
-            s.fallbackToLegacyFill = false
             s.patternPriorityOrder = [
                 "Slow Deliberate Typer",
                 "Click-Focus Sequential",
@@ -228,9 +216,6 @@ nonisolated struct AutomationTemplate: Codable, Sendable, Identifiable {
             s.freshWebViewPerAttempt = false
             s.stealthJSInjection = true
             s.fingerprintSpoofing = true
-            s.fallbackToVisionMLClick = true
-            s.fallbackToCoordinateClick = true
-            s.fallbackToLegacyFill = false
             s.patternPriorityOrder = [
                 "React Native Setter",
                 "Form Submit Direct",
@@ -274,10 +259,6 @@ nonisolated struct AutomationTemplate: Codable, Sendable, Identifiable {
             s.connectionResetAutoRetry = true
             s.dnsFailureAutoRetry = true
             s.classifyUnknownAsUnsure = true
-            s.fallbackToLegacyFill = false
-            s.fallbackToOCRClick = true
-            s.fallbackToVisionMLClick = true
-            s.fallbackToCoordinateClick = true
             s.patternLearningEnabled = true
             s.preferCalibratedPatternsFirst = true
             s.evaluationStrictness = .lenient

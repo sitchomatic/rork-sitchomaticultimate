@@ -478,14 +478,6 @@ struct DualFindSettingsView: View {
                 }
             }
 
-            Toggle("Fallback to Legacy Fill", isOn: $vm.automationSettings.fallbackToLegacyFill)
-                .tint(accentColor)
-            Toggle("Fallback to OCR Click", isOn: $vm.automationSettings.fallbackToOCRClick)
-                .tint(accentColor)
-            Toggle("Fallback to VisionML Click", isOn: $vm.automationSettings.fallbackToVisionMLClick)
-                .tint(accentColor)
-            Toggle("Fallback to Coordinate Click", isOn: $vm.automationSettings.fallbackToCoordinateClick)
-                .tint(accentColor)
         } header: {
             Label("Pattern Strategy", systemImage: "list.bullet.indent")
         }
@@ -577,15 +569,6 @@ struct DualFindSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Toggle(isOn: $vm.automationSettings.postSubmitScreenshotsOnly) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Post-Submit Only")
-                    Text("All screenshots taken after submit triple-click")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(accentColor)
         } header: {
             Label("Screenshot / Debug", systemImage: "camera.viewfinder")
         }

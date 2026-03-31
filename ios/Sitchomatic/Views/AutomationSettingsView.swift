@@ -1338,23 +1338,10 @@ struct AutomationSettingsView: View {
                     Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
                 }
             }
-
-            Group {
-                Toggle("Vision ML Click", isOn: $vm.automationSettings.fallbackToVisionMLClick).tint(.purple)
-                Toggle("OCR Click", isOn: $vm.automationSettings.fallbackToOCRClick).tint(.indigo)
-                Toggle("Coordinate Click", isOn: $vm.automationSettings.fallbackToCoordinateClick).tint(.cyan)
-                Toggle(isOn: $vm.automationSettings.fallbackToLegacyFill) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Legacy DOM Fill (Detectable)")
-                        Text("Direct DOM manipulation — detectable by anti-bot").font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
-                .tint(.red)
-            }
         } header: {
-            Label("Pattern Strategy & Fallbacks", systemImage: "wand.and.rays")
+            Label("Pattern Strategy", systemImage: "wand.and.rays")
         } footer: {
-            Text("Controls form-filling patterns and fallback chain. Cycles retry with different strategies if prior ones fail.")
+            Text("Controls form-filling patterns. Cycles retry with different strategies if prior ones fail.")
         }
     }
 
@@ -1777,15 +1764,6 @@ struct AutomationSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Toggle(isOn: $vm.automationSettings.postSubmitScreenshotsOnly) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Post-Submit Only")
-                    Text("All screenshots taken after submit triple-click")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(.orange)
         } header: {
             Label("Screenshot / Debug", systemImage: "camera.viewfinder")
         }
