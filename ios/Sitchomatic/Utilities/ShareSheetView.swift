@@ -1,8 +1,9 @@
 import SwiftUI
 import UIKit
 
+/// A SwiftUI wrapper around `UIActivityViewController` for sharing content.
 struct ShareSheetView: UIViewControllerRepresentable {
-    let items: [Any]
+    let items: [any Sendable]
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
         UIActivityViewController(activityItems: items, applicationActivities: nil)

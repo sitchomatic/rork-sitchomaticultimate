@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 
+@frozen
 nonisolated enum CardBrand: String, Sendable, Codable {
     case visa = "Visa"
     case mastercard = "Mastercard"
@@ -50,6 +51,7 @@ nonisolated enum CardBrand: String, Sendable, Codable {
     }
 }
 
+@frozen
 nonisolated enum CardStatus: String, Sendable, Codable {
     case untested = "Untested"
     case testing = "Testing"

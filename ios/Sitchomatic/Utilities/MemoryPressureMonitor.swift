@@ -5,11 +5,13 @@ import UIKit
 final class MemoryPressureMonitor {
     static let shared = MemoryPressureMonitor()
 
-    private var observers: [() -> Void] = []
+    private var observers: [@MainActor @Sendable () -> Void] = []
     private var isRegistered: Bool = false
     private var lastTierTriggered: MemoryTier = .normal
     private var tierEscalationCount: Int = 0
+    private var monitorTask: Task<Void, Never>?
 
+    @frozen
     nonisolated enum MemoryTier: Int, Sendable, Comparable {
         case normal = 0
         case elevated = 1
@@ -17,6 +19,7 @@ final class MemoryPressureMonitor {
         case critical = 3
         case severe = 4
 
+        @inlinable
         nonisolated static func < (lhs: MemoryTier, rhs: MemoryTier) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
@@ -25,18 +28,18 @@ final class MemoryPressureMonitor {
     func register() {
         guard !isRegistered else { return }
         isRegistered = true
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didReceiveMemoryWarningNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.handleMemoryWarning(tier: .critical)
+        monitorTask = Task { [weak self] in
+            let notifications = NotificationCenter.default.notifications(
+                named: UIApplication.didReceiveMemoryWarningNotification
+            )
+            for await _ in notifications {
+                guard !Task.isCancelled, let self else { break }
+                self.handleMemoryWarning(tier: .critical)
             }
         }
     }
 
-    func onMemoryWarning(_ handler: @escaping @MainActor () -> Void) {
+    func onMemoryWarning(_ handler: @escaping @MainActor @Sendable () -> Void) {
         observers.append(handler)
     }
 

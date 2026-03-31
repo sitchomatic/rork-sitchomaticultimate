@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum LoginFormPattern: String, CaseIterable, Codable, Sendable {
     case tabNavigation = "Tab Navigation"
     case clickFocusSequential = "Click-Focus Sequential"

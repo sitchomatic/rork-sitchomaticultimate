@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum ProxySetType: String, CaseIterable, Codable, Sendable {
     case socks5 = "SOCKS5 Proxy"
     case wireGuard = "WireGuard Config"

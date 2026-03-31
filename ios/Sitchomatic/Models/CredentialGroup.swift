@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+@frozen
 nonisolated enum GroupColor: String, CaseIterable, Codable, Sendable {
     case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink
 
@@ -23,6 +24,7 @@ nonisolated enum GroupColor: String, CaseIterable, Codable, Sendable {
     var label: String { rawValue.capitalized }
 }
 
+@frozen
 nonisolated enum GroupSize: Int, CaseIterable, Sendable {
     case twenty = 20
     case fifty = 50

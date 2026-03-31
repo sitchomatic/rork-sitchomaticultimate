@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 
+@frozen
 nonisolated enum PasswordSetStatus: String, Codable, Sendable {
     case queued
     case active
@@ -119,6 +120,7 @@ nonisolated enum DualFindTestOutcome: Sendable {
     case unsure
 }
 
+@frozen
 nonisolated enum DualFindInterventionAction: String, Codable, Sendable, CaseIterable, Identifiable {
     case markSuccess = "Mark as Success"
     case markNoAccount = "Mark as No Account"
@@ -188,6 +190,7 @@ nonisolated struct DualFindInterventionRequest: Identifiable, Sendable {
     let passwordIndex: Int
 }
 
+@frozen
 nonisolated enum DualFindScreenshotCount: Int, CaseIterable, Sendable {
     case zero = 0
     case one = 1
@@ -207,6 +210,7 @@ nonisolated enum DualFindScreenshotCount: Int, CaseIterable, Sendable {
 // DualFindLiveScreenshot is now a type alias for CapturedScreenshot defined in UnifiedScreenshotManager.swift.
 // The DualFindLiveScreenshot typealias is declared there.
 
+@frozen
 nonisolated enum DualFindSessionCount: Int, CaseIterable, Sendable {
     case one = 1
     case two = 2

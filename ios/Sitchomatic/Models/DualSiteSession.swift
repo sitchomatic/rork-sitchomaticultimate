@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+@frozen
 nonisolated enum SessionGlobalState: String, Codable, Sendable {
     case active = "ACTIVE"
     case success = "SUCCESS"
@@ -9,6 +10,7 @@ nonisolated enum SessionGlobalState: String, Codable, Sendable {
     case exhausted = "EXHAUSTED"
 }
 
+@frozen
 nonisolated enum SessionClassification: String, Codable, Sendable {
     case validAccount = "Valid Account"
     case permanentBan = "Permanent Ban"
@@ -17,6 +19,7 @@ nonisolated enum SessionClassification: String, Codable, Sendable {
     case pending = "Pending"
 }
 
+@frozen
 nonisolated enum SiteResult: String, Codable, Sendable, CaseIterable {
     case success = "Success"
     case noAccount = "No Acc"
@@ -106,6 +109,7 @@ nonisolated enum SiteResult: String, Codable, Sendable, CaseIterable {
     }
 }
 
+@frozen
 nonisolated enum IdentityAction: String, Codable, Sendable {
     case burn = "BURN"
     case save = "SAVE"

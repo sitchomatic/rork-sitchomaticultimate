@@ -11,7 +11,7 @@ class ProxyRotationManager {
     private let connectionPool = ProxyConnectionPool.shared
     private let logger = DebugLogger.shared
 
-    private var rotationTimer: Timer?
+    private var rotationTimer: Task<Void, Never>?
 
     private(set) var rotationLog: [RotationLogEntry] = []
     private(set) var nextRotationDate: Date?
@@ -90,15 +90,17 @@ class ProxyRotationManager {
         invalidateTimer()
         guard ipRoutingMode == .appWideUnited, let interval = rotationInterval.seconds else { return }
         nextRotationDate = Date().addingTimeInterval(interval)
-        rotationTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                onRotate("Timer (\(self?.rotationCountdownLabel ?? ""))")
+        rotationTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(interval))
+                guard !Task.isCancelled, let self else { break }
+                onRotate("Timer (\(self.rotationCountdownLabel))")
             }
         }
     }
 
     func invalidateTimer() {
-        rotationTimer?.invalidate()
+        rotationTimer?.cancel()
         rotationTimer = nil
         nextRotationDate = nil
     }

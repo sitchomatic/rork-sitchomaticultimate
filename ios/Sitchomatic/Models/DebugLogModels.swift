@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum DebugLogCategory: String, CaseIterable, Sendable, Identifiable, Codable {
     case automation = "Automation"
     case login = "Login"
@@ -72,6 +73,7 @@ nonisolated enum DebugLogCategory: String, CaseIterable, Sendable, Identifiable,
     }
 }
 
+@frozen
 nonisolated enum DebugLogLevel: String, CaseIterable, Sendable, Comparable, Codable {
     case trace = "TRACE"
     case debug = "DEBUG"

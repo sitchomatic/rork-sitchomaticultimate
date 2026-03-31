@@ -25,7 +25,7 @@ class NetworkResilienceService {
     var minConcurrency: Int = 1
     var maxConcurrency: Int = 8
 
-    private var verificationTimer: Timer?
+    private var verificationTimer: Task<Void, Never>?
     private var bandwidthSamples: [(timestamp: Date, bytes: UInt64)] = []
     private var failoverAttemptCount: Int = 0
     private var lastFailoverAttempt: Date?
@@ -113,15 +113,18 @@ class NetworkResilienceService {
 
         Task { await performVerification(expectedProxy: proxy) }
 
-        verificationTimer = Timer.scheduledTimer(withTimeInterval: verificationIntervalSeconds, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        verificationTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                let interval = self?.verificationIntervalSeconds ?? 30
+                try? await Task.sleep(for: .seconds(interval))
+                guard !Task.isCancelled else { break }
                 await self?.performVerification(expectedProxy: proxy)
             }
         }
     }
 
     func stopVerificationLoop() {
-        verificationTimer?.invalidate()
+        verificationTimer?.cancel()
         verificationTimer = nil
         failClosedVerificationActive = false
     }

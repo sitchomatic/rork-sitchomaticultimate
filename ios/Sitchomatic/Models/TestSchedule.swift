@@ -7,6 +7,7 @@ nonisolated struct TestSchedule: Codable, Identifiable, Sendable {
     var cardFilter: CardFilter
     var createdAt: Date
 
+    @frozen
     nonisolated enum CardFilter: String, Codable, CaseIterable, Sendable {
         case allUntested = "All Untested"
         case deadOnly = "Dead Only (Retest)"

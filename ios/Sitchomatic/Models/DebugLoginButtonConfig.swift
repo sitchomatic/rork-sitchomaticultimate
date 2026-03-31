@@ -53,6 +53,7 @@ nonisolated struct DebugClickAttempt: Identifiable, Sendable {
     var screenshotAfter: Data?
     var timestamp: Date = Date()
 
+    @frozen
     nonisolated enum AttemptStatus: String, Sendable {
         case pending = "Pending"
         case running = "Running"

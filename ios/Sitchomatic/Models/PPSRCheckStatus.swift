@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum PPSRCheckStatus: String, Sendable, CaseIterable, Identifiable {
     case queued = "Queued"
     case fillingVIN = "Filling VIN"

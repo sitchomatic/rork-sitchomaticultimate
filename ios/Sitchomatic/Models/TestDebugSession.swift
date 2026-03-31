@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import UIKit
 
+@frozen
 nonisolated enum TestDebugSite: String, CaseIterable, Sendable {
     case joe = "JoePoint"
     case ignition = "Ignition Lite"
@@ -28,6 +29,7 @@ nonisolated enum TestDebugSite: String, CaseIterable, Sendable {
     }
 }
 
+@frozen
 nonisolated enum TestDebugSessionCount: Int, CaseIterable, Sendable {
     case twentyFour = 24
     case fortyEight = 48
@@ -36,6 +38,7 @@ nonisolated enum TestDebugSessionCount: Int, CaseIterable, Sendable {
     var label: String { "\(rawValue)" }
 }
 
+@frozen
 nonisolated enum TestDebugVariationMode: String, CaseIterable, Sendable {
     case all = "All"
     case network = "Network Focus"
@@ -61,6 +64,7 @@ nonisolated enum TestDebugVariationMode: String, CaseIterable, Sendable {
     }
 }
 
+@frozen
 nonisolated enum TestDebugSessionStatus: String, Sendable {
     case queued = "Queued"
     case running = "Running"

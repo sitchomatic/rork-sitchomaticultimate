@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum NordLynxExportFormat: String, CaseIterable, Identifiable, Sendable {
     case individualFiles
     case zipArchive

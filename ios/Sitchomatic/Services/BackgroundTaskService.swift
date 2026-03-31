@@ -8,7 +8,7 @@ class BackgroundTaskService {
     static let batchProcessingIdentifier = "Sitchomatic.ios77.batchProcessing"
 
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
-    private var backgroundMonitorTimer: Timer?
+    private var backgroundMonitorTask: Task<Void, Never>?
     private var isInBackground: Bool = false
 
     func beginExtendedBackgroundExecution(reason: String) {
@@ -112,16 +112,18 @@ class BackgroundTaskService {
 
     private func startBackgroundMonitoring() {
         stopBackgroundMonitoring()
-        backgroundMonitorTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+        backgroundMonitorTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(10))
+                guard !Task.isCancelled else { break }
                 self?.checkBackgroundState()
             }
         }
     }
 
     private func stopBackgroundMonitoring() {
-        backgroundMonitorTimer?.invalidate()
-        backgroundMonitorTimer = nil
+        backgroundMonitorTask?.cancel()
+        backgroundMonitorTask = nil
     }
 
     private func checkBackgroundState() {

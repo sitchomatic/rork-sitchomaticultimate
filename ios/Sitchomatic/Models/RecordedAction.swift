@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum RecordedActionType: String, Codable, Sendable {
     case mouseMove
     case mouseDown

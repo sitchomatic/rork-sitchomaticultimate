@@ -7,6 +7,7 @@ nonisolated struct FailureNotice: Identifiable, Sendable {
     let timestamp: Date
     var autoRetried: Bool
 
+    @frozen
     enum Source: String, Sendable, Codable {
         case ppsr = "PPSR"
         case login = "Login"

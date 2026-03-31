@@ -304,6 +304,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
 
     // MARK: - Enums
 
+    @frozen
     nonisolated enum UnifiedScreenshotCount: Int, Codable, CaseIterable, Sendable {
         case zero = 0
         case two = 2
@@ -341,6 +342,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
         }
     }
 
+    @frozen
     nonisolated enum ScreenshotsPerAttempt: String, Codable, CaseIterable, Sendable {
         case none = "None"
         case one = "1"
@@ -357,12 +359,14 @@ nonisolated struct AutomationSettings: Codable, Sendable {
         }
     }
 
+    @frozen
     nonisolated enum EvaluationStrictness: String, Codable, CaseIterable, Sendable {
         case lenient = "Lenient"
         case normal = "Normal"
         case strict = "Strict"
     }
 
+    @frozen
     nonisolated enum ButtonDetectionMode: String, Codable, CaseIterable, Sendable {
         case textMatch = "Text Match"
         case visionML = "Vision ML"
@@ -370,6 +374,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
         case coordinateOnly = "Coordinate Only"
     }
 
+    @frozen
     nonisolated enum ButtonClickMethod: String, Codable, CaseIterable, Sendable {
         case humanClick = "Human Touch Chain"
         case jsClick = "JS Click"
@@ -378,6 +383,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
         case enterKey = "Enter Key"
     }
 
+    @frozen
     nonisolated enum SessionIsolationMode: String, Codable, CaseIterable, Sendable {
         case none = "None"
         case cookies = "Cookies Only"
@@ -385,6 +391,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
         case full = "Full Isolation"
     }
 
+    @frozen
     nonisolated enum FieldClearMethod: String, Codable, CaseIterable, Sendable {
         case selectAllDelete = "Select All + Delete"
         case tripleClickDelete = "Triple Click + Delete"
