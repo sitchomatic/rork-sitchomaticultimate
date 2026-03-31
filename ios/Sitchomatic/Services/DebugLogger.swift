@@ -574,8 +574,7 @@ class DebugLogger {
         let trimmed = username.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "[REDACTED]" }
         if trimmed.count <= 2 { return "[REDACTED]" }
-        let first = trimmed.first!
-        let last = trimmed.last!
+        guard let first = trimmed.first, let last = trimmed.last else { return "[REDACTED]" }
         let redactedMiddle = String(repeating: "•", count: max(1, trimmed.count - 2))
         return "\(first)\(redactedMiddle)\(last)"
     }

@@ -127,13 +127,17 @@ struct ImportSettingsView: View {
             case .success(let urls):
                 guard let url = urls.first else { return }
                 guard url.startAccessingSecurityScopedResource() else { return }
-                Task.detached(priority: .userInitiated) {
-                    defer { url.stopAccessingSecurityScopedResource() }
-                    guard let data = try? Data(contentsOf: url),
-                          let text = String(data: data, encoding: .utf8) else {
-                        return
-                    }
-                    await MainActor.run {
+                let localURL = url
+                Task {
+                    let text: String? = await Task.detached(priority: .userInitiated) {
+                        guard let data = try? Data(contentsOf: localURL),
+                              let text = String(data: data, encoding: .utf8) else {
+                            return nil
+                        }
+                        return text
+                    }.value
+                    localURL.stopAccessingSecurityScopedResource()
+                    if let text {
                         importText = text
                     }
                 }
