@@ -204,37 +204,8 @@ nonisolated enum DualFindScreenshotCount: Int, CaseIterable, Sendable {
     }
 }
 
-nonisolated struct DualFindLiveScreenshot: Identifiable, Sendable {
-    let id: String
-    let email: String
-    let password: String
-    let platform: String
-    let url: String
-    let imageData: Data
-    let step: String
-    let timestamp: Date
-    let outcome: String
-
-    var image: UIImage {
-        ScreenshotImageCache.shared.image(forKey: "\(id)_df", data: imageData)
-    }
-
-    init(email: String, password: String, platform: String, url: String, image: UIImage, step: String, outcome: String = "") {
-        self.id = UUID().uuidString
-        self.email = email
-        self.password = password
-        self.platform = platform
-        self.url = url
-        self.imageData = image.jpegData(compressionQuality: 0.4) ?? Data()
-        self.step = step
-        self.timestamp = Date()
-        self.outcome = outcome
-    }
-
-    var formattedTime: String {
-        DateFormatters.timeOnly.string(from: timestamp)
-    }
-}
+// DualFindLiveScreenshot is now a type alias for CapturedScreenshot defined in UnifiedScreenshotManager.swift.
+// The DualFindLiveScreenshot typealias is declared there.
 
 nonisolated enum DualFindSessionCount: Int, CaseIterable, Sendable {
     case one = 1

@@ -3,6 +3,9 @@ import Observation
 import UIKit
 import SwiftUI
 
+// PPSRDebugScreenshot is now a type alias for CapturedScreenshot in UnifiedScreenshotManager.swift.
+// UserResultOverride enum is kept here as it's referenced throughout the codebase.
+
 nonisolated enum UserResultOverride: String, Sendable, CaseIterable {
     case none
     case success
@@ -49,122 +52,3 @@ nonisolated enum UserResultOverride: String, Sendable, CaseIterable {
     }
 }
 
-@Observable
-class PPSRDebugScreenshot: Identifiable {
-    let id: String
-    let timestamp: Date
-    let stepName: String
-    let cardDisplayNumber: String
-    let cardId: String
-    let vin: String
-    let email: String
-    let imageData: Data
-    var croppedImageData: Data?
-    var note: String
-    var site: String = ""
-    var autoDetectedResult: AutoDetectedResult = .unknown
-    var userOverride: UserResultOverride = .none
-    var userNote: String = ""
-    var correctionReason: String = ""
-
-    nonisolated enum AutoDetectedResult: String, Sendable {
-        case success
-        case noAcc
-        case permDisabled
-        case tempDisabled
-        case unsure
-        case unknown
-
-        var displayLabel: String {
-            switch self {
-            case .success: "Success"
-            case .noAcc: "No Acc"
-            case .permDisabled: "Perm Disabled"
-            case .tempDisabled: "Temp Disabled"
-            case .unsure: "Unsure"
-            case .unknown: "Unknown"
-            }
-        }
-
-        var toOverride: UserResultOverride {
-            switch self {
-            case .success: .success
-            case .noAcc: .noAcc
-            case .permDisabled: .permDisabled
-            case .tempDisabled: .tempDisabled
-            case .unsure: .unsure
-            case .unknown: .none
-            }
-        }
-    }
-
-    var albumKey: String {
-        "\(cardId.isEmpty ? cardDisplayNumber : cardId)"
-    }
-
-    var albumTitle: String {
-        cardDisplayNumber
-    }
-
-    var effectiveResult: UserResultOverride {
-        if userOverride != .none { return userOverride }
-        return autoDetectedResult.toOverride
-    }
-
-    var image: UIImage {
-        ScreenshotImageCache.shared.image(forKey: "\(id)_img", data: imageData)
-    }
-
-    var croppedImage: UIImage? {
-        get {
-            guard let data = croppedImageData else { return nil }
-            return ScreenshotImageCache.shared.image(forKey: "\(id)_crop", data: data)
-        }
-        set {
-            if let img = newValue {
-                croppedImageData = img.jpegData(compressionQuality: 0.5)
-                ScreenshotImageCache.shared.removeImage(forKey: "\(id)_crop")
-            } else {
-                croppedImageData = nil
-                ScreenshotImageCache.shared.removeImage(forKey: "\(id)_crop")
-            }
-        }
-    }
-
-    var displayImage: UIImage {
-        croppedImage ?? image
-    }
-
-    var isJoe: Bool { site.lowercased().contains("joe") }
-    var isIgnition: Bool { site.lowercased().contains("ign") }
-    var siteLabel: String { isJoe ? "JoePoint" : isIgnition ? "Ignition Lite" : "Unknown" }
-    var siteIcon: String { isJoe ? "suit.spade.fill" : isIgnition ? "flame.fill" : "globe" }
-    var siteColor: SwiftUI.Color { isJoe ? .green : isIgnition ? .orange : .gray }
-
-    init(stepName: String, cardDisplayNumber: String, cardId: String = "", vin: String, email: String = "", image: UIImage, croppedImage: UIImage? = nil, note: String = "", site: String = "", autoDetectedResult: AutoDetectedResult = .unknown) {
-        self.id = UUID().uuidString
-        self.timestamp = Date()
-        self.stepName = stepName
-        self.cardDisplayNumber = cardDisplayNumber
-        self.cardId = cardId
-        self.vin = vin
-        self.email = email
-        self.imageData = image.jpegData(compressionQuality: 0.4) ?? Data()
-        self.croppedImageData = croppedImage?.jpegData(compressionQuality: 0.4)
-        self.note = note
-        self.site = site
-        self.autoDetectedResult = autoDetectedResult
-    }
-
-    var formattedTime: String {
-        DateFormatters.timeOnly.string(from: timestamp)
-    }
-
-    var hasUserOverride: Bool {
-        userOverride != .none
-    }
-
-    var overrideLabel: String {
-        userOverride == .none ? "Auto" : "Override: \(userOverride.displayLabel)"
-    }
-}
