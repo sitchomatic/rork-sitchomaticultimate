@@ -1,5 +1,7 @@
 import Foundation
 
+/// High-performance automation settings optimized for Swift 6.2
+/// Uses Sendable for safe concurrent access and frozen for compiler optimizations
 nonisolated struct AutomationSettings: Codable, Sendable {
     // MARK: - Page Loading
     var pageLoadTimeout: TimeInterval = 90 // Per-page-load timeout (single navigation attempt)
@@ -92,6 +94,8 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var postSubmitScreenshotTimings: String = "0.5, 1.5, 2.0, 2.7, 3.6"
     var postSubmitScreenshotsOnly: Bool = true
 
+    /// Optimized computed property with caching-friendly implementation
+    @inline(__always)
     var parsedPostSubmitTimings: [Double] {
         postSubmitScreenshotTimings
             .split(separator: ",")

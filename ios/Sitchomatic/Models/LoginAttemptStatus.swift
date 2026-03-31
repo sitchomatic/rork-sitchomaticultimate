@@ -1,6 +1,8 @@
 import Foundation
 
-nonisolated enum LoginAttemptStatus: String, Sendable, CaseIterable, Identifiable {
+/// Swift 6.2 optimized login attempt status with frozen enum and performance attributes
+@frozen
+nonisolated enum LoginAttemptStatus: String, Sendable, CaseIterable, Identifiable, Codable {
     case queued = "Queued"
     case loadingPage = "Loading Page"
     case fillingCredentials = "Filling Credentials"
@@ -11,6 +13,7 @@ nonisolated enum LoginAttemptStatus: String, Sendable, CaseIterable, Identifiabl
 
     var id: String { rawValue }
 
+    @inline(__always)
     var icon: String {
         switch self {
         case .queued: "clock"
@@ -23,10 +26,12 @@ nonisolated enum LoginAttemptStatus: String, Sendable, CaseIterable, Identifiabl
         }
     }
 
+    @inline(__always)
     var isTerminal: Bool {
         self == .completed || self == .failed
     }
 
+    @inline(__always)
     var progress: Double {
         switch self {
         case .queued: 0.0

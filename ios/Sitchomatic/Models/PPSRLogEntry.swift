@@ -1,12 +1,14 @@
 import Foundation
 
-nonisolated struct PPSRLogEntry: Identifiable, Sendable {
+/// Swift 6.2 optimized log entry with frozen enum and performance attributes
+nonisolated struct PPSRLogEntry: Identifiable, Sendable, Codable {
     let id: UUID
     let timestamp: Date
     let message: String
     let level: Level
 
-    nonisolated enum Level: String, Sendable {
+    @frozen
+    nonisolated enum Level: String, Sendable, Codable {
         case info = "INFO"
         case success = "OK"
         case warning = "WARN"
@@ -20,6 +22,7 @@ nonisolated struct PPSRLogEntry: Identifiable, Sendable {
         self.level = level
     }
 
+    @inline(__always)
     var formattedTime: String {
         DateFormatters.timeWithMillis.string(from: timestamp)
     }
