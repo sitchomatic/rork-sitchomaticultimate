@@ -226,6 +226,7 @@ actor AdaptiveRetryService {
 
         switch outcome {
         case .timeout: return isIdleTimeout ? .idleTimeout : .timeout
+        case .cancelled: return .unknown
         case .connectionFailure: return fieldDetectionFailed ? .fieldDetectionMiss : .connectionFailure
         case .permDisabled, .tempDisabled: return .disabledAccount
         case .redBannerError: return .rateLimited

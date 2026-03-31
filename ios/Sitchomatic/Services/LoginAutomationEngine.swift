@@ -10,6 +10,7 @@ nonisolated enum LoginOutcome: Sendable {
     case unsure
     case connectionFailure
     case timeout
+    case cancelled
     case redBannerError
     case smsDetected
 }
@@ -70,7 +71,7 @@ class LoginAutomationEngine {
         attempt.logs.append(PPSRLogEntry(message: message, level: .warning))
         logger.log(message, category: .automation, level: .warning, sessionId: sessionId)
         replayLogger.log(sessionId: sessionId, action: "cancelled", detail: context, level: "warning")
-        return .timeout
+        return .cancelled
     }
 
     func runLoginTest(_ attempt: LoginAttempt, targetURL: URL, timeout: TimeInterval = 180) async -> LoginOutcome {
@@ -522,6 +523,9 @@ class LoginAutomationEngine {
         if let earlyReturn = readinessResult { return earlyReturn }
 
         let calibration = await phaseCalibrate(session: session, attempt: attempt, sessionId: sessionId)
+        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "post-calibration") {
+            return cancelled
+        }
 
         let (finalOutcome, lastEvaluation, maxSubmitCycles) = await phasePatternCycleLoop(
             session: session,
@@ -808,9 +812,6 @@ class LoginAutomationEngine {
     // MARK: - Phase 4: Calibrate
 
     private func phaseCalibrate(session: LoginSiteWebSession, attempt: LoginAttempt, sessionId: String) async -> LoginCalibrationService.URLCalibration? {
-        if let cancelled = cancellationOutcomeIfNeeded(attempt, sessionId: sessionId, context: "calibration") {
-            return nil
-        }
         let calibrationService = LoginCalibrationService.shared
         let targetURLString = session.targetURL.absoluteString
 
