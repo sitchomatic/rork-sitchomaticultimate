@@ -10,12 +10,15 @@ class LoginSettingsManager {
     var testTimeout: TimeInterval = 90
     var maxConcurrency: Int = AutomationSettings.defaultMaxConcurrency
     var savedCropRect: CGRect? = nil
-    var automationSettings: AutomationSettings = AutomationSettings()
+    var automationSettings: AutomationSettings {
+        get { centralSettings.loginAutomationSettings }
+        set { centralSettings.persistLoginAutomationSettings(newValue) }
+    }
     let urlRotation = LoginURLRotationService.shared
 
     private let persistence = LoginPersistenceService.shared
+    private let centralSettings = CentralSettingsService.shared
     private var settingsSaveTask: Task<Void, Never>?
-    private let automationSettingsKey = "automation_settings_v1"
     var onLog: ((String, PPSRLogEntry.Level) -> Void)?
 
     var effectiveColorScheme: ColorScheme? {
@@ -56,19 +59,11 @@ class LoginSettingsManager {
     }
 
     func persistAutomationSettings() {
-        automationSettings = automationSettings.normalizedTimeouts()
-        PPSRStealthService.shared.applySettings(automationSettings)
-        if let data = try? JSONEncoder().encode(automationSettings) {
-            UserDefaults.standard.set(data, forKey: automationSettingsKey)
-        }
+        centralSettings.persistLoginAutomationSettings(automationSettings)
     }
 
     func loadAutomationSettings() {
-        if let data = UserDefaults.standard.data(forKey: automationSettingsKey),
-           let loaded = try? JSONDecoder().decode(AutomationSettings.self, from: data) {
-            automationSettings = loaded.normalizedTimeouts()
-        }
-        PPSRStealthService.shared.applySettings(automationSettings)
+        centralSettings.loadLoginAutomationSettings()
     }
 
     func flowAssignment(for urlString: String) -> URLFlowAssignment? {

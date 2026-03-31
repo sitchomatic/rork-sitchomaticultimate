@@ -57,7 +57,7 @@ class PersistentFileStorageService {
         let creds = LoginPersistenceService.shared.loadCredentials()
         let cards = PPSRPersistenceService.shared.loadCards()
         let flows = FlowPersistenceService.shared.loadFlows()
-        let automationData = UserDefaults.standard.data(forKey: "automation_settings_v1")
+        let automationData = try? JSONEncoder().encode(CentralSettingsService.shared.loginAutomationSettings)
         let logEntries = DebugLogger.shared.entries
         let proxyService = ProxyRotationService.shared
         let dnsService = PPSRDoHService.shared
@@ -345,8 +345,8 @@ class PersistentFileStorageService {
 
     // MARK: - Automation Settings
 
-    private func saveAutomationSettings() {
-        guard let data = UserDefaults.standard.data(forKey: "automation_settings_v1") else { return }
+    @MainActor private func saveAutomationSettings() {
+        guard let data = try? JSONEncoder().encode(CentralSettingsService.shared.loginAutomationSettings) else { return }
         let file = configURL.appendingPathComponent("automation_settings.json")
         try? data.write(to: file)
     }
