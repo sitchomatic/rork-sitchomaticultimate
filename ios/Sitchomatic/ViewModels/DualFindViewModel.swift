@@ -7,6 +7,8 @@ import UIKit
 @Observable
 @MainActor
 class DualFindViewModel {
+    static let shared = DualFindViewModel()
+
     /// ContiguousArray for zero-latency email access on A19 Pro silicon.
     var emails: ContiguousArray<String> = []
     var passwordInputText: String = ""
