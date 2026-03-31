@@ -1905,7 +1905,7 @@ struct AutomationSettingsView: View {
             }
 
             Button(role: .destructive) {
-                vm.automationSettings = AutomationSettings()
+                vm.automationSettings = CentralSettingsService.shared.defaultAutomationSettings(for: .login)
                 vm.persistAutomationSettings()
             } label: {
                 Label("Reset All to Defaults", systemImage: "arrow.counterclockwise")

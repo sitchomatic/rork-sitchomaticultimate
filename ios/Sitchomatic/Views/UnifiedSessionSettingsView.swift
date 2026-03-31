@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct UnifiedSessionSettingsView: View {
     @Bindable var vm: UnifiedSessionViewModel
@@ -9,7 +10,6 @@ struct UnifiedSessionSettingsView: View {
     @State private var showSavedToast: Bool = false
     @State private var lastSaveTime: Date? = nil
     @State private var autoSaveEnabled: Bool = true
-
     private let accentColor: Color = .cyan
 
     private var settingsHash: String {
@@ -267,7 +267,7 @@ struct UnifiedSessionSettingsView: View {
             }
 
             Button {
-                vm.automationSettings = AutomationSettings()
+                vm.automationSettings = CentralSettingsService.shared.defaultAutomationSettings(for: .unified)
                 vm.persistAutomationSettings()
                 vm.log("Reset automation settings to defaults", level: .warning)
             } label: {

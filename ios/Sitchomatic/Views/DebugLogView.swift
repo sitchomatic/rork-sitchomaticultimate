@@ -16,6 +16,8 @@ struct DebugLogView: View {
     @State private var shareFileURL: URL?
     @State private var showSessionPicker: Bool = false
     @State private var refreshTrigger: Int = 0
+    @State private var showCompleteLogConfirm: Bool = false
+    @State private var completeLogAction: (() -> Void)?
 
     private var filteredEntries: [DebugLogEntry] {
         var result = logger.entries
@@ -57,6 +59,9 @@ struct DebugLogView: View {
                 }
 
                 Menu {
+                    Button { confirmCompleteLogExport { exportCompleteLog() } } label: {
+                        Label("Export Complete Log", systemImage: "doc.richtext")
+                    }
                     Button { exportFullLog() } label: {
                         Label("Export Full Log", systemImage: "doc.text")
                     }
@@ -64,6 +69,9 @@ struct DebugLogView: View {
                         Label("Export Filtered Log", systemImage: "doc.text.magnifyingglass")
                     }
                     Divider()
+                    Button { confirmCompleteLogExport { exportCompleteLogAsFile() } } label: {
+                        Label("Export Complete Log File", systemImage: "doc.badge.gearshape")
+                    }
                     Button { exportAsFile() } label: {
                         Label("Export as File", systemImage: "square.and.arrow.up")
                     }
@@ -98,6 +106,17 @@ struct DebugLogView: View {
         }
         .onReceive(logger.didChange.throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)) { _ in
             refreshTrigger += 1
+        }
+        .alert("Export Contains Sensitive Data", isPresented: $showCompleteLogConfirm) {
+            Button("Export Anyway", role: .destructive) {
+                completeLogAction?()
+                completeLogAction = nil
+            }
+            Button("Cancel", role: .cancel) {
+                completeLogAction = nil
+            }
+        } message: {
+            Text("The complete log includes credentials, proxy secrets, and other sensitive configuration. Do not share it publicly.")
         }
     }
 
@@ -493,6 +512,19 @@ struct DebugLogView: View {
         .presentationDetents([.medium])
     }
 
+    private func exportCompleteLog() {
+        exportText = logger.exportCompleteLog()
+        showExportSheet = true
+    }
+
+    private func exportCompleteLogAsFile() {
+        if let url = logger.exportCompleteLogToFile() {
+            shareFileURL = url
+        } else {
+            print("DebugLogView: Failed to export complete log to file.")
+        }
+    }
+
     private func exportAsFile() {
         if let url = logger.exportLogToFile() {
             shareFileURL = url
@@ -503,6 +535,11 @@ struct DebugLogView: View {
         if let url = logger.exportDiagnosticReportToFile() {
             shareFileURL = url
         }
+    }
+
+    private func confirmCompleteLogExport(_ action: @escaping () -> Void) {
+        completeLogAction = action
+        showCompleteLogConfirm = true
     }
 
     private func exportFullLog() {

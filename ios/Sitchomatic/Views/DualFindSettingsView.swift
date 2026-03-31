@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DualFindSettingsView: View {
     @Bindable var vm: DualFindViewModel
@@ -9,7 +10,6 @@ struct DualFindSettingsView: View {
     @State private var showSavedToast: Bool = false
     @State private var lastSaveTime: Date? = nil
     @State private var autoSaveEnabled: Bool = true
-
     private let accentColor: Color = .purple
 
     private var settingsHash: String {
@@ -281,7 +281,7 @@ struct DualFindSettingsView: View {
             }
 
             Button {
-                vm.automationSettings = AutomationSettings()
+                vm.automationSettings = CentralSettingsService.shared.defaultAutomationSettings(for: .dualFind)
                 vm.persistDualFindSettings()
                 vm.log("Reset automation settings to defaults", level: .warning)
             } label: {

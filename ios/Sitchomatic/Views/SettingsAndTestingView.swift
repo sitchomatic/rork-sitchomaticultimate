@@ -7,6 +7,8 @@ struct SettingsAndTestingView: View {
     @State private var toastMessage: String = "Copied to clipboard"
     @State private var shareFileURL: URL?
     @State private var nordService = NordVPNService.shared
+    @State private var showCompleteLogConfirm: Bool = false
+    @State private var completeLogAction: (() -> Void)?
     private let proxyService = ProxyRotationService.shared
 
     var body: some View {
@@ -47,6 +49,17 @@ struct SettingsAndTestingView: View {
             if let url = shareFileURL {
                 ShareSheetView(items: [url])
             }
+        }
+        .alert("Export Contains Sensitive Data", isPresented: $showCompleteLogConfirm) {
+            Button("Export Anyway", role: .destructive) {
+                completeLogAction?()
+                completeLogAction = nil
+            }
+            Button("Cancel", role: .cancel) {
+                completeLogAction = nil
+            }
+        } message: {
+            Text("The complete log includes credentials, proxy secrets, and other sensitive configuration. Do not share it publicly.")
         }
     }
 
@@ -284,67 +297,42 @@ struct SettingsAndTestingView: View {
 
             Section {
                 Button {
-                    let credentials = LoginPersistenceService.shared.loadCredentials()
-                    let cards = PPSRPersistenceService.shared.loadCards()
-                    let text = DebugLogger.shared.exportCompleteLog(credentials: credentials, cards: cards)
-                    UIPasteboard.general.string = text
-                    toastMessage = "Copied to clipboard"
-                    withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
-                    Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+                    completeLogAction = {
+                        let text = DebugLogger.shared.exportCompleteLog(
+                            automationSettings: vm.automationSettings
+                        )
+                        UIPasteboard.general.string = text
+                        toastMessage = "Copied to clipboard"
+                        withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                        Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+                    }
+                    showCompleteLogConfirm = true
                 } label: {
                     settingsRow(
-                        icon: "doc.text.fill.badge.ellipsis",
+                        icon: "doc.badge.gearshape",
                         title: "Export Complete Log",
-                        subtitle: "Copy comprehensive diagnostic & data log",
-                        color: .orange
-                    )
-                }
-
-                Button {
-                    let credentials = LoginPersistenceService.shared.loadCredentials()
-                    let cards = PPSRPersistenceService.shared.loadCards()
-                    shareFileURL = DebugLogger.shared.exportCompleteLogToFile(credentials: credentials, cards: cards)
-                } label: {
-                    settingsRow(
-                        icon: "doc.badge.gearshape.fill",
-                        title: "Share Complete Log File",
-                        subtitle: "Export all logging & diagnostic data as file",
-                        color: .red
-                    )
-                }
-
-                Button {
-                    let text = DebugLogger.shared.exportDiagnosticReport(
-                        credentials: [],
-                        automationSettings: vm.automationSettings
-                    )
-                    UIPasteboard.general.string = text
-                    toastMessage = "Copied to clipboard"
-                    withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
-                    Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
-                } label: {
-                    settingsRow(
-                        icon: "stethoscope",
-                        title: "Export Diagnostic Report",
-                        subtitle: "Copy standard diagnostic report",
-                        color: .purple
-                    )
-                }
-
-                Button {
-                    shareFileURL = DebugLogger.shared.exportLogToFile()
-                } label: {
-                    settingsRow(
-                        icon: "square.and.arrow.up",
-                        title: "Share Debug Log File",
-                        subtitle: "Export debug log as shareable .txt file",
+                        subtitle: "Copy diagnostics + config (contains secrets)",
                         color: .indigo
                     )
                 }
+
+                Button {
+                    completeLogAction = {
+                        shareFileURL = DebugLogger.shared.exportCompleteLogToFile(
+                            automationSettings: vm.automationSettings
+                        )
+                    }
+                    showCompleteLogConfirm = true
+                } label: {
+                    settingsRow(
+                        icon: "square.and.arrow.up",
+                        title: "Share Complete Log File",
+                        subtitle: "Full debug, diagnostics, and config (contains secrets)",
+                        color: .purple
+                    )
+                }
             } header: {
-                Label("Diagnostic Reports", systemImage: "doc.badge.gearshape")
-            } footer: {
-                Text("Complete Log includes all diagnostic data, automation settings for all modes, network configuration, credentials, cards, proxies, VPNs, DNS, and comprehensive debug logs.")
+                Label("Complete Log", systemImage: "doc.badge.gearshape")
             }
         }
     }
