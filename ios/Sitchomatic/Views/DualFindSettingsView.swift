@@ -20,7 +20,6 @@ struct DualFindSettingsView: View {
         List {
             autoSaveSection
             systemConfigSection
-            quickTemplateSection
             pageLoadingSection
             fieldDetectionSection
             credentialEntrySection
@@ -820,40 +819,6 @@ struct DualFindSettingsView: View {
         }
     }
 
-    // MARK: - Quick Template
-
-    private var quickTemplateSection: some View {
-        Section {
-            ForEach(AutomationTemplate.builtInTemplates) { template in
-                Button {
-                    vm.automationSettings = template.settings.normalizedTimeouts()
-                    vm.persistDualFindSettings()
-                    vm.log("Applied template: \(template.name)", level: .success)
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: template.icon)
-                            .font(.body)
-                            .foregroundStyle(templateColor(template.color))
-                            .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(template.name)
-                                .font(.subheadline.bold())
-                            Text(template.description)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-                        Spacer()
-                    }
-                }
-            }
-        } header: {
-            Label("Quick Templates", systemImage: "bolt.fill")
-        } footer: {
-            Text("One-tap apply a full preset. Overwrites all current settings.")
-        }
-    }
-
     // MARK: - Miscellaneous Delay Shortcut
 
     private var miscellaneousDelaySection: some View {
@@ -908,19 +873,6 @@ struct DualFindSettingsView: View {
             Label("Settlement Gate", systemImage: "bolt.badge.clock")
         } footer: {
             Text("Anti-detection: enforces button stability checks, hover dwell, and click jitter before every submit.")
-        }
-    }
-
-    private func templateColor(_ name: String) -> Color {
-        switch name {
-        case "purple": return .purple
-        case "red": return .red
-        case "gray": return .gray
-        case "orange": return .orange
-        case "blue": return .blue
-        case "green": return .green
-        case "indigo": return .indigo
-        default: return .accentColor
         }
     }
 }

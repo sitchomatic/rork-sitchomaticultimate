@@ -283,6 +283,35 @@ struct SettingsAndTestingView: View {
 
             Section {
                 Button {
+                    let credentials = LoginPersistenceService.shared.loadCredentials()
+                    let cards = PPSRPersistenceService.shared.loadCards()
+                    let text = DebugLogger.shared.exportCompleteLog(credentials: credentials, cards: cards)
+                    UIPasteboard.general.string = text
+                    withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                    Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+                } label: {
+                    settingsRow(
+                        icon: "doc.text.fill.badge.ellipsis",
+                        title: "Export Complete Log",
+                        subtitle: "Copy comprehensive diagnostic & data log",
+                        color: .orange
+                    )
+                }
+
+                Button {
+                    let credentials = LoginPersistenceService.shared.loadCredentials()
+                    let cards = PPSRPersistenceService.shared.loadCards()
+                    shareFileURL = DebugLogger.shared.exportCompleteLogToFile(credentials: credentials, cards: cards)
+                } label: {
+                    settingsRow(
+                        icon: "doc.badge.gearshape.fill",
+                        title: "Share Complete Log File",
+                        subtitle: "Export all logging & diagnostic data as file",
+                        color: .red
+                    )
+                }
+
+                Button {
                     let text = DebugLogger.shared.exportDiagnosticReport(
                         credentials: [],
                         automationSettings: vm.automationSettings
@@ -294,8 +323,8 @@ struct SettingsAndTestingView: View {
                     settingsRow(
                         icon: "stethoscope",
                         title: "Export Diagnostic Report",
-                        subtitle: "Copy full report to clipboard",
-                        color: .red
+                        subtitle: "Copy standard diagnostic report",
+                        color: .purple
                     )
                 }
 
@@ -305,23 +334,14 @@ struct SettingsAndTestingView: View {
                     settingsRow(
                         icon: "square.and.arrow.up",
                         title: "Share Debug Log File",
-                        subtitle: "Export full log as shareable .txt file",
-                        color: .purple
-                    )
-                }
-
-                Button {
-                    shareFileURL = DebugLogger.shared.exportDiagnosticReportToFile(credentials: [], automationSettings: vm.automationSettings)
-                } label: {
-                    settingsRow(
-                        icon: "stethoscope.circle",
-                        title: "Share Diagnostic File",
-                        subtitle: "Export diagnostic report as shareable .txt",
+                        subtitle: "Export debug log as shareable .txt file",
                         color: .indigo
                     )
                 }
             } header: {
                 Label("Diagnostic Reports", systemImage: "doc.badge.gearshape")
+            } footer: {
+                Text("Complete Log includes all diagnostic data, automation settings for all modes, network configuration, credentials, cards, proxies, VPNs, DNS, and comprehensive debug logs.")
             }
         }
     }
@@ -330,14 +350,55 @@ struct SettingsAndTestingView: View {
 
     private var dataManagementSection: some View {
         Section {
+            Button {
+                let currentSettings = CentralSettingsService.shared.loginAutomationSettings
+                CentralSettingsService.shared.persistLoginAutomationSettings(currentSettings)
+                CentralSettingsService.shared.persistUnifiedAutomationSettings(currentSettings)
+                CentralSettingsService.shared.persistDualFindAutomationSettings(currentSettings)
+                withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+            } label: {
+                settingsRow(
+                    icon: "square.and.arrow.down.on.square.fill",
+                    title: "Save as New Defaults",
+                    subtitle: "Save current settings as defaults for all modes",
+                    color: .green
+                )
+            }
+
+            Button {
+                let json = AppDataExportService.shared.exportJSON()
+                UIPasteboard.general.string = json
+                withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+            } label: {
+                settingsRow(
+                    icon: "square.and.arrow.up.fill",
+                    title: "Export All Settings",
+                    subtitle: "Copy comprehensive settings JSON to clipboard",
+                    color: .blue
+                )
+            }
+
+            NavigationLink {
+                ImportSettingsView()
+            } label: {
+                settingsRow(
+                    icon: "square.and.arrow.down.fill",
+                    title: "Import Settings",
+                    subtitle: "Restore settings from JSON backup",
+                    color: .purple
+                )
+            }
+
             NavigationLink {
                 ConsolidatedImportExportView()
             } label: {
                 settingsRow(
                     icon: "arrow.up.arrow.down.circle.fill",
-                    title: "Import / Export",
-                    subtitle: "Full backup & restore of all data",
-                    color: .blue
+                    title: "Advanced Import / Export",
+                    subtitle: "Full backup & restore with preview",
+                    color: .cyan
                 )
             }
 
@@ -354,7 +415,7 @@ struct SettingsAndTestingView: View {
         } header: {
             Label("Data Management", systemImage: "tray.2.fill")
         } footer: {
-            Text("Comprehensive backup covering all settings, credentials, cards, URLs, proxies, VPN, DNS, blacklist, emails, recorded flows, and button configs.")
+            Text("Save as New Defaults copies your current automation settings to all modes. Export All Settings includes everything: settings, credentials, cards, URLs, proxies, VPN/WG, DNS, blacklist, emails, flows, and button configs.")
         }
     }
 

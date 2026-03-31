@@ -346,6 +346,285 @@ class DebugLogger {
         return report
     }
 
+    func exportCompleteLog(credentials: [LoginCredential] = [], cards: [PPSRCard] = []) -> String {
+        let now = DateFormatters.fullTimestamp.string(from: Date())
+        let appDataService = AppDataExportService.shared
+        let urlService = LoginURLRotationService.shared
+        let proxyService = ProxyRotationService.shared
+        let dnsService = PPSRDoHService.shared
+        let blacklistService = BlacklistService.shared
+        let emailService = PPSREmailRotationService.shared
+        let flowService = FlowPersistenceService.shared
+        let debugButtonService = DebugLoginButtonService.shared
+        let centralSettings = CentralSettingsService.shared
+
+        var report = """
+        ========================================
+        COMPLETE DIAGNOSTIC & DATA EXPORT LOG
+        Generated: \(now)
+        ========================================
+
+        DEVICE & SYSTEM INFO:
+        - iOS Version: \(UIDevice.current.systemVersion)
+        - Device Model: \(UIDevice.current.model)
+        - Device Name: \(UIDevice.current.name)
+        - System Name: \(UIDevice.current.systemName)
+        - App Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")
+        - Build: \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown")
+
+        DEBUG LOG STATISTICS:
+        - Total Log Entries: \(entries.count)
+        - Total Logged (Session): \(totalEntriesLogged)
+        - Total Evicted: \(totalEntriesEvicted)
+        - Errors: \(errorCount)
+        - Warnings: \(warningCount)
+        - Critical: \(criticalCount)
+        - Healing Events: \(errorHealingLog.count)
+        - Healing Success Rate: \(String(format: "%.1f%%", healingSuccessRate * 100))
+        - Active Sessions: \(uniqueSessionIds.count)
+
+        DATA SUMMARY:
+        - Total Credentials: \(credentials.count)
+        - Working Credentials: \(credentials.filter { $0.status == .working }.count)
+        - Total Cards: \(cards.count)
+        - Working Cards: \(cards.filter { $0.status == .working }.count)
+        - Joe URLs: \(urlService.joeURLs.count)
+        - Ignition URLs: \(urlService.ignitionURLs.count)
+        - Joe Proxies: \(proxyService.savedProxies.count)
+        - Ignition Proxies: \(proxyService.ignitionProxies.count)
+        - PPSR Proxies: \(proxyService.ppsrProxies.count)
+        - Joe VPN Configs: \(proxyService.joeVPNConfigs.count)
+        - Ignition VPN Configs: \(proxyService.ignitionVPNConfigs.count)
+        - PPSR VPN Configs: \(proxyService.ppsrVPNConfigs.count)
+        - Joe WireGuard Configs: \(proxyService.joeWGConfigs.count)
+        - Ignition WireGuard Configs: \(proxyService.ignitionWGConfigs.count)
+        - PPSR WireGuard Configs: \(proxyService.ppsrWGConfigs.count)
+        - DNS Servers: \(dnsService.managedProviders.count)
+        - Blacklist Entries: \(blacklistService.blacklistedEmails.count)
+        - Email Rotation List: \(emailService.emails.count)
+        - Recorded Flows: \(flowService.loadFlows().count)
+        - Debug Button Configs: \(debugButtonService.configs.count)
+
+        ========================================
+        AUTOMATION SETTINGS (ALL MODES)
+        ========================================
+
+        LOGIN/GLOBAL MODE:
+        \(formatAutomationSettings(centralSettings.loginAutomationSettings))
+
+        UNIFIED SESSION MODE:
+        \(formatAutomationSettings(centralSettings.unifiedAutomationSettings))
+
+        DUALFIND MODE:
+        \(formatAutomationSettings(centralSettings.dualFindAutomationSettings))
+
+        ========================================
+        NETWORK CONFIGURATION
+        ========================================
+
+        CONNECTION MODES:
+        - Joe: \(proxyService.joeConnectionMode.label)
+        - Ignition: \(proxyService.ignitionConnectionMode.label)
+        - PPSR: \(proxyService.ppsrConnectionMode.label)
+        - Unified: \(proxyService.unifiedConnectionMode.label)
+
+        NETWORK REGION: \(proxyService.networkRegion.label)
+
+        IP ROUTING:
+        - Mode: \(DeviceProxyService.shared.ipRoutingMode.label)
+        - Rotation Interval: \(DeviceProxyService.shared.rotationInterval.rawValue)
+        - Rotate on Batch Start: \(DeviceProxyService.shared.rotateOnBatchStart)
+        - Rotate on Fingerprint Detection: \(DeviceProxyService.shared.rotateOnFingerprintDetection)
+        - Local Proxy Enabled: \(DeviceProxyService.shared.localProxyEnabled)
+        - Auto Failover: \(DeviceProxyService.shared.autoFailoverEnabled)
+        - Health Check Interval: \(DeviceProxyService.shared.healthCheckInterval)s
+        - Max Failures Before Rotation: \(DeviceProxyService.shared.maxFailuresBeforeRotation)
+
+        ========================================
+        URL PERFORMANCE DATA
+        ========================================
+
+        \(appDataService.exportURLHistory())
+
+        ========================================
+        CREDENTIAL DETAILS
+        ========================================
+
+        \(exportCredentialDetails(credentials))
+
+        ========================================
+        CARD DETAILS
+        ========================================
+
+        \(exportCardDetails(cards))
+
+        ========================================
+        PROXY STATUS
+        ========================================
+
+        \(appDataService.exportProxyState())
+
+        ========================================
+        VPN & WIREGUARD STATUS
+        ========================================
+
+        \(appDataService.exportVPNState())
+
+        ========================================
+        DNS CONFIGURATION
+        ========================================
+
+        \(appDataService.exportDNSState())
+
+        ========================================
+        BLACKLIST
+        ========================================
+
+        \(appDataService.exportBlacklistState())
+
+        ========================================
+        DEBUG BUTTON CONFIGURATIONS
+        ========================================
+
+        \(debugButtonConfigSummary())
+
+        ========================================
+        CALIBRATION DATA
+        ========================================
+
+        \(calibrationSummary())
+
+        ========================================
+        LOG CATEGORY BREAKDOWN
+        ========================================
+
+        \(categoryBreakdown.map { "  - \($0.category.rawValue): \($0.count)" }.joined(separator: "\n"))
+
+        ========================================
+        LOG LEVEL BREAKDOWN
+        ========================================
+
+        \(levelBreakdown.map { "  - \($0.level.rawValue): \($0.count)" }.joined(separator: "\n"))
+
+        ========================================
+        ERROR LOG (last 200)
+        ========================================
+
+        \(entries.filter { $0.level >= .error }.prefix(200).map(\.exportLine).joined(separator: "\n"))
+
+        ========================================
+        WARNING LOG (last 100)
+        ========================================
+
+        \(entries.filter { $0.level == .warning }.prefix(100).map(\.exportLine).joined(separator: "\n"))
+
+        ========================================
+        HEALING LOG (all events)
+        ========================================
+
+        \(exportHealingLog())
+
+        ========================================
+        FULL DEBUG LOG (last 1000)
+        ========================================
+
+        \(entries.prefix(1000).map(\.exportLine).joined(separator: "\n"))
+
+        ========================================
+        END OF COMPLETE LOG
+        ========================================
+        """
+
+        return report
+    }
+
+    func exportCompleteLogToFile(credentials: [LoginCredential] = [], cards: [PPSRCard] = []) -> URL? {
+        persistence.exportCompleteLogToFile(content: exportCompleteLog(credentials: credentials, cards: cards))
+    }
+
+    private func formatAutomationSettings(_ settings: AutomationSettings) -> String {
+        """
+        - Max Concurrency: \(settings.maxConcurrency)
+        - Detection Mode: \(settings.loginButtonDetectionMode.rawValue)
+        - Click Method: \(settings.loginButtonClickMethod.rawValue)
+        - Session Isolation: \(settings.sessionIsolation.rawValue)
+        - Stealth JS: \(settings.stealthJSInjection)
+        - Fingerprint Spoofing: \(settings.fingerprintSpoofing)
+        - User Agent Rotation: \(settings.userAgentRotation)
+        - Viewport Randomization: \(settings.viewportRandomization)
+        - Human Mouse Movement: \(settings.humanMouseMovement)
+        - Human Scroll Jitter: \(settings.humanScrollJitter)
+        - Typing Speed: \(settings.typingSpeedMinMs)-\(settings.typingSpeedMaxMs)ms
+        - Typing Jitter: \(settings.typingJitterEnabled)
+        - Page Load Timeout: \(Int(settings.pageLoadTimeout))s
+        - Field Verification Timeout: \(Int(settings.fieldVerificationTimeout))s
+        - Wait For Response: \(settings.waitForResponseSeconds)s
+        - Submit Retry Count: \(settings.submitRetryCount)
+        - Max Submit Cycles: \(settings.maxSubmitCycles)
+        - Max Requeue Count: \(settings.maxRequeueCount)
+        - Pattern Learning: \(settings.patternLearningEnabled)
+        - Auto Calibration: \(settings.autoCalibrationEnabled)
+        - Field Verification: \(settings.fieldVerificationEnabled)
+        - Clear Cookies: \(settings.clearCookiesBetweenAttempts)
+        - Fresh WebView Per Attempt: \(settings.freshWebViewPerAttempt)
+        """
+    }
+
+    private func exportCredentialDetails(_ credentials: [LoginCredential]) -> String {
+        guard !credentials.isEmpty else { return "No credentials to export" }
+
+        var lines: [String] = []
+        for cred in credentials {
+            lines.append("Username: \(cred.username)")
+            lines.append("  Status: \(cred.status.rawValue)")
+            lines.append("  Added: \(DateFormatters.exportTimestamp.string(from: cred.addedAt))")
+            lines.append("  Total Tests: \(cred.totalTests)")
+            lines.append("  Success Count: \(cred.successCount)")
+            lines.append("  Success Rate: \(cred.successRateFormatted)")
+            if !cred.notes.isEmpty {
+                lines.append("  Notes: \(cred.notes)")
+            }
+            if !cred.testResults.isEmpty {
+                lines.append("  Recent Tests:")
+                for result in cred.testResults.prefix(5) {
+                    let icon = result.success ? "✓" : "✗"
+                    let detail = result.responseDetail ?? result.errorMessage ?? "N/A"
+                    lines.append("    \(icon) \(DateFormatters.exportTimestamp.string(from: result.timestamp)) | \(result.formattedDuration) | \(detail)")
+                }
+            }
+            lines.append("")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func exportCardDetails(_ cards: [PPSRCard]) -> String {
+        guard !cards.isEmpty else { return "No cards to export" }
+
+        var lines: [String] = []
+        for card in cards {
+            lines.append("Card: ****\(card.number.suffix(4))")
+            lines.append("  Brand: \(card.brand.rawValue)")
+            lines.append("  Status: \(card.status.rawValue)")
+            lines.append("  Expiry: \(card.expiryMonth)/\(card.expiryYear)")
+            lines.append("  Added: \(DateFormatters.exportTimestamp.string(from: card.addedAt))")
+            lines.append("  Total Tests: \(card.totalTests)")
+            lines.append("  Success Count: \(card.successCount)")
+            if let binData = card.binData, binData.isLoaded {
+                lines.append("  BIN Info: \(binData.issuer) (\(binData.country))")
+                lines.append("  Card Type: \(binData.type) / \(binData.category)")
+            }
+            if !card.testResults.isEmpty {
+                lines.append("  Recent Tests:")
+                for result in card.testResults.prefix(5) {
+                    let icon = result.success ? "✓" : "✗"
+                    lines.append("    \(icon) \(DateFormatters.exportTimestamp.string(from: result.timestamp)) | VIN: \(result.vin) | \(result.formattedDuration)")
+                }
+            }
+            lines.append("")
+        }
+        return lines.joined(separator: "\n")
+    }
+
     func classifyNetworkError(_ error: Error) -> (code: Int, domain: String, userMessage: String, isRetryable: Bool) {
         let nsError = error as NSError
         let retryableCodes: Set<Int> = [

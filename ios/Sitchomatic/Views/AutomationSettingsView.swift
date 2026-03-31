@@ -13,7 +13,6 @@ struct AutomationSettingsView: View {
     @State private var showButtonTextEditor: Bool = false
     @State private var showMFAKeywordEditor: Bool = false
     @State private var showCaptchaKeywordEditor: Bool = false
-    @State private var showTemplates: Bool = false
     @State private var showCalibrationSheet: Bool = false
     @State private var calibrationURL: String = ""
     @State private var isAutoCalibrating: Bool = false
@@ -42,7 +41,6 @@ struct AutomationSettingsView: View {
     var body: some View {
         List {
             autoSaveSection
-            templateQuickSection
             urlCalibrationSection
             pageLoadingSection
             fieldDetectionSection
@@ -96,12 +94,6 @@ struct AutomationSettingsView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .padding(.bottom, 20)
             }
-        }
-        .sheet(isPresented: $showTemplates) {
-            NavigationStack { AutomationTemplateView(vm: vm) }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
         }
         .sheet(isPresented: $showFlowAssignment) {
             NavigationStack { URLFlowAssignmentView(vm: vm) }
@@ -213,40 +205,6 @@ struct AutomationSettingsView: View {
             }
         } header: {
             Label("Persistence", systemImage: "externaldrive.fill")
-        }
-    }
-
-    // MARK: - Templates
-
-    private var templateQuickSection: some View {
-        Section {
-            Button {
-                showTemplates = true
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "rectangle.stack.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.purple)
-                        .frame(width: 36, height: 36)
-                        .background(.purple.opacity(0.12))
-                        .clipShape(.rect(cornerRadius: 8))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Automation Templates")
-                            .font(.subheadline.weight(.bold))
-                        Text("\(AutomationTemplate.builtInTemplates.count) built-in + custom presets")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-        } header: {
-            Label("Quick Apply", systemImage: "bolt.fill")
-        } footer: {
-            Text("Apply a pre-configured template for Vision ML, Coordinate, Stealth, Speed, or Resilient automation.")
         }
     }
 
