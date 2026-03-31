@@ -555,7 +555,6 @@ class LoginAutomationEngine {
             let loadMs = logger.stopTimer(key: "\(sessionId)_pageload_\(attemptNum)")
             if loaded {
                 logger.log("Page load attempt \(attemptNum)/3 SUCCESS", category: .webView, level: .success, sessionId: sessionId, durationMs: loadMs)
-                let pageHost = session.targetURL.host ?? ""
                 break
             }
             let errorDetail = session.lastNavigationError ?? "unknown error"

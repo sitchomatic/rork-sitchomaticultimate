@@ -396,22 +396,14 @@ class NordServerIntelligence {
             )
             let connection = NWConnection(to: endpoint, using: .tcp)
             let queue = DispatchQueue(label: "nord-intel-validate.\(UUID().uuidString.prefix(6))")
-            var completed = false
-            let lock = NSLock()
-
-            func finish(_ result: (alive: Bool, validated: Bool)) {
-                lock.lock()
-                defer { lock.unlock() }
-                guard !completed else { return }
-                completed = true
-                continuation.resume(returning: result)
+            let guard_ = ContinuationGuard()
+            let timeoutTask = Task.detached(priority: .utility) {
+                do { try await Task.sleep(for: .seconds(5)) } catch { return }
+                if guard_.tryConsume() {
+                    connection.cancel()
+                    continuation.resume(returning: (false, false))
+                }
             }
-
-            let timeoutWork = DispatchWorkItem { [weak connection] in
-                connection?.cancel()
-                finish((false, false))
-            }
-            queue.asyncAfter(deadline: .now() + 5, execute: timeoutWork)
 
             connection.stateUpdateHandler = { state in
                 switch state {
@@ -425,23 +417,23 @@ class NordServerIntelligence {
 
                     connection.send(content: greeting, completion: .contentProcessed { sendError in
                         if sendError != nil {
-                            timeoutWork.cancel()
+                            timeoutTask.cancel()
                             connection.cancel()
-                            finish((true, false))
+                            if guard_.tryConsume() {
+                                continuation.resume(returning: (true, false))
+                            }
                             return
                         }
 
                         connection.receive(minimumIncompleteLength: 2, maximumLength: 16) { data, _, _, recvError in
-                            if recvError != nil {
-                                timeoutWork.cancel()
+                            timeoutTask.cancel()
+                            // Do not cancel the connection here: the auth path (authMethod == 0x02)
+                            // still needs it for the username/password sub-handshake.
+                            guard recvError == nil, let data, data.count >= 2, data[0] == 0x05 else {
                                 connection.cancel()
-                                finish((true, false))
-                                return
-                            }
-                            guard let data, data.count >= 2, data[0] == 0x05 else {
-                                timeoutWork.cancel()
-                                connection.cancel()
-                                finish((true, false))
+                                if guard_.tryConsume() {
+                                    continuation.resume(returning: (true, false))
+                                }
                                 return
                             }
                             let authMethod = data[1]
@@ -456,48 +448,53 @@ class NordServerIntelligence {
 
                                 connection.send(content: authPacket, completion: .contentProcessed { authSendError in
                                     if authSendError != nil {
-                                        timeoutWork.cancel()
                                         connection.cancel()
-                                        finish((true, false))
+                                        if guard_.tryConsume() {
+                                            continuation.resume(returning: (true, false))
+                                        }
                                         return
                                     }
                                     connection.receive(minimumIncompleteLength: 2, maximumLength: 4) { authData, _, _, authRecvError in
-                                        timeoutWork.cancel()
                                         connection.cancel()
-                                        if authRecvError != nil {
-                                            finish((true, false))
-                                            return
+                                        if guard_.tryConsume() {
+                                            guard authRecvError == nil, let authData, authData.count >= 2 else {
+                                                continuation.resume(returning: (true, false))
+                                                return
+                                            }
+                                            continuation.resume(returning: (true, authData[1] == 0x00))
                                         }
-                                        guard let authData, authData.count >= 2 else {
-                                            finish((true, false))
-                                            return
-                                        }
-                                        finish((true, authData[1] == 0x00))
                                     }
                                 })
                             } else if authMethod == 0x00 {
-                                timeoutWork.cancel()
                                 connection.cancel()
-                                finish((true, true))
+                                if guard_.tryConsume() {
+                                    continuation.resume(returning: (true, true))
+                                }
                             } else if authMethod == 0xFF {
-                                timeoutWork.cancel()
                                 connection.cancel()
-                                finish((true, false))
+                                if guard_.tryConsume() {
+                                    continuation.resume(returning: (true, false))
+                                }
                             } else {
-                                timeoutWork.cancel()
                                 connection.cancel()
-                                finish((true, true))
+                                if guard_.tryConsume() {
+                                    continuation.resume(returning: (true, true))
+                                }
                             }
                         }
                     })
 
                 case .failed:
-                    timeoutWork.cancel()
+                    timeoutTask.cancel()
                     connection.cancel()
-                    finish((false, false))
+                    if guard_.tryConsume() {
+                        continuation.resume(returning: (false, false))
+                    }
                 case .cancelled:
-                    timeoutWork.cancel()
-                    finish((false, false))
+                    timeoutTask.cancel()
+                    if guard_.tryConsume() {
+                        continuation.resume(returning: (false, false))
+                    }
                 default:
                     break
                 }

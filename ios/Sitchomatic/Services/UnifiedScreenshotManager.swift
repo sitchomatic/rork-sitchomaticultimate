@@ -214,7 +214,9 @@ class UnifiedScreenshotManager {
         if screenshots.count > keep {
             screenshots = Array(screenshots.prefix(keep))
         }
-        ScreenshotCache.shared.clearDecodedImages()
+        Task {
+            await ScreenshotCache.shared.clearDecodedImages()
+        }
     }
 }
 
@@ -319,10 +321,14 @@ class CapturedScreenshot: Identifiable {
         set {
             if let img = newValue {
                 croppedImageData = img.jpegData(compressionQuality: 0.5)
-                ScreenshotCache.shared.removeDecodedImage(forKey: "\(id)_crop")
+                Task {
+                    await ScreenshotCache.shared.removeDecodedImage(forKey: "\(id)_crop")
+                }
             } else {
                 croppedImageData = nil
-                ScreenshotCache.shared.removeDecodedImage(forKey: "\(id)_crop")
+                Task {
+                    await ScreenshotCache.shared.removeDecodedImage(forKey: "\(id)_crop")
+                }
             }
         }
     }
