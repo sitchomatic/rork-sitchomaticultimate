@@ -26,7 +26,6 @@ class LoginAutomationEngine {
     private let logger = DebugLogger.shared
     private let visionML = VisionMLService.shared
     private let debugButtonService = DebugLoginButtonService.shared
-    private let trueDetection = TrueDetectionService.shared
     private let networkFactory = NetworkSessionFactory.shared
     private let deadSessionDetector = DeadSessionDetector.shared
     private let replayLogger = SessionReplayLogger.shared
@@ -835,14 +834,7 @@ class LoginAutomationEngine {
         var duplicateContentCount: Int = 0
         var buttonFingerprint: SmartButtonRecoveryService.ButtonFingerprint?
 
-        let priorityPatterns: [LoginFormPattern]
-        if automationSettings.trueDetectionEnabled && automationSettings.trueDetectionPriority {
-            priorityPatterns = [.visionMLCoordinate, .trueDetection, .calibratedTyping, .calibratedDirect, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
-        } else if calibration?.isCalibrated == true {
-            priorityPatterns = [.visionMLCoordinate, .calibratedTyping, .calibratedDirect, .trueDetection, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
-        } else {
-            priorityPatterns = [.visionMLCoordinate, .trueDetection, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst, .calibratedDirect, .coordinateClick, .calibratedTyping]
-        }
+        let priorityPatterns: [LoginFormPattern] = [.visionMLCoordinate, .calibratedTyping, .calibratedDirect, .tabNavigation, .reactNativeSetter, .formSubmitDirect, .coordinateClick, .clickFocusSequential, .execCommandInsert, .slowDeliberateTyper, .mobileTouchBurst]
 
         for cycle in 1...maxSubmitCycles {
             logger.log("Phase: HUMAN PATTERN CYCLE \(cycle)/\(maxSubmitCycles)", category: .automation, level: .info, sessionId: sessionId)
@@ -857,7 +849,7 @@ class LoginAutomationEngine {
                 if learnedBest == .visionMLCoordinate {
                     selectedPattern = .visionMLCoordinate
                     attempt.logs.append(PPSRLogEntry(message: "PatternML confirmed visionMLCoordinate as best for this site", level: .info))
-                } else if learnedBest != .trueDetection && learnedBest != .visionMLCoordinate {
+                } else if learnedBest != .visionMLCoordinate {
                     selectedPattern = .visionMLCoordinate
                     attempt.logs.append(PPSRLogEntry(message: "OCR Vision first: overriding learned '\(learnedBest.rawValue)' — visionMLCoordinate is primary for undetectable automation", level: .info))
                 } else {
@@ -1118,7 +1110,7 @@ class LoginAutomationEngine {
                     message: "RED BANNER ERROR detected — wiping session, requeuing to bottom",
                     level: .warning
                 ))
-                await captureTerminalScreenshot(session: session, attempt: attempt, step: "red_banner_error", note: "RED BANNER ERROR — requeued for future retry", autoResult: .unknown, terminalType: .errorBanner)
+                await captureDebugScreenshot(session: session, attempt: attempt, step: "red_banner_error", note: "RED BANNER ERROR — requeued for future retry", autoResult: .unknown)
                 attempt.status = .failed
                 attempt.errorMessage = "Red banner error detected — requeuing to bottom"
                 attempt.completedAt = Date()
@@ -1130,7 +1122,7 @@ class LoginAutomationEngine {
                     message: "SMS NOTIFICATION detected (Ignition): sms verification — burning session, requeuing with different IP/webview",
                     level: .warning
                 ))
-                await captureTerminalScreenshot(session: session, attempt: attempt, step: "sms_notification", note: "SMS NOTIFICATION (Ignition): sms verification — burn session, retry with different setup", autoResult: .unknown, terminalType: .smsVerification)
+                await captureDebugScreenshot(session: session, attempt: attempt, step: "sms_notification", note: "SMS NOTIFICATION (Ignition): sms verification — burn session, retry with different setup", autoResult: .unknown)
                 attempt.status = .failed
                 attempt.errorMessage = "SMS notification detected — burning session, requeuing for retry with different IP/webview"
                 attempt.completedAt = Date()
@@ -1200,13 +1192,13 @@ class LoginAutomationEngine {
             case .tempDisabled:
                 attempt.logs.append(PPSRLogEntry(message: "TEMP DISABLED on cycle \(cycle): \(evaluation.reason) — FINAL RESULT", level: .warning))
                 failAttempt(attempt, message: "Account temporarily disabled: \(evaluation.reason)")
-                await captureTerminalScreenshot(session: session, attempt: attempt, step: "temp_disabled", note: "TEMP DISABLED: \(evaluation.reason)", autoResult: .tempDisabled, terminalType: .temporarilyDisabled)
+                await captureDebugScreenshot(session: session, attempt: attempt, step: "temp_disabled", note: "TEMP DISABLED: \(evaluation.reason)", autoResult: .tempDisabled)
                 return (.tempDisabled, lastEvaluation, maxSubmitCycles)
 
             case .permDisabled:
                 attempt.logs.append(PPSRLogEntry(message: "PERM DISABLED on cycle \(cycle): \(evaluation.reason) — FINAL RESULT (immediate)", level: .error))
                 failAttempt(attempt, message: "Account permanently disabled/blacklisted: \(evaluation.reason)")
-                await captureTerminalScreenshot(session: session, attempt: attempt, step: "perm_disabled", note: "PERM DISABLED: \(evaluation.reason)", autoResult: .permDisabled, terminalType: .accountDisabled)
+                await captureDebugScreenshot(session: session, attempt: attempt, step: "perm_disabled", note: "PERM DISABLED: \(evaluation.reason)", autoResult: .permDisabled)
                 return (.permDisabled, lastEvaluation, maxSubmitCycles)
 
             case .noAcc:
@@ -1613,122 +1605,6 @@ class LoginAutomationEngine {
             return (false, false, nil)
         }
         return await visionML.detectSuccessIndicators(in: screenshot)
-    }
-
-    private func captureTerminalScreenshot(session: LoginSiteWebSession, attempt: LoginAttempt, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult, terminalType: TrueDetectionService.TerminalError) async {
-        let config = TrueDetectionService.TrueDetectionConfig()
-
-        let terminalImage: UIImage?
-        if terminalType == .errorBanner {
-            terminalImage = await trueDetection.captureErrorBannerCrop(session: session, config: config)
-        } else {
-            terminalImage = await captureTerminalMessageCrop(session: session, terminalType: terminalType)
-        }
-
-        var finalImage = terminalImage
-        if finalImage == nil {
-            finalImage = await session.captureScreenshot()
-        }
-        guard let finalImage else { return }
-
-        let compressed: UIImage
-        if let jpegData = finalImage.jpegData(compressionQuality: 0.5), let ci = UIImage(data: jpegData) {
-            compressed = ci
-        } else {
-            compressed = finalImage
-        }
-
-        let previousIds = attempt.screenshotIds
-        if !previousIds.isEmpty {
-            onPurgeScreenshots?(previousIds)
-            attempt.screenshotIds.removeAll()
-        }
-
-        attempt.responseSnapshot = compressed
-
-        let screenshot = PPSRDebugScreenshot(
-            stepName: step,
-            cardDisplayNumber: attempt.credential.username,
-            cardId: attempt.credential.id,
-            vin: "",
-            email: attempt.credential.username,
-            image: compressed,
-            note: note,
-            autoDetectedResult: autoResult
-        )
-        attempt.screenshotIds = [screenshot.id]
-        onScreenshot?(screenshot)
-
-        logger.log("Terminal screenshot captured for \(step) — purged \(previousIds.count) previous screenshot(s)", category: .screenshot, level: .info)
-    }
-
-    private func captureTerminalMessageCrop(session: LoginSiteWebSession, terminalType: TrueDetectionService.TerminalError) async -> UIImage? {
-        guard let fullScreenshot = await session.captureScreenshot() else { return nil }
-        guard let webView = session.webView else { return fullScreenshot }
-
-        let keywords: [String]
-        switch terminalType {
-        case .temporarilyDisabled:
-            keywords = ["temporarily", "temporarily disabled", "temporarily locked", "temporarily suspended", "too many attempts", "try again later"]
-        case .accountDisabled:
-            keywords = ["account is disabled", "account has been disabled", "account has been suspended", "permanently banned", "account is closed", "self-excluded", "account has been blocked"]
-        case .errorBanner:
-            return fullScreenshot
-        case .smsVerification:
-            keywords = ["sms", "text message", "verification code", "verify your phone", "send code", "enter the code", "phone verification", "mobile verification", "code sent", "enter code", "security code"]
-        }
-
-        let keywordsJS = "[" + keywords.map { "'\($0)'" }.joined(separator: ",") + "]"
-
-        let searchJS = """
-        (function() {
-            var keywords = \(keywordsJS);
-            var allElements = document.querySelectorAll('div, p, span, h1, h2, h3, h4, h5, h6, li, td, section, article, aside, label, strong, em, b');
-            for (var i = 0; i < allElements.length; i++) {
-                var el = allElements[i];
-                var text = (el.textContent || '').toLowerCase();
-                var visible = el.offsetParent !== null || el.offsetHeight > 0;
-                if (!visible) continue;
-                for (var k = 0; k < keywords.length; k++) {
-                    if (text.indexOf(keywords[k]) !== -1) {
-                        var rect = el.getBoundingClientRect();
-                        if (rect.width > 20 && rect.height > 10) {
-                            return JSON.stringify({x: rect.left, y: rect.top, w: rect.width, h: rect.height});
-                        }
-                    }
-                }
-            }
-            return null;
-        })();
-        """
-
-        if let result = await session.executeJS(searchJS),
-           let data = result.data(using: .utf8),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Double],
-           let x = json["x"], let y = json["y"], let w = json["w"], let h = json["h"],
-           w > 20, h > 10 {
-
-            let viewSize = webView.bounds.size
-            guard let cgImage = fullScreenshot.cgImage else { return fullScreenshot }
-            let imageW = CGFloat(cgImage.width)
-            let imageH = CGFloat(cgImage.height)
-            let scaleX = imageW / viewSize.width
-            let scaleY = imageH / viewSize.height
-
-            let padding: CGFloat = 20
-            let cropRect = CGRect(
-                x: max(0, x * scaleX - padding),
-                y: max(0, y * scaleY - padding),
-                width: min(imageW, w * scaleX + padding * 2),
-                height: min(imageH, h * scaleY + padding * 2)
-            )
-
-            if let croppedCG = cgImage.cropping(to: cropRect) {
-                return UIImage(cgImage: croppedCG, scale: fullScreenshot.scale, orientation: fullScreenshot.imageOrientation)
-            }
-        }
-
-        return fullScreenshot
     }
 
     private func captureDebugScreenshot(session: LoginSiteWebSession, attempt: LoginAttempt, step: String, note: String, autoResult: PPSRDebugScreenshot.AutoDetectedResult = .unknown) async {

@@ -1,30 +1,6 @@
 import Foundation
 
 nonisolated struct AutomationSettings: Codable, Sendable {
-    // MARK: - TRUE DETECTION (Primary Protocol)
-    var trueDetectionEnabled: Bool = true
-    var trueDetectionPriority: Bool = true
-    var trueDetectionHardPauseMs: Int = 4500
-    var trueDetectionTripleClickCount: Int = 4
-    var trueDetectionTripleClickDelayMs: Int = 1600
-    var trueDetectionSubmitCycleCount: Int = 4
-    var trueDetectionButtonRecoveryTimeoutMs: Int = 12000
-    var trueDetectionMaxAttempts: Int = 4
-    var trueDetectionAlwaysForceEnabled: Bool = true
-    var trueDetectionPostClickWaitMs: Int = 3250
-    var trueDetectionCooldownMinutes: Int = 15
-    var trueDetectionEmailSelector: String = "#email"
-    var trueDetectionPasswordSelector: String = "#login-password"
-    var trueDetectionSubmitSelector: String = "#login-submit"
-    var trueDetectionSuccessMarkers: [String] = ["balance", "wallet", "my account", "logout"]
-    var trueDetectionTerminalKeywords: [String] = ["temporarily disabled", "account is disabled"]
-    var trueDetectionErrorBannerSelectors: [String] = [".error-banner", ".alert-danger", ".alert-error", ".login-error", ".notification-error", "[role='alert']"]
-    var trueDetectionNoProxyRotation: Bool = false
-    var trueDetectionStrictWaits: Bool = true
-    var trueDetectionIgnorePlaceholders: Bool = true
-    var trueDetectionIgnoreXPaths: Bool = true
-    var trueDetectionIgnoreClassNames: Bool = true
-
     // MARK: - Page Loading
     var pageLoadTimeout: TimeInterval = 90 // Per-page-load timeout (single navigation attempt)
     var pageLoadRetries: Int = 3
@@ -69,7 +45,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
 
     // MARK: - Submit Behavior
     var submitRetryCount: Int = 5
-    var submitRetryDelayMs: Int = 4800
     var waitForResponseSeconds: Double = 90.0 // Post-submit polling timeout (waiting for server response after form submit)
     var rapidPollEnabled: Bool = true
     var rapidPollIntervalMs: Int = 200
@@ -142,7 +117,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
 
     // MARK: - URL Rotation
     var urlRotationEnabled: Bool = true
-    var disableURLAfterConsecutiveFailures: Int = 2
     var reEnableURLAfterSeconds: TimeInterval = 0
     var preferFastestURL: Bool = false
     var smartURLSelection: Bool = true
@@ -161,7 +135,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var gaussianTimingDistribution: Bool = true
 
     // MARK: - Login Button (Fallback modes only)
-    var loginButtonDetectionMode: ButtonDetectionMode = .trueDetection
+    var loginButtonDetectionMode: ButtonDetectionMode = .textMatch
     var loginButtonTextMatches: [String] = ["LOGIN", "Sign in", "Sign In", "Submit", "Continue", "Next", "Go", "Enter", "Login", "Lo gin"]
     var loginButtonCustomSelector: String = ""
     var loginButtonClickMethod: ButtonClickMethod = .humanClick
@@ -193,22 +167,26 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var postTypingDelayMs: Int = 350
     var preSubmitDelayMs: Int = 350
     var postSubmitDelayMs: Int = 600
-    var betweenAttemptsDelayMs: Int = 1250
+    var betweenAttemptsDelayMs: Int = 600
     var betweenCredentialsDelayMs: Int = 750
-    var pageStabilizationDelayMs: Int = 1100
-    var ajaxSettleDelayMs: Int = 1100
+    var pageStabilizationDelayMs: Int = 600
+    var ajaxSettleDelayMs: Int = 600
     var domMutationSettleMs: Int = 600
     var animationSettleDelayMs: Int = 700
     var redirectFollowDelayMs: Int = 600
-    var captchaDetectionDelayMs: Int = 2000
-    var errorRecoveryDelayMs: Int = 1750
+    var captchaDetectionDelayMs: Int = 1300
+    var errorRecoveryDelayMs: Int = 600
     var sessionCooldownDelayMs: Int = 500
     var proxyRotationDelayMs: Int = 750
-    var vpnReconnectDelayMs: Int = 2500
+    var vpnReconnectDelayMs: Int = 1300
     var autoFallbackWGtoOVPN: Bool = true
     var autoFallbackOVPNtoSOCKS5: Bool = true
     var delayRandomizationEnabled: Bool = true
     var delayRandomizationPercent: Int = 25
+    /// When enabled, overrides mid-tier delays (betweenAttempts, pageStabilization, ajaxSettle, errorRecovery)
+    /// with this single value at runtime, allowing fast global adjustment without tuning each delay individually.
+    var miscellaneousDelayMs: Int = 600
+    var miscellaneousDelayEnabled: Bool = false
 
     // MARK: - Two-Factor / MFA Handling
     var mfaDetectionEnabled: Bool = false
@@ -390,7 +368,6 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     nonisolated enum ButtonDetectionMode: String, Codable, CaseIterable, Sendable {
-        case trueDetection = "TRUE DETECTION"
         case textMatch = "Text Match"
         case visionML = "Vision ML"
         case hybrid = "Hybrid"
@@ -434,7 +411,6 @@ nonisolated struct URLFlowAssignment: Codable, Sendable, Identifiable {
 
 nonisolated enum LoginFormPatternList {
     static let allNames: [String] = [
-        "TRUE DETECTION",
         "Tab Navigation",
         "Click-Focus Sequential",
         "ExecCommand Insert",
@@ -449,7 +425,6 @@ nonisolated enum LoginFormPatternList {
     ]
 
     static let defaultPriorityOrder: [String] = [
-        "TRUE DETECTION",
         "Calibrated Typing",
         "Calibrated Direct",
         "Tab Navigation",

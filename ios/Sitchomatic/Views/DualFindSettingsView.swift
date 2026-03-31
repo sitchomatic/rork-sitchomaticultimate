@@ -2,9 +2,6 @@ import SwiftUI
 
 struct DualFindSettingsView: View {
     @Bindable var vm: DualFindViewModel
-    @State private var showSuccessMarkerEditor: Bool = false
-    @State private var showTerminalKeywordEditor: Bool = false
-    @State private var showErrorBannerEditor: Bool = false
     @State private var showButtonTextEditor: Bool = false
     @State private var showMFAKeywordEditor: Bool = false
     @State private var showCaptchaKeywordEditor: Bool = false
@@ -23,7 +20,6 @@ struct DualFindSettingsView: View {
         List {
             autoSaveSection
             systemConfigSection
-            trueDetectionSection
             pageLoadingSection
             fieldDetectionSection
             credentialEntrySection
@@ -72,24 +68,6 @@ struct DualFindSettingsView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .padding(.bottom, 20)
             }
-        }
-        .sheet(isPresented: $showSuccessMarkerEditor) {
-            NavigationStack { KeywordListEditor(title: "Success Markers", keywords: $vm.automationSettings.trueDetectionSuccessMarkers) }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
-        }
-        .sheet(isPresented: $showTerminalKeywordEditor) {
-            NavigationStack { KeywordListEditor(title: "Terminal Keywords", keywords: $vm.automationSettings.trueDetectionTerminalKeywords) }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
-        }
-        .sheet(isPresented: $showErrorBannerEditor) {
-            NavigationStack { KeywordListEditor(title: "Error Banner Selectors", keywords: $vm.automationSettings.trueDetectionErrorBannerSelectors) }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
         }
         .sheet(isPresented: $showButtonTextEditor) {
             NavigationStack { KeywordListEditor(title: "Button Text Matches", keywords: $vm.automationSettings.loginButtonTextMatches) }
@@ -297,73 +275,6 @@ struct DualFindSettingsView: View {
         }
     }
 
-    // MARK: - TRUE DETECTION
-
-    private var trueDetectionSection: some View {
-        Section {
-            Toggle(isOn: $vm.automationSettings.trueDetectionEnabled) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("TRUE DETECTION")
-                        .font(.headline)
-                    Text("Hardcoded interaction — bypasses DOM detection")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(accentColor)
-
-            if vm.automationSettings.trueDetectionEnabled {
-                Toggle("Always First Priority", isOn: $vm.automationSettings.trueDetectionPriority)
-                    .tint(accentColor)
-
-                Group {
-                    Stepper("Hard Pause: \(vm.automationSettings.trueDetectionHardPauseMs)ms", value: $vm.automationSettings.trueDetectionHardPauseMs, in: 1000...8000, step: 500)
-                    Stepper("Click Count: \(vm.automationSettings.trueDetectionTripleClickCount)", value: $vm.automationSettings.trueDetectionTripleClickCount, in: 1...10)
-                    Stepper("Click Delay: \(vm.automationSettings.trueDetectionTripleClickDelayMs)ms", value: $vm.automationSettings.trueDetectionTripleClickDelayMs, in: 200...3000, step: 100)
-                    Stepper("Submit Cycles: \(vm.automationSettings.trueDetectionSubmitCycleCount)", value: $vm.automationSettings.trueDetectionSubmitCycleCount, in: 1...8)
-                    Stepper("Button Recovery: \(vm.automationSettings.trueDetectionButtonRecoveryTimeoutMs)ms", value: $vm.automationSettings.trueDetectionButtonRecoveryTimeoutMs, in: 2000...30000, step: 1000)
-                    Stepper("Max Attempts: \(vm.automationSettings.trueDetectionMaxAttempts)", value: $vm.automationSettings.trueDetectionMaxAttempts, in: 1...10)
-                    Stepper("Post-Click Wait: \(vm.automationSettings.trueDetectionPostClickWaitMs)ms", value: $vm.automationSettings.trueDetectionPostClickWaitMs, in: 500...5000, step: 250)
-                    Stepper("Cooldown: \(vm.automationSettings.trueDetectionCooldownMinutes) min", value: $vm.automationSettings.trueDetectionCooldownMinutes, in: 1...60)
-                }
-
-                dfSelectorField("Email Selector", placeholder: "#email", binding: $vm.automationSettings.trueDetectionEmailSelector)
-                dfSelectorField("Password Selector", placeholder: "#login-password", binding: $vm.automationSettings.trueDetectionPasswordSelector)
-                dfSelectorField("Submit Selector", placeholder: "#login-submit", binding: $vm.automationSettings.trueDetectionSubmitSelector)
-
-                Button { showSuccessMarkerEditor = true } label: {
-                    dfKeywordRow("Success Markers", count: vm.automationSettings.trueDetectionSuccessMarkers.count)
-                }
-                Button { showTerminalKeywordEditor = true } label: {
-                    dfKeywordRow("Terminal Keywords", count: vm.automationSettings.trueDetectionTerminalKeywords.count)
-                }
-                Button { showErrorBannerEditor = true } label: {
-                    dfKeywordRow("Error Banner Selectors", count: vm.automationSettings.trueDetectionErrorBannerSelectors.count)
-                }
-
-                Toggle("No Proxy Rotation", isOn: $vm.automationSettings.trueDetectionNoProxyRotation)
-                    .tint(accentColor)
-                Toggle("Strict Waits", isOn: $vm.automationSettings.trueDetectionStrictWaits)
-                    .tint(accentColor)
-                Toggle("Ignore Placeholders", isOn: $vm.automationSettings.trueDetectionIgnorePlaceholders)
-                    .tint(accentColor)
-                Toggle("Ignore XPaths", isOn: $vm.automationSettings.trueDetectionIgnoreXPaths)
-                    .tint(accentColor)
-                Toggle("Ignore Class Names", isOn: $vm.automationSettings.trueDetectionIgnoreClassNames)
-                    .tint(accentColor)
-                Toggle("Always Force Enabled", isOn: $vm.automationSettings.trueDetectionAlwaysForceEnabled)
-                    .tint(accentColor)
-            }
-        } header: {
-            HStack {
-                Image(systemName: "shield.checkered")
-                Text("TRUE DETECTION Protocol")
-            }
-        } footer: {
-            Text("V5.2: Triple-click escalating dwell primary. Settlement gate waits for button color reversion before evaluation.")
-        }
-    }
-
     // MARK: - Page Loading
 
     private var pageLoadingSection: some View {
@@ -441,7 +352,6 @@ struct DualFindSettingsView: View {
     private var submitBehaviorSection: some View {
         Section {
             Stepper("Submit Retries: \(vm.automationSettings.submitRetryCount)", value: $vm.automationSettings.submitRetryCount, in: 1...10)
-            Stepper("Retry Delay: \(vm.automationSettings.submitRetryDelayMs)ms", value: $vm.automationSettings.submitRetryDelayMs, in: 1000...15000, step: 500)
             HStack {
                 Text("Wait for Response")
                 Spacer()

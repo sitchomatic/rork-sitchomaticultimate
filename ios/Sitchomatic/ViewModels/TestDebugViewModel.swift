@@ -441,8 +441,6 @@ class TestDebugViewModel {
 
         var settings = snapshot.toAutomationSettings(base: AutomationSettings())
         settings = settings.normalizedTimeouts()
-        settings.trueDetectionEnabled = true
-        settings.trueDetectionPriority = true
 
         let sessionEngine = LoginAutomationEngine()
         sessionEngine.debugMode = false
@@ -536,9 +534,6 @@ class TestDebugViewModel {
 
         let fpGroups = Dictionary(grouping: sessions) { $0.settingsSnapshot.fingerprintSpoofing ? "ON" : "OFF" }
         dimensions.append(buildDimension("Fingerprint", groups: fpGroups))
-
-        let tdGroups = Dictionary(grouping: sessions) { $0.settingsSnapshot.trueDetectionEnabled ? "ON" : "OFF" }
-        dimensions.append(buildDimension("TRUE DETECTION", groups: tdGroups))
 
         return dimensions
     }

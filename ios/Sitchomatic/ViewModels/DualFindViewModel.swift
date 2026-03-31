@@ -201,8 +201,6 @@ class DualFindViewModel {
 
         reloadAllSettings()
 
-        automationSettings.trueDetectionEnabled = true
-        automationSettings.trueDetectionPriority = true
         if let data = try? JSONEncoder().encode(automationSettings) {
             UserDefaults.standard.set(data, forKey: "automation_settings_v1")
         }
@@ -458,10 +456,9 @@ class DualFindViewModel {
                 let cal = calibrations[i]
                 let fillResult = await session.fillPasswordCalibrated(password, calibration: cal)
                 if !fillResult.success {
-                    let tdResult = await session.trueDetectionFillPassword(password)
-                    if !tdResult.success {
-                        log("[\(label)] Password fill failed — trying legacy", level: .warning)
-                        _ = await session.fillPassword(password)
+                    let fallbackResult = await session.fillPassword(password)
+                    if !fallbackResult.success {
+                        log("[\(label)] Password fill failed — all fill strategies exhausted", level: .warning)
                     }
                 }
                 log("[\(label)] Password \(pwIdx + 1) entered")
@@ -566,10 +563,9 @@ class DualFindViewModel {
             let cal = getCalibration(site: site, index: sessionIndex)
             let emailFillResult = await session.fillUsernameCalibrated(email, calibration: cal)
             if !emailFillResult.success {
-                let tdResult = await session.trueDetectionFillEmail(email)
-                if !tdResult.success {
-                    log("V5.2 [\(label)] Email fill failed for \(email) — trying legacy", level: .warning)
-                    _ = await session.fillUsername(email)
+                let fallbackResult = await session.fillUsername(email)
+                if !fallbackResult.success {
+                    log("V5.2 [\(label)] Email fill failed for \(email) — all fill strategies exhausted", level: .warning)
                 }
             }
 
@@ -989,9 +985,9 @@ class DualFindViewModel {
         let cal = getCalibration(site: site, index: sessionIndex)
         let fillResult = await session.fillUsernameCalibrated(email, calibration: cal)
         if !fillResult.success {
-            let tdResult = await session.trueDetectionFillEmail(email)
-            if !tdResult.success {
-                _ = await session.fillUsername(email)
+            let fallbackResult = await session.fillUsername(email)
+            if !fallbackResult.success {
+                log("V5.2 [\(label)] Email fill failed — all fill strategies exhausted", level: .warning)
             }
         }
 
@@ -1114,7 +1110,7 @@ class DualFindViewModel {
 
         let fillResult = await newSession.fillPasswordCalibrated(password, calibration: cal)
         if !fillResult.success {
-            _ = await newSession.trueDetectionFillPassword(password)
+            _ = await newSession.fillPassword(password)
         }
         log("[\(label)] Replacement session ready")
     }

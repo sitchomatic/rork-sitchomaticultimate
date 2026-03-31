@@ -148,7 +148,6 @@ nonisolated struct TestDebugSettingsSnapshot: Sendable {
     let humanScrollJitter: Bool
     let viewportRandomization: Bool
     let fingerprintSpoofing: Bool
-    let trueDetectionEnabled: Bool
     let tabBetweenFields: Bool
     let pageLoadExtraDelayMs: Int
     let preSubmitDelayMs: Int
@@ -166,18 +165,13 @@ nonisolated struct TestDebugSettingsSnapshot: Sendable {
         s.humanScrollJitter = humanScrollJitter
         s.viewportRandomization = viewportRandomization
         s.fingerprintSpoofing = fingerprintSpoofing
-        s.trueDetectionEnabled = trueDetectionEnabled
         s.tabBetweenFields = tabBetweenFields
         s.pageLoadExtraDelayMs = pageLoadExtraDelayMs
         s.preSubmitDelayMs = preSubmitDelayMs
         s.postSubmitDelayMs = postSubmitDelayMs
         s.clearCookiesBetweenAttempts = clearCookiesBetweenAttempts
         s.sessionIsolation = sessionIsolation
-        if trueDetectionEnabled {
-            s.patternPriorityOrder = ["TRUE DETECTION"] + s.patternPriorityOrder.filter { $0 != "TRUE DETECTION" }
-        } else {
-            s.patternPriorityOrder = [pattern] + s.patternPriorityOrder.filter { $0 != pattern }
-        }
+        s.patternPriorityOrder = [pattern] + s.patternPriorityOrder.filter { $0 != pattern }
         return s
     }
 
@@ -232,12 +226,11 @@ nonisolated struct TestDebugVariationOverrides: Sendable {
     var pinFingerprint: Bool?
     var pinTypingSpeed: (min: Int, max: Int)?
     var pinSessionIsolation: AutomationSettings.SessionIsolationMode?
-    var pinTrueDetection: Bool?
 
     var hasPins: Bool {
         pinConnectionMode != nil || pinPattern != nil || pinStealth != nil ||
         pinHumanSim != nil || pinFingerprint != nil || pinTypingSpeed != nil ||
-        pinSessionIsolation != nil || pinTrueDetection != nil
+        pinSessionIsolation != nil
     }
 
     var summary: String {
@@ -246,7 +239,6 @@ nonisolated struct TestDebugVariationOverrides: Sendable {
         if let pat = pinPattern { parts.append("Pat: \(pat)") }
         if let s = pinStealth { parts.append("Stealth: \(s ? "ON" : "OFF")") }
         if let h = pinHumanSim { parts.append("Human: \(h ? "ON" : "OFF")") }
-        if let t = pinTrueDetection { parts.append("TrueDet: \(t ? "ON" : "OFF")") }
         if let iso = pinSessionIsolation { parts.append("Iso: \(iso.rawValue)") }
         return parts.isEmpty ? "None" : parts.joined(separator: ", ")
     }

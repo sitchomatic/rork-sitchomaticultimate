@@ -243,7 +243,7 @@ final class ApexAutomationEngine {
             return .smsDetected
         }
 
-        // Basic outcome classification (full implementation delegates to TrueDetectionService).
+        // Basic outcome classification.
         let lower = pageText.lowercased()
         if lower.contains("has been disabled") || lower.contains("account is disabled") {
             return .permDisabled

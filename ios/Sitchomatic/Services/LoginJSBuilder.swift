@@ -113,26 +113,6 @@ class LoginJSBuilder {
         "(function(){var cx=\(x);var cy=\(y);var el=document.elementFromPoint(cx,cy);if(!el)return'NO_EL';el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerId:1,pointerType:'mouse',button:0,buttons:1}));el.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true,clientX:cx,clientY:cy,button:0,buttons:1}));el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerId:1,pointerType:'mouse',button:0}));el.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,cancelable:true,clientX:cx,clientY:cy,button:0}));el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:cx,clientY:cy,button:0}));try{el.click();}catch(e){}return'CAL_COORD:'+el.tagName;})()"
     }
 
-    func trueDetectionFillJS(fieldId: String, value: String) -> String {
-        let escaped = escapeForJS(value)
-        return """
-        (function() {
-            var el = document.querySelector('#\(fieldId)');
-            if (!el) return 'NOT_FOUND';
-            el.focus();
-            el.dispatchEvent(new Event('focus', {bubbles: true}));
-            var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-            if (ns && ns.set) { ns.set.call(el, ''); } else { el.value = ''; }
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            if (ns && ns.set) { ns.set.call(el, '\(escaped)'); } else { el.value = '\(escaped)'; }
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            el.dispatchEvent(new Event('change', {bubbles: true}));
-            el.dispatchEvent(new Event('blur', {bubbles: true}));
-            return el.value === '\(escaped)' ? 'OK' : 'VALUE_MISMATCH';
-        })();
-        """
-    }
-
     func tripleClickSubmitJS(attempt: Int) -> String {
         """
         (function() {

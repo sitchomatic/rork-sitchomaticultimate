@@ -135,7 +135,7 @@ nonisolated struct SiteTarget: Codable, Sendable, Identifiable {
         id: "ignition",
         name: "Ignition Lite",
         url: "https://ignitioncasino.ooo/?overlay=login",
-        selectors: SiteSelectors(user: "#email", pass: "#login-password", submit: "#login-submit", error: ".alert-danger")
+        selectors: SiteSelectors(user: LoginSelectorConstants.email, pass: LoginSelectorConstants.password, submit: LoginSelectorConstants.submit, error: ".alert-danger")
     )
 }
 

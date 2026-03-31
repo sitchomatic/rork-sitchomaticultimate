@@ -76,8 +76,6 @@ class HumanInteractionEngine {
 
         let result: HumanPatternResult
         switch pattern {
-        case .trueDetection:
-            result = await executeTrueDetectionPattern(username: username, password: password, executeJS: executeJS, sessionId: sessionId)
         case .tabNavigation:
             result = await executeTabNavigation(username: username, password: password, executeJS: executeJS, sessionId: sessionId)
         case .clickFocusSequential:
@@ -119,94 +117,6 @@ class HumanInteractionEngine {
             )
         }
 
-        return result
-    }
-
-    // MARK: - Pattern 0: TRUE DETECTION
-
-    private func executeTrueDetectionPattern(username: String, password: String, executeJS: @escaping (String) async -> String?, sessionId: String) async -> HumanPatternResult {
-        var result = HumanPatternResult(pattern: .trueDetection)
-
-        logger.log("TrueDetection Pattern: waiting for DOM complete...", category: .automation, level: .trace, sessionId: sessionId)
-        let domStart = Date()
-        while Date().timeIntervalSince(domStart) < 10 {
-            let ready = await executeJS("document.readyState")
-            if ready == "complete" { break }
-            try? await Task.sleep(for: .milliseconds(300))
-        }
-
-        let postDOMDelay = aiOptimizedDelay(category: .postDOMPause, fallbackMin: 2000, fallbackMax: 4000)
-        logger.log("TrueDetection Pattern: hard pause \(postDOMDelay)ms (AI-optimized)", category: .automation, level: .trace, sessionId: sessionId)
-        try? await Task.sleep(for: .milliseconds(postDOMDelay))
-
-        let emailTapResult = await executeJS(JSInteractionBuilder.humanTapJS(selector: "#email"))
-        logger.log("TrueDetection: human tap on #email → \(emailTapResult ?? "nil")", category: .automation, level: .trace, sessionId: sessionId)
-        try? await Task.sleep(for: .milliseconds(Int.random(in: 80...220)))
-
-        let emailResult = await executeJS(JSInteractionBuilder.nativeSetterFillJS(selector: "#email", value: username))
-        result.usernameFilled = emailResult == "OK" || emailResult == "VALUE_MISMATCH"
-        logger.log("TrueDetection: #email fill → \(emailResult ?? "nil")", category: .automation, level: result.usernameFilled ? .success : .error, sessionId: sessionId)
-
-        if !result.usernameFilled { return result }
-        try? await Task.sleep(for: .milliseconds(aiOptimizedDelay(category: .interFieldPause, fallbackMin: 300, fallbackMax: 600)))
-
-        let passTapResult = await executeJS(JSInteractionBuilder.humanTapJS(selector: "#login-password"))
-        logger.log("TrueDetection: human tap on #login-password → \(passTapResult ?? "nil")", category: .automation, level: .trace, sessionId: sessionId)
-        try? await Task.sleep(for: .milliseconds(Int.random(in: 80...220)))
-
-        let passResult = await executeJS(JSInteractionBuilder.nativeSetterFillJS(selector: "#login-password", value: password))
-        result.passwordFilled = passResult == "OK" || passResult == "VALUE_MISMATCH"
-        logger.log("TrueDetection: #login-password fill → \(passResult ?? "nil")", category: .automation, level: result.passwordFilled ? .success : .error, sessionId: sessionId)
-
-        if !result.passwordFilled { return result }
-        try? await Task.sleep(for: .milliseconds(aiOptimizedDelay(category: .preSubmitWait, fallbackMin: 300, fallbackMax: 600)))
-
-        let submitCycles = 4
-        let clicksPerCycle = 4
-        let clickDelayMs = 1100
-        let buttonRecoveryTimeoutMs = 12000
-        let buttonRecovery = SmartButtonRecoveryService.shared
-
-        logger.log("TrueDetection: starting \(submitCycles)-cycle submit on #login-submit (\(clicksPerCycle) clicks/cycle)", category: .automation, level: .info, sessionId: sessionId)
-
-        for cycle in 0..<submitCycles {
-            let preClickFingerprint = await buttonRecovery.captureFingerprint(
-                executeJS: executeJS,
-                sessionId: sessionId
-            )
-
-            for i in 0..<clicksPerCycle {
-                let clickResult = await executeJS(JSInteractionBuilder.cycledSubmitClickJS(selector: "#login-submit", clickIndex: i))
-                logger.log("TrueDetection: cycle \(cycle + 1) click \(i + 1)/\(clicksPerCycle) \u{2192} \(clickResult ?? "nil")", category: .automation, level: .trace, sessionId: sessionId)
-                if clickResult == "NOT_FOUND" && i == 0 && cycle == 0 {
-                    return result
-                }
-                if i < clicksPerCycle - 1 {
-                    try? await Task.sleep(for: .milliseconds(clickDelayMs))
-                }
-            }
-
-            if cycle < submitCycles - 1 {
-                logger.log("TrueDetection: cycle \(cycle + 1) done — AI smart button color change detection...", category: .automation, level: .info, sessionId: sessionId)
-                if let fingerprint = preClickFingerprint {
-                    let recovery = await buttonRecovery.waitForRecovery(
-                        originalFingerprint: fingerprint,
-                        executeJS: executeJS,
-                        host: currentHost,
-                        sessionId: sessionId,
-                        maxTimeoutMs: buttonRecoveryTimeoutMs
-                    )
-                    logger.log("TrueDetection: button recovery \(recovery.recovered ? "OK" : "TIMEOUT") in \(recovery.durationMs)ms", category: .automation, level: recovery.recovered ? .success : .warning, sessionId: sessionId)
-                } else {
-                    try? await Task.sleep(for: .milliseconds(2000))
-                }
-                try? await Task.sleep(for: .milliseconds(Int.random(in: 200...500)))
-            }
-        }
-
-        result.submitTriggered = true
-        result.submitMethod = "TRUE_DETECTION_CYCLED_TRIPLE_CLICK_\(submitCycles)x\(clicksPerCycle)"
-        logger.log("TrueDetection: all \(submitCycles) submit cycles complete", category: .automation, level: .success, sessionId: sessionId)
         return result
     }
 
