@@ -1,0 +1,43 @@
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - main
+      - codex/**
+  pull_request:
+    paths:
+      - ios/**
+      - .github/workflows/ios-build.yml
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.2.app 2>/dev/null || \
+          sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build app and extensions (warnings treated as errors)
+        env:
+          NSUnbufferedIO: "YES"
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/Sitchomatic.xcodeproj \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -target Sitchomatic \
+            -target SitchomaticWidget \
+            -target SitchomaticTests \
+            -target SitchomaticUITests \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            GCC_TREAT_WARNINGS_AS_ERRORS=YES \
+            OTHER_SWIFT_FLAGS="-warnings-as-errors" \
+            clean build
