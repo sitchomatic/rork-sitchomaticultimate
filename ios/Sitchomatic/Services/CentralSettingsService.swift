@@ -144,15 +144,6 @@ final class CentralSettingsService {
         }
     }
 
-    /// The UserDefaults key for the specified mode's automation settings.
-    static func key(for mode: SettingsMode) -> String {
-        switch mode {
-        case .login: return Keys.loginAutomation
-        case .unified: return Keys.unifiedAutomation
-        case .dualFind: return Keys.dualFindAutomation
-        }
-    }
-
     // MARK: - Private Helpers
 
     private func encodeAndSave(_ settings: AutomationSettings, forKey key: String) {
@@ -163,7 +154,7 @@ final class CentralSettingsService {
 
     // MARK: - Nested Types
 
-    @frozen enum SettingsMode: String, CaseIterable, Sendable {
+    enum SettingsMode: String, CaseIterable, Sendable {
         case login
         case unified
         case dualFind

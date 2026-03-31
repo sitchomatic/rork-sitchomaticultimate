@@ -204,6 +204,7 @@ class DualFindViewModel {
 
         reloadAllSettings()
 
+        CentralSettingsService.shared.persistDualFindAutomationSettings(automationSettings)
         CentralSettingsService.shared.persistLoginAutomationSettings(automationSettings)
 
         emails = ContiguousArray(parsed)
