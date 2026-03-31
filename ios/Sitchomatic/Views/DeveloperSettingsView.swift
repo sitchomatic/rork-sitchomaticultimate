@@ -67,7 +67,7 @@ struct DeveloperSettingsView: View {
     private var syncAllModesSection: some View {
         Section {
             Button {
-                let source = vm.automationSettings
+                let source = vm.automationSettings.normalizedTimeouts()
                 unifiedVM.automationSettings = source
                 unifiedVM.persistAutomationSettings()
                 dualFindVM.automationSettings = source
@@ -75,6 +75,10 @@ struct DeveloperSettingsView: View {
                 let loginVM = LoginViewModel.shared
                 loginVM.automationSettings = source
                 loginVM.persistAutomationSettings()
+                // Persist to shared key for PPSR
+                if let data = try? JSONEncoder().encode(source) {
+                    UserDefaults.standard.set(data, forKey: "automation_settings_v1")
+                }
                 withAnimation(.spring(duration: 0.3)) { showSyncToast = true }
                 Task {
                     try? await Task.sleep(for: .seconds(1.5))
@@ -105,9 +109,12 @@ struct DeveloperSettingsView: View {
             }
 
             Button {
-                let source = unifiedVM.automationSettings
+                let source = unifiedVM.automationSettings.normalizedTimeouts()
                 vm.automationSettings = source
                 vm.persistSettings()
+                if let data = try? JSONEncoder().encode(source) {
+                    UserDefaults.standard.set(data, forKey: "automation_settings_v1")
+                }
                 dualFindVM.automationSettings = source
                 dualFindVM.persistDualFindSettings()
                 let loginVM = LoginViewModel.shared
@@ -143,9 +150,12 @@ struct DeveloperSettingsView: View {
             }
 
             Button {
-                let source = dualFindVM.automationSettings
+                let source = dualFindVM.automationSettings.normalizedTimeouts()
                 vm.automationSettings = source
                 vm.persistSettings()
+                if let data = try? JSONEncoder().encode(source) {
+                    UserDefaults.standard.set(data, forKey: "automation_settings_v1")
+                }
                 unifiedVM.automationSettings = source
                 unifiedVM.persistAutomationSettings()
                 let loginVM = LoginViewModel.shared
@@ -509,7 +519,7 @@ struct DeveloperSettingsView: View {
                 Text("\(Int(dualFindVM.testTimeout))s")
             }
             LabeledContent("Max Concurrency") {
-                Text("\(dualFindVM.maxConcurrency)")
+                Text("\(dualFindVM.automationSettings.maxConcurrency)")
             }
             LabeledContent("Strategy") {
                 Text(dualFindVM.automationSettings.concurrencyStrategy.label)

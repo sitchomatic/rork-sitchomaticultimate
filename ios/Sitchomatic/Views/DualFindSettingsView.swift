@@ -258,9 +258,12 @@ struct DualFindSettingsView: View {
             Button {
                 let unifiedVM = UnifiedSessionViewModel.shared
                 let loginVM = LoginViewModel.shared
-                unifiedVM.automationSettings = vm.automationSettings
+                let normalizedSettings = vm.automationSettings.normalizedTimeouts()
+                vm.automationSettings = normalizedSettings
+                vm.persistDualFindSettings()
+                unifiedVM.automationSettings = normalizedSettings
                 unifiedVM.persistAutomationSettings()
-                loginVM.automationSettings = vm.automationSettings
+                loginVM.automationSettings = normalizedSettings
                 loginVM.persistAutomationSettings()
                 vm.log("Synced settings → Login & Unified Sessions", level: .success)
             } label: {
@@ -840,7 +843,7 @@ struct DualFindSettingsView: View {
         Section {
             ForEach(AutomationTemplate.builtInTemplates) { template in
                 Button {
-                    vm.automationSettings = template.settings
+                    vm.automationSettings = template.settings.normalizedTimeouts()
                     vm.persistDualFindSettings()
                     vm.log("Applied template: \(template.name)", level: .success)
                 } label: {
@@ -874,7 +877,7 @@ struct DualFindSettingsView: View {
         Section {
             Toggle(isOn: $vm.automationSettings.miscellaneousDelayEnabled) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Unified Delay Override")
+                    Text("Delay Override")
                     Text("Replace mid-tier delays with a single value")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -896,7 +899,7 @@ struct DualFindSettingsView: View {
         }
     }
 
-    // MARK: - V5.2 Settlement Gate
+    // MARK: - V4.2 Settlement Gate
 
     private var settlementGateSection: some View {
         Section {
@@ -932,6 +935,8 @@ struct DualFindSettingsView: View {
         case "gray": return .gray
         case "orange": return .orange
         case "blue": return .blue
+        case "green": return .green
+        case "indigo": return .indigo
         default: return .accentColor
         }
     }

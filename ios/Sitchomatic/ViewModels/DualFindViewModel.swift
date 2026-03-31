@@ -1285,6 +1285,7 @@ class DualFindViewModel {
     }
 
     func persistDualFindSettings() {
+        automationSettings = automationSettings.normalizedTimeouts()
         if let data = try? JSONEncoder().encode(automationSettings) {
             UserDefaults.standard.set(data, forKey: dualFindSettingsKey)
         }

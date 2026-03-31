@@ -246,9 +246,10 @@ struct UnifiedSessionSettingsView: View {
             Button {
                 let dfVM = DualFindViewModel.shared
                 let loginVM = LoginViewModel.shared
-                dfVM.automationSettings = vm.automationSettings
+                let normalizedSettings = vm.automationSettings.normalizedTimeouts()
+                dfVM.automationSettings = normalizedSettings
                 dfVM.persistDualFindSettings()
-                loginVM.automationSettings = vm.automationSettings
+                loginVM.automationSettings = normalizedSettings
                 loginVM.persistAutomationSettings()
                 vm.log("Synced settings → Login & DualFind", level: .success)
             } label: {
@@ -929,6 +930,8 @@ struct UnifiedSessionSettingsView: View {
         case "gray": return .gray
         case "orange": return .orange
         case "blue": return .blue
+        case "green": return .green
+        case "indigo": return .indigo
         default: return .accentColor
         }
     }
