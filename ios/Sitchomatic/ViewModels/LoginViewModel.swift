@@ -1184,9 +1184,8 @@ class LoginViewModel {
     private let screenshotManager = UnifiedScreenshotManager.shared
 
     func addScreenshot(_ screenshot: CapturedScreenshot) {
-        // Screenshots are now stored directly in the unified manager.
-        // The addScreenshot call from engines creates the screenshot and the manager handles storage.
-        // For backward compatibility, insert into the unified manager if not already present.
+        // Insert into the unified manager if not already present.
+        // Engine callbacks create the CapturedScreenshot and pass it here for centralized storage.
         if !screenshotManager.screenshots.contains(where: { $0.id == screenshot.id }) {
             screenshotManager.screenshots.insert(screenshot, at: 0)
             if screenshotManager.screenshots.count > maxInMemoryScreenshots {

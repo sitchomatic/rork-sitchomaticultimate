@@ -861,9 +861,6 @@ struct ScreenshotCorrectionSheet: View {
             Section("Note") {
                 TextField("Add a note...", text: $editingNote, axis: .vertical)
                     .lineLimit(3)
-                    .onSubmit {
-                        screenshot.userNote = editingNote
-                    }
             }
         }
         .listStyle(.insetGrouped)
@@ -872,9 +869,7 @@ struct ScreenshotCorrectionSheet: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done") {
-                    if !editingNote.isEmpty {
-                        screenshot.userNote = editingNote
-                    }
+                    screenshot.userNote = editingNote
                     dismiss()
                 }
             }
