@@ -9,6 +9,7 @@ struct SettingsAndTestingView: View {
     @State private var nordService = NordVPNService.shared
     @State private var showCompleteLogConfirm: Bool = false
     @State private var completeLogAction: (() -> Void)?
+    @State private var showSettingsExportConfirm: Bool = false
     private let proxyService = ProxyRotationService.shared
 
     var body: some View {
@@ -60,6 +61,18 @@ struct SettingsAndTestingView: View {
             }
         } message: {
             Text("The complete log includes credentials, proxy secrets, and other sensitive configuration. Do not share it publicly.")
+        }
+        .alert("Export Contains Sensitive Data", isPresented: $showSettingsExportConfirm) {
+            Button("Export Anyway", role: .destructive) {
+                let json = AppDataExportService.shared.exportJSON()
+                UIPasteboard.general.string = json
+                toastMessage = "Copied to clipboard"
+                withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
+                Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The exported JSON includes sensitive configuration (credentials, proxy secrets, VPN configs). Do not share it publicly.")
         }
     }
 
@@ -359,16 +372,12 @@ struct SettingsAndTestingView: View {
             }
 
             Button {
-                let json = AppDataExportService.shared.exportJSON()
-                UIPasteboard.general.string = json
-                toastMessage = "Copied to clipboard"
-                withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
-                Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
+                showSettingsExportConfirm = true
             } label: {
                 settingsRow(
                     icon: "square.and.arrow.up.fill",
                     title: "Export All Settings",
-                    subtitle: "Copy comprehensive settings JSON to clipboard",
+                    subtitle: "Copy comprehensive settings JSON (contains secrets)",
                     color: .blue
                 )
             }

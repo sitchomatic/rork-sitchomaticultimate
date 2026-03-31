@@ -33,6 +33,10 @@ struct AutomationSettingsView: View {
     @State private var autoSaveEnabled: Bool = true
     @State private var lastSaveTime: Date? = nil
     @State private var showSavedToast: Bool = false
+    @State private var showSettingsImportSheet: Bool = false
+    @State private var settingsImportText: String = ""
+    @State private var importError: String?
+    @State private var showExportConfirm: Bool = false
 
     private var automationSettingsHash: String {
         (try? String(data: JSONEncoder().encode(vm.automationSettings), encoding: .utf8)) ?? ""
@@ -41,6 +45,7 @@ struct AutomationSettingsView: View {
     var body: some View {
         List {
             autoSaveSection
+            settingsTransferSection
             urlCalibrationSection
             pageLoadingSection
             fieldDetectionSection
@@ -135,6 +140,27 @@ struct AutomationSettingsView: View {
         .sheet(isPresented: $showProxyImport) {
             unifiedProxyImportSheet
         }
+        .sheet(isPresented: $showSettingsImportSheet) {
+            settingsImportSheet
+        }
+        .alert("Import Failed", isPresented: Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
+        }
+        .alert("Export Contains Sensitive Data", isPresented: $showExportConfirm) {
+            Button("Export Anyway", role: .destructive) {
+                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
+                UIPasteboard.general.string = exported
+                vm.log("Exported automation settings to clipboard", level: .success)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The exported JSON may include sensitive configuration. Do not share it publicly.")
+        }
         .fileImporter(
             isPresented: Binding(
                 get: { activeFileImportType != nil },
@@ -206,6 +232,128 @@ struct AutomationSettingsView: View {
         } header: {
             Label("Persistence", systemImage: "externaldrive.fill")
         }
+    }
+
+    // MARK: - Settings Transfer
+
+    private var settingsTransferSection: some View {
+        Section {
+            Button {
+                let normalized = vm.automationSettings.normalizedTimeouts()
+                CentralSettingsService.shared.saveDefaultAutomationSettings(normalized, for: .login)
+                vm.automationSettings = normalized
+                vm.log("Saved automation defaults", level: .success)
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "star.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.yellow)
+                        .frame(width: 36, height: 36)
+                        .background(Color.yellow.opacity(0.14))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Save as New Defaults")
+                            .font(.subheadline.weight(.bold))
+                        Text("Future resets use this profile")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                showExportConfirm = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.up.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.teal)
+                        .frame(width: 36, height: 36)
+                        .background(Color.teal.opacity(0.14))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export All Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Copy automation JSON (contains secrets)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                settingsImportText = UIPasteboard.general.string ?? ""
+                showSettingsImportSheet = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.green)
+                        .frame(width: 36, height: 36)
+                        .background(Color.green.opacity(0.14))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Paste JSON to override")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+        } header: {
+            Label("Settings Transfer", systemImage: "arrow.left.arrow.right.circle.fill")
+        } footer: {
+            Text("Save your current automation profile as the new default, or move settings by exporting/importing JSON.")
+        }
+    }
+
+    private var settingsImportSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Import Settings JSON") {
+                    TextEditor(text: $settingsImportText)
+                        .font(.system(.callout, design: .monospaced))
+                        .frame(minHeight: 220)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+
+                Section {
+                    Button {
+                        applyImportedSettings()
+                    } label: {
+                        Label("Apply Settings", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                    }
+                    .disabled(settingsImportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .navigationTitle("Import Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showSettingsImportSheet = false }
+                }
+            }
+        }
+    }
+
+    private func applyImportedSettings() {
+        guard let imported = AutomationSettingsTransfer.importSettings(from: settingsImportText) else {
+            importError = "Could not parse automation settings JSON."
+            return
+        }
+        importError = nil
+        let normalized = imported.normalizedTimeouts()
+        vm.automationSettings = normalized
+        vm.persistAutomationSettings()
+        vm.log("Imported automation settings", level: .success)
+        showSettingsImportSheet = false
+        settingsImportText = ""
     }
 
     // MARK: - URL Calibration
