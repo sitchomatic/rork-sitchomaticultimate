@@ -8,7 +8,7 @@ class LiveActivityService {
     static let shared = LiveActivityService()
 
     private var currentActivity: Activity<CommandCenterActivityAttributes>?
-    private var updateTimer: Timer?
+    private var updateTask: Task<Void, Never>?
     private var startDate: Date?
 
     var isActivityActive: Bool {
@@ -109,15 +109,17 @@ class LiveActivityService {
 
     private func startPeriodicUpdates() {
         stopPeriodicUpdates()
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+        updateTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { break }
                 self?.updateActivity()
             }
         }
     }
 
     private func stopPeriodicUpdates() {
-        updateTimer?.invalidate()
-        updateTimer = nil
+        updateTask?.cancel()
+        updateTask = nil
     }
 }

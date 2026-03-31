@@ -72,7 +72,7 @@ class NetworkTruthService {
     private let wireProxyBridge = WireProxyBridge.shared
     private let proxyService = ProxyRotationService.shared
     private let logger = DebugLogger.shared
-    private var refreshTimer: Timer?
+    private var refreshTimer: Task<Void, Never>?
     private var pathMonitor: NWPathMonitor?
     private let monitorQueue = DispatchQueue(label: "network-truth-monitor", qos: .utility)
     private(set) var isNetworkAvailable: Bool = true
@@ -114,15 +114,17 @@ class NetworkTruthService {
         }
         pathMonitor?.start(queue: monitorQueue)
 
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: adaptiveInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        refreshTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(self?.adaptiveInterval ?? 5))
+                guard !Task.isCancelled else { break }
                 self?.refreshSnapshot()
             }
         }
     }
 
     func stopMonitoring() {
-        refreshTimer?.invalidate()
+        refreshTimer?.cancel()
         refreshTimer = nil
         pathMonitor?.cancel()
         pathMonitor = nil
@@ -133,9 +135,11 @@ class NetworkTruthService {
         let newInterval = active ? batchActiveInterval : idleInterval
         if abs(newInterval - adaptiveInterval) > 0.5 {
             adaptiveInterval = newInterval
-            refreshTimer?.invalidate()
-            refreshTimer = Timer.scheduledTimer(withTimeInterval: adaptiveInterval, repeats: true) { [weak self] _ in
-                Task { @MainActor [weak self] in
+            refreshTimer?.cancel()
+            refreshTimer = Task { [weak self] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(self?.adaptiveInterval ?? 5))
+                    guard !Task.isCancelled else { break }
                     self?.refreshSnapshot()
                 }
             }

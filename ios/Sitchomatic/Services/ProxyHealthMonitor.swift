@@ -46,7 +46,7 @@ class ProxyHealthMonitor {
         didSet { persistSettings() }
     }
 
-    private var monitorTimer: Timer?
+    private var monitorTimer: Task<Void, Never>?
     private let logger = DebugLogger.shared
     private let queue = DispatchQueue(label: "proxy-health-monitor", qos: .utility)
     private let settingsKey = "proxy_health_monitor_v1"
@@ -78,7 +78,7 @@ class ProxyHealthMonitor {
     }
 
     func stopMonitoring() {
-        monitorTimer?.invalidate()
+        monitorTimer?.cancel()
         monitorTimer = nil
         isMonitoring = false
         onFailoverNeeded = nil
@@ -98,9 +98,11 @@ class ProxyHealthMonitor {
     }
 
     private func scheduleHealthCheck() {
-        monitorTimer?.invalidate()
-        monitorTimer = Timer.scheduledTimer(withTimeInterval: checkIntervalSeconds, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        monitorTimer?.cancel()
+        monitorTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(self?.checkIntervalSeconds ?? 30))
+                guard !Task.isCancelled else { break }
                 await self?.performHealthCheck()
             }
         }

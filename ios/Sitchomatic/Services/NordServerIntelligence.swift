@@ -75,7 +75,7 @@ class NordServerIntelligence {
     private let logger = DebugLogger.shared
     private let nordService = NordVPNService.shared
     private let apiService = NordLynxAPIService()
-    private var refreshTimer: Timer?
+    private var refreshTimer: Task<Void, Never>?
     private let refreshInterval: TimeInterval = 300
     private let maxServersPerRegion = 10
 
@@ -90,8 +90,10 @@ class NordServerIntelligence {
 
     func startMonitoring() {
         stopMonitoring()
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        refreshTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(self?.refreshInterval ?? 300))
+                guard !Task.isCancelled else { break }
                 await self?.refreshStaleRegions()
             }
         }
@@ -99,7 +101,7 @@ class NordServerIntelligence {
     }
 
     func stopMonitoring() {
-        refreshTimer?.invalidate()
+        refreshTimer?.cancel()
         refreshTimer = nil
     }
 
