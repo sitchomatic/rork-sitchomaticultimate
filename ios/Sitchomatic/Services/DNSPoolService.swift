@@ -378,21 +378,16 @@ class DNSPoolService {
         let params = NWParameters(tls: tlsOptions, tcp: tcpOptions)
         let connection = NWConnection(host: host, port: port, using: params)
 
-        let resumed = UnsafeSendableBox(false)
+        let guard_ = ContinuationGuard()
 
         return await withCheckedContinuation { continuation in
-            func safeResume(_ value: DNSAnswer?) {
-                if !resumed.value {
-                    resumed.value = true
-                    continuation.resume(returning: value)
+            let timeoutTask = Task.detached(priority: .utility) {
+                try? await Task.sleep(for: .seconds(10))
+                if guard_.tryConsume() {
+                    connection.cancel()
+                    continuation.resume(returning: nil)
                 }
             }
-
-            let timeoutItem = DispatchWorkItem { [weak connection] in
-                connection?.cancel()
-                safeResume(nil)
-            }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 10, execute: timeoutItem)
 
             connection.stateUpdateHandler = { state in
                 switch state {
@@ -405,18 +400,22 @@ class DNSPoolService {
 
                     connection.send(content: lengthPrefixed, completion: .contentProcessed({ sendError in
                         if sendError != nil {
-                            timeoutItem.cancel()
+                            timeoutTask.cancel()
                             connection.cancel()
-                            safeResume(nil)
+                            if guard_.tryConsume() {
+                                continuation.resume(returning: nil)
+                            }
                             return
                         }
 
                         connection.receive(minimumIncompleteLength: 2, maximumLength: 4096) { data, _, _, recvError in
-                            timeoutItem.cancel()
-                            defer { connection.cancel() }
+                            timeoutTask.cancel()
+                            connection.cancel()
 
                             guard recvError == nil, let data, data.count > 2 else {
-                                safeResume(nil)
+                                if guard_.tryConsume() {
+                                    continuation.resume(returning: nil)
+                                }
                                 return
                             }
 
@@ -430,16 +429,20 @@ class DNSPoolService {
 
                             if let ip = self.parseDNSResponseForA(dnsData) {
                                 let latency = Int(Date().timeIntervalSince(start) * 1000)
-                                safeResume(DNSAnswer(ip: ip, provider: server.displayLabel, latencyMs: latency, protocolUsed: .dot))
-                            } else {
-                                safeResume(nil)
+                                if guard_.tryConsume() {
+                                    continuation.resume(returning: DNSAnswer(ip: ip, provider: server.displayLabel, latencyMs: latency, protocolUsed: .dot))
+                                }
+                            } else if guard_.tryConsume() {
+                                continuation.resume(returning: nil)
                             }
                         }
                     }))
 
                 case .failed, .cancelled:
-                    timeoutItem.cancel()
-                    safeResume(nil)
+                    timeoutTask.cancel()
+                    if guard_.tryConsume() {
+                        continuation.resume(returning: nil)
+                    }
 
                 default:
                     break

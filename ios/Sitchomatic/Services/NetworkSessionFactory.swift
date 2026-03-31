@@ -505,22 +505,14 @@ class NetworkSessionFactory {
             let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port))
             let connection = NWConnection(to: endpoint, using: .tcp)
             let queue = DispatchQueue(label: "preflight-socks5")
-            var completed = false
-            let lock = NSLock()
-
-            func finish(_ result: Bool) {
-                lock.lock()
-                defer { lock.unlock() }
-                guard !completed else { return }
-                completed = true
-                continuation.resume(returning: result)
+            let guard_ = ContinuationGuard()
+            let timeoutTask = Task.detached(priority: .utility) {
+                try? await Task.sleep(for: .milliseconds(2500))
+                if guard_.tryConsume() {
+                    connection.cancel()
+                    continuation.resume(returning: false)
+                }
             }
-
-            let timeoutWork = DispatchWorkItem { [weak connection] in
-                connection?.cancel()
-                finish(false)
-            }
-            queue.asyncAfter(deadline: .now() + 2.5, execute: timeoutWork)
 
             connection.stateUpdateHandler = { state in
                 switch state {
@@ -528,29 +520,31 @@ class NetworkSessionFactory {
                     let greeting = Data([0x05, 0x01, 0x00])
                     connection.send(content: greeting, completion: .contentProcessed { sendError in
                         if sendError != nil {
-                            timeoutWork.cancel()
+                            timeoutTask.cancel()
                             connection.cancel()
-                            finish(false)
+                            if guard_.tryConsume() {
+                                continuation.resume(returning: false)
+                            }
                             return
                         }
                         connection.receive(minimumIncompleteLength: 2, maximumLength: 2) { data, _, _, recvError in
-                            timeoutWork.cancel()
+                            timeoutTask.cancel()
                             connection.cancel()
-                            if recvError != nil {
-                                finish(false)
-                                return
+                            if guard_.tryConsume() {
+                                guard recvError == nil, let data, data.count >= 2, data[0] == 0x05 else {
+                                    continuation.resume(returning: false)
+                                    return
+                                }
+                                continuation.resume(returning: true)
                             }
-                            guard let data, data.count >= 2, data[0] == 0x05 else {
-                                finish(false)
-                                return
-                            }
-                            finish(true)
                         }
                     })
                 case .failed:
-                    timeoutWork.cancel()
+                    timeoutTask.cancel()
                     connection.cancel()
-                    finish(false)
+                    if guard_.tryConsume() {
+                        continuation.resume(returning: false)
+                    }
                 default:
                     break
                 }

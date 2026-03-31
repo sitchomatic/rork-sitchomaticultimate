@@ -316,7 +316,7 @@ struct DeveloperAutomationSettingsView: View {
     private var urlRotationSection: some View {
         Section {
             Toggle("URL Rotation", isOn: $settings.urlRotationEnabled)
-            stepperRow("Re-Enable URL After", intValue: $settings.reEnableURLAfterSeconds, range: 0...3600, step: 60, unit: "s")
+            stepperRow("Re-Enable URL After", value: $settings.reEnableURLAfterSeconds, range: 0...3600, step: 60, unit: "s")
             Toggle("Prefer Fastest URL", isOn: $settings.preferFastestURL)
             Toggle("Smart URL Selection", isOn: $settings.smartURLSelection)
         } header: {

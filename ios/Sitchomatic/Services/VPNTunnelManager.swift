@@ -319,26 +319,26 @@ class VPNTunnelManager {
             let queue = DispatchQueue(label: "vpn-endpoint-test")
 
             let guard_ = ContinuationGuard()
-            let timeoutWork = DispatchWorkItem {
+            let timeoutTask = Task.detached(priority: .utility) {
+                try? await Task.sleep(for: .seconds(5))
                 if guard_.tryConsume() {
                     connection.cancel()
                     continuation.resume(returning: (false, 0))
                 }
             }
-            queue.asyncAfter(deadline: .now() + 5, execute: timeoutWork)
 
             connection.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
                     if guard_.tryConsume() {
-                        timeoutWork.cancel()
+                        timeoutTask.cancel()
                         let elapsed = Int((CFAbsoluteTimeGetCurrent() - start) * 1000)
                         connection.cancel()
                         continuation.resume(returning: (true, elapsed))
                     }
                 case .failed:
                     if guard_.tryConsume() {
-                        timeoutWork.cancel()
+                        timeoutTask.cancel()
                         connection.cancel()
                         continuation.resume(returning: (false, 0))
                     }
