@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import UIKit
 
 struct ImportSettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -88,12 +89,12 @@ struct ImportSettingsView: View {
             Section {
                 Button {
                     isImporting = true
-                    let result = AppDataExportService.shared.importJSON(importText)
-                    importResult = result
-                    isImporting = false
-
-                    if result.errors.isEmpty {
-                        Task {
+                    let currentText = importText
+                    Task {
+                        let result = AppDataExportService.shared.importJSON(currentText)
+                        importResult = result
+                        isImporting = false
+                        if result.errors.isEmpty {
                             try? await Task.sleep(for: .seconds(2.5))
                             dismiss()
                         }
@@ -126,10 +127,15 @@ struct ImportSettingsView: View {
             case .success(let urls):
                 guard let url = urls.first else { return }
                 guard url.startAccessingSecurityScopedResource() else { return }
-                defer { url.stopAccessingSecurityScopedResource() }
-                if let data = try? Data(contentsOf: url),
-                   let text = String(data: data, encoding: .utf8) {
-                    importText = text
+                Task.detached(priority: .userInitiated) {
+                    defer { url.stopAccessingSecurityScopedResource() }
+                    guard let data = try? Data(contentsOf: url),
+                          let text = String(data: data, encoding: .utf8) else {
+                        return
+                    }
+                    await MainActor.run {
+                        importText = text
+                    }
                 }
             case .failure:
                 break

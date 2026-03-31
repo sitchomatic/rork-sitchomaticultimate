@@ -510,13 +510,13 @@ class DebugLogger {
         ERROR LOG (last 200)
         ========================================
 
-        \(entries.filter { $0.level >= .error }.prefix(200).map(\.exportLine).joined(separator: "\n"))
+        \(entries.filter { $0.level >= .error }.prefix(200).reversed().map(\.exportLine).joined(separator: "\n"))
 
         ========================================
         WARNING LOG (last 100)
         ========================================
 
-        \(entries.filter { $0.level == .warning }.prefix(100).map(\.exportLine).joined(separator: "\n"))
+        \(entries.filter { $0.level == .warning }.prefix(100).reversed().map(\.exportLine).joined(separator: "\n"))
 
         ========================================
         HEALING LOG (all events)
@@ -528,7 +528,7 @@ class DebugLogger {
         FULL DEBUG LOG (last 1000)
         ========================================
 
-        \(entries.prefix(1000).map(\.exportLine).joined(separator: "\n"))
+        \(entries.prefix(1000).reversed().map(\.exportLine).joined(separator: "\n"))
 
         ========================================
         END OF COMPLETE LOG
@@ -570,19 +570,29 @@ class DebugLogger {
         """
     }
 
+    private func redactUsername(_ username: String) -> String {
+        let trimmed = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "[REDACTED]" }
+        if trimmed.count <= 2 { return "[REDACTED]" }
+        let first = trimmed.first!
+        let last = trimmed.last!
+        let redactedMiddle = String(repeating: "•", count: max(1, trimmed.count - 2))
+        return "\(first)\(redactedMiddle)\(last)"
+    }
+
     private func exportCredentialDetails(_ credentials: [LoginCredential]) -> String {
         guard !credentials.isEmpty else { return "No credentials to export" }
 
         var lines: [String] = []
         for cred in credentials {
-            lines.append("Username: \(cred.username)")
+            lines.append("Username: \(redactUsername(cred.username))")
             lines.append("  Status: \(cred.status.rawValue)")
             lines.append("  Added: \(DateFormatters.exportTimestamp.string(from: cred.addedAt))")
             lines.append("  Total Tests: \(cred.totalTests)")
             lines.append("  Success Count: \(cred.successCount)")
             lines.append("  Success Rate: \(cred.successRateFormatted)")
             if !cred.notes.isEmpty {
-                lines.append("  Notes: \(cred.notes)")
+                lines.append("  Notes: [REDACTED]")
             }
             if !cred.testResults.isEmpty {
                 lines.append("  Recent Tests:")

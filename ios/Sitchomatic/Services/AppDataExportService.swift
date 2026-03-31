@@ -776,7 +776,7 @@ class AppDataExportService {
         return lines.joined(separator: "\n")
     }
 
-    private func exportProxyState() -> String {
+    func exportProxyState() -> String {
         let proxyService = ProxyRotationService.shared
         var lines: [String] = ["--- PROXIES ---"]
 
@@ -801,7 +801,7 @@ class AppDataExportService {
         return lines.joined(separator: "\n")
     }
 
-    private func exportDNSState() -> String {
+    func exportDNSState() -> String {
         let dnsService = PPSRDoHService.shared
         var lines: [String] = ["--- DNS SERVERS ---"]
         for provider in dnsService.managedProviders {
@@ -812,7 +812,7 @@ class AppDataExportService {
         return lines.joined(separator: "\n")
     }
 
-    private func exportVPNState() -> String {
+    func exportVPNState() -> String {
         let proxyService = ProxyRotationService.shared
         var lines: [String] = ["--- OPENVPN CONFIGS ---"]
 
@@ -858,7 +858,7 @@ class AppDataExportService {
         return lines.joined(separator: "\n")
     }
 
-    private func exportBlacklistState() -> String {
+    func exportBlacklistState() -> String {
         let blacklistService = BlacklistService.shared
         var lines: [String] = ["--- BLACKLIST (\(blacklistService.blacklistedEmails.count)) ---"]
         for entry in blacklistService.blacklistedEmails {

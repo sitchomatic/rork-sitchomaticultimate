@@ -4,6 +4,7 @@ import UIKit
 struct SettingsAndTestingView: View {
     @State private var vm = PPSRAutomationViewModel.shared
     @State private var showCopiedToast: Bool = false
+    @State private var toastMessage: String = "Copied to clipboard"
     @State private var shareFileURL: URL?
     @State private var nordService = NordVPNService.shared
     private let proxyService = ProxyRotationService.shared
@@ -30,7 +31,7 @@ struct SettingsAndTestingView: View {
         .preferredColorScheme(CentralSettingsService.shared.effectiveColorScheme)
         .overlay(alignment: .bottom) {
             if showCopiedToast {
-                Text("Copied to clipboard")
+                Text(toastMessage)
                     .font(.subheadline.bold()).foregroundStyle(.white)
                     .padding(.horizontal, 20).padding(.vertical, 12)
                     .background(.green.gradient, in: Capsule())
@@ -287,6 +288,7 @@ struct SettingsAndTestingView: View {
                     let cards = PPSRPersistenceService.shared.loadCards()
                     let text = DebugLogger.shared.exportCompleteLog(credentials: credentials, cards: cards)
                     UIPasteboard.general.string = text
+                    toastMessage = "Copied to clipboard"
                     withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
                     Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
                 } label: {
@@ -317,6 +319,7 @@ struct SettingsAndTestingView: View {
                         automationSettings: vm.automationSettings
                     )
                     UIPasteboard.general.string = text
+                    toastMessage = "Copied to clipboard"
                     withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
                     Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
                 } label: {
@@ -355,6 +358,7 @@ struct SettingsAndTestingView: View {
                 CentralSettingsService.shared.persistLoginAutomationSettings(currentSettings)
                 CentralSettingsService.shared.persistUnifiedAutomationSettings(currentSettings)
                 CentralSettingsService.shared.persistDualFindAutomationSettings(currentSettings)
+                toastMessage = "Saved as new defaults"
                 withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
                 Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
             } label: {
@@ -369,6 +373,7 @@ struct SettingsAndTestingView: View {
             Button {
                 let json = AppDataExportService.shared.exportJSON()
                 UIPasteboard.general.string = json
+                toastMessage = "Copied to clipboard"
                 withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
                 Task { try? await Task.sleep(for: .seconds(1.5)); withAnimation { showCopiedToast = false } }
             } label: {
