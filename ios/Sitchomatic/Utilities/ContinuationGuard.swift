@@ -2,7 +2,7 @@ import Foundation
 
 /// Thread-safe continuation guard for single-resume continuations.
 /// Uses an internal lock so callers can use it from @Sendable closures without `await`.
-final class ContinuationGuard: @unchecked Sendable {
+nonisolated final class ContinuationGuard: @unchecked Sendable {
     private let lock = NSLock()
     private var consumed = false
 
