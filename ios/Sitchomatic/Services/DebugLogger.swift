@@ -222,6 +222,39 @@ class DebugLogger {
         persistence.exportDiagnosticReportToFile(content: exportDiagnosticReport(credentials: credentials, automationSettings: automationSettings))
     }
 
+    func exportCompleteLog(credentials: [LoginCredential]? = nil, automationSettings: AutomationSettings? = nil) -> String {
+        let resolvedCreds = credentials ?? LoginPersistenceService.shared.loadCredentials()
+        let resolvedSettings = automationSettings ?? CentralSettingsService.shared.loginAutomationSettings
+        let timestamp = DateFormatters.exportTimestamp.string(from: Date())
+
+        let diagnostic = exportDiagnosticReport(credentials: resolvedCreds, automationSettings: resolvedSettings)
+        let appState = AppDataExportService.shared.exportComprehensiveState()
+        let debugLog = exportFullLog()
+        let fullConfig = AppDataExportService.shared.exportJSON()
+
+        return """
+        === COMPLETE LOG EXPORT ===
+        Generated: \(timestamp)
+        Includes: diagnostic report, app state snapshot, debug log, and full config JSON
+        ========================================
+
+        \(diagnostic)
+
+        === APP STATE SNAPSHOT ===
+        \(appState)
+
+        === DEBUG LOG ===
+        \(debugLog)
+
+        === FULL CONFIG JSON ===
+        \(fullConfig)
+        """
+    }
+
+    func exportCompleteLogToFile(credentials: [LoginCredential]? = nil, automationSettings: AutomationSettings? = nil) -> URL? {
+        persistence.exportCompleteLogToFile(content: exportCompleteLog(credentials: credentials, automationSettings: automationSettings))
+    }
+
     func exportFullLog() -> String {
         let header = """
         === DEBUG LOG EXPORT ===

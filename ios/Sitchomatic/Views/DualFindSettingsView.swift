@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DualFindSettingsView: View {
     @Bindable var vm: DualFindViewModel
@@ -9,6 +10,9 @@ struct DualFindSettingsView: View {
     @State private var showSavedToast: Bool = false
     @State private var lastSaveTime: Date? = nil
     @State private var autoSaveEnabled: Bool = true
+    @State private var showSettingsImportSheet: Bool = false
+    @State private var settingsImportText: String = ""
+    @State private var importError: String?
 
     private let accentColor: Color = .purple
 
@@ -20,7 +24,7 @@ struct DualFindSettingsView: View {
         List {
             autoSaveSection
             systemConfigSection
-            quickTemplateSection
+            settingsTransferSection
             pageLoadingSection
             fieldDetectionSection
             credentialEntrySection
@@ -95,6 +99,17 @@ struct DualFindSettingsView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationContentInteraction(.scrolls)
+        }
+        .sheet(isPresented: $showSettingsImportSheet) {
+            settingsImportSheet
+        }
+        .alert("Import Failed", isPresented: Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
         }
     }
 
@@ -282,7 +297,7 @@ struct DualFindSettingsView: View {
             }
 
             Button {
-                vm.automationSettings = AutomationSettings()
+                vm.automationSettings = CentralSettingsService.shared.defaultAutomationSettings(for: .dualFind)
                 vm.persistDualFindSettings()
                 vm.log("Reset automation settings to defaults", level: .warning)
             } label: {
@@ -820,38 +835,129 @@ struct DualFindSettingsView: View {
         }
     }
 
-    // MARK: - Quick Template
+    // MARK: - Settings Transfer
 
-    private var quickTemplateSection: some View {
+    private var settingsTransferSection: some View {
         Section {
-            ForEach(AutomationTemplate.builtInTemplates) { template in
-                Button {
-                    vm.automationSettings = template.settings.normalizedTimeouts()
-                    vm.persistDualFindSettings()
-                    vm.log("Applied template: \(template.name)", level: .success)
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: template.icon)
-                            .font(.body)
-                            .foregroundStyle(templateColor(template.color))
-                            .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(template.name)
-                                .font(.subheadline.bold())
-                            Text(template.description)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-                        Spacer()
+            Button {
+                let normalized = vm.automationSettings.normalizedTimeouts()
+                CentralSettingsService.shared.saveDefaultAutomationSettings(normalized, for: .dualFind)
+                vm.log("Saved DualFind defaults", level: .success)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "star.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(.yellow)
+                        .frame(width: 28)
+                        .padding(8)
+                        .background(Color.yellow.opacity(0.16))
+                        .clipShape(.rect(cornerRadius: 10))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Save as New Defaults")
+                            .font(.subheadline.bold())
+                        Text("Reset will use this profile")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                }
+            }
+
+            Button {
+                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
+                UIPasteboard.general.string = exported
+                vm.log("Exported DualFind settings", level: .success)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "square.and.arrow.up.fill")
+                        .font(.body)
+                        .foregroundStyle(.teal)
+                        .frame(width: 28)
+                        .padding(8)
+                        .background(Color.teal.opacity(0.16))
+                        .clipShape(.rect(cornerRadius: 10))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export All Settings")
+                            .font(.subheadline.bold())
+                        Text("Copy automation JSON")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                settingsImportText = UIPasteboard.general.string ?? ""
+                showSettingsImportSheet = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                        .font(.body)
+                        .foregroundStyle(.green)
+                        .frame(width: 28)
+                        .padding(8)
+                        .background(Color.green.opacity(0.16))
+                        .clipShape(.rect(cornerRadius: 10))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import Settings")
+                            .font(.subheadline.bold())
+                        Text("Paste JSON to override")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
                 }
             }
         } header: {
-            Label("Quick Templates", systemImage: "bolt.fill")
+            Label("Settings Transfer", systemImage: "arrow.left.arrow.right.circle.fill")
         } footer: {
-            Text("One-tap apply a full preset. Overwrites all current settings.")
+            Text("Save the current DualFind profile as the new default or move settings via export/import.")
         }
+    }
+
+    private var settingsImportSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Import Settings JSON") {
+                    TextEditor(text: $settingsImportText)
+                        .font(.system(.callout, design: .monospaced))
+                        .frame(minHeight: 220)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+
+                Section {
+                    Button {
+                        applyImportedSettings()
+                    } label: {
+                        Label("Apply Settings", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                    }
+                    .disabled(settingsImportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .navigationTitle("Import Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showSettingsImportSheet = false }
+                }
+            }
+        }
+    }
+
+    private func applyImportedSettings() {
+        guard let imported = AutomationSettingsTransfer.importSettings(from: settingsImportText) else {
+            importError = "Could not parse automation settings JSON."
+            return
+        }
+        importError = nil
+        vm.automationSettings = imported.normalizedTimeouts()
+        vm.persistDualFindSettings()
+        vm.log("Imported DualFind settings", level: .success)
+        showSettingsImportSheet = false
+        settingsImportText = ""
     }
 
     // MARK: - Miscellaneous Delay Shortcut
@@ -911,16 +1017,4 @@ struct DualFindSettingsView: View {
         }
     }
 
-    private func templateColor(_ name: String) -> Color {
-        switch name {
-        case "purple": return .purple
-        case "red": return .red
-        case "gray": return .gray
-        case "orange": return .orange
-        case "blue": return .blue
-        case "green": return .green
-        case "indigo": return .indigo
-        default: return .accentColor
-        }
-    }
 }
