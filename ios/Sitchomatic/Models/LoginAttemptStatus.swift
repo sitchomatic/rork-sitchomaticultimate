@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum LoginAttemptStatus: String, Sendable, CaseIterable, Identifiable {
     case queued = "Queued"
     case loadingPage = "Loading Page"

@@ -1,5 +1,6 @@
 import SwiftUI
 
+@frozen
 nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, Identifiable {
     case rorkAISmart = "rorkAISmart"
     case fullSend = "fullSend"

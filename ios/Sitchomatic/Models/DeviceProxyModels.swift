@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum RotationInterval: String, CaseIterable, Codable, Sendable {
     case everyBatch = "Every Batch"
     case every1Min = "Every 1 Minute"
@@ -36,6 +37,7 @@ nonisolated enum RotationInterval: String, CaseIterable, Codable, Sendable {
     }
 }
 
+@frozen
 nonisolated enum IPRoutingMode: String, CaseIterable, Codable, Sendable {
     case separatePerSession = "Separate IP per Session"
     case appWideUnited = "App-Wide United IP"

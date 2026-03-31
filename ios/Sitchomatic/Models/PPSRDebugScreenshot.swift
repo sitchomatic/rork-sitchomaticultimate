@@ -6,6 +6,7 @@ import SwiftUI
 // PPSRDebugScreenshot is now a type alias for CapturedScreenshot in UnifiedScreenshotManager.swift.
 // UserResultOverride enum is kept here as it's referenced throughout the codebase.
 
+@frozen
 nonisolated enum UserResultOverride: String, Sendable, CaseIterable {
     case none
     case success

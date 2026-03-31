@@ -1,5 +1,6 @@
 import SwiftUI
 
+@frozen
 nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable {
     case system = "System"
     case light = "Light"
@@ -22,6 +23,7 @@ nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable {
     }
 }
 
+@frozen
 nonisolated enum AppConnectionStatus: String, Sendable {
     case disconnected = "Disconnected"
     case connecting = "Connecting"

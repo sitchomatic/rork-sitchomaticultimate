@@ -1,5 +1,6 @@
 import Foundation
 
+@frozen
 nonisolated enum TestGateway: String, CaseIterable, Identifiable, Sendable, Codable {
     case ppsr = "PPSR"
     case bpoint = "BPoint"
@@ -46,6 +47,7 @@ nonisolated enum TestGateway: String, CaseIterable, Identifiable, Sendable, Coda
     var requiresChargeAmount: Bool { self == .bpoint }
 }
 
+@frozen
 nonisolated enum ChargeAmountTier: String, CaseIterable, Identifiable, Sendable, Codable {
     case low = "$100"
     case medium = "$200"

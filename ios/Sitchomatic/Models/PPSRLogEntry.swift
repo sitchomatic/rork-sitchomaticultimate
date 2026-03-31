@@ -6,6 +6,7 @@ nonisolated struct PPSRLogEntry: Identifiable, Sendable {
     let message: String
     let level: Level
 
+    @frozen
     nonisolated enum Level: String, Sendable {
         case info = "INFO"
         case success = "OK"
