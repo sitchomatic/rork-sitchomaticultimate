@@ -84,7 +84,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     var screenshotOnEveryEval: Bool = true
     var screenshotOnFailure: Bool = true
     var screenshotOnSuccess: Bool = true
-    var maxScreenshotRetention: Int = 500
+    var maxScreenshotRetention: Int = AutomationSettings.defaultMaxScreenshotRetention
     var screenshotsPerAttempt: ScreenshotsPerAttempt = .three
     var unifiedScreenshotsPerAttempt: UnifiedScreenshotCount = .ten
     var unifiedScreenshotPostClickDelayMs: Int = 1500
@@ -101,7 +101,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     // MARK: - Concurrency
-    var maxConcurrency: Int = 7
+    var maxConcurrency: Int = AutomationSettings.defaultMaxConcurrency
     var concurrencyStrategy: ConcurrencyStrategy = .rorkAISmart
     var fixedPairCount: Int = 3
     var liveUserPairCount: Int = 4
@@ -289,8 +289,10 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     // MARK: - Recorded Flow Override
     var urlFlowAssignments: [URLFlowAssignment] = []
 
-    static let minimumTimeoutSeconds: TimeInterval = 180
-    static let minimumTimeoutMilliseconds: Int = 180_000
+    static let minimumTimeoutSeconds: TimeInterval = 90
+    static let minimumTimeoutMilliseconds: Int = 90_000
+    static let defaultMaxConcurrency: Int = 4
+    static let defaultMaxScreenshotRetention: Int = 200
 
     func normalizedTimeouts() -> AutomationSettings {
         var normalized = self

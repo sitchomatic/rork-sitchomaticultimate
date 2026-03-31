@@ -155,6 +155,7 @@ struct LoginSettingsContentView: View {
                     Text("90s").tag(90)
                     Text("120s").tag(120)
                     Text("150s").tag(150)
+                    Text("180s").tag(180)
                 }
                 .pickerStyle(.menu)
             }

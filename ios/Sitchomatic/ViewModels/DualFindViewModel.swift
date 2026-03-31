@@ -45,7 +45,7 @@ class DualFindViewModel {
     var showLiveFeed: Bool = false
     var liveFeedFilterEmail: String = ""
     var liveFeedFilterPlatform: String = ""
-    private let maxLiveScreenshots: Int = 200
+    private let maxLiveScreenshots: Int = AutomationSettings.defaultMaxScreenshotRetention
     private let screenshotManager = UnifiedScreenshotManager.shared
 
     var activeIntervention: DualFindInterventionRequest?
@@ -60,7 +60,7 @@ class DualFindViewModel {
     var stealthEnabled: Bool = true
     var debugMode: Bool = true
     var testTimeout: TimeInterval = 90
-    var maxConcurrency: Int = 7
+    var maxConcurrency: Int = AutomationSettings.defaultMaxConcurrency
     var automationSettings: AutomationSettings = AutomationSettings()
 
     private var resumePoint: DualFindResumePoint?

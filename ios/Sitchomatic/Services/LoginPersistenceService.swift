@@ -110,9 +110,9 @@ class LoginPersistenceService {
         guard let dict = UserDefaults.standard.dictionary(forKey: settingsKey) else { return nil }
         return (
             targetSite: dict["targetSite"] as? String ?? LoginTargetSite.joefortune.rawValue,
-            maxConcurrency: dict["maxConcurrency"] as? Int ?? 8,
+            maxConcurrency: dict["maxConcurrency"] as? Int ?? AutomationSettings.defaultMaxConcurrency,
             debugMode: dict["debugMode"] as? Bool ?? true,
-            appearanceMode: dict["appearanceMode"] as? String ?? "Dark",
+            appearanceMode: dict["appearanceMode"] as? String ?? AppAppearanceMode.dark.rawValue,
             stealthEnabled: dict["stealthEnabled"] as? Bool ?? true,
             testTimeout: max(dict["testTimeout"] as? TimeInterval ?? 90, AutomationSettings.minimumTimeoutSeconds)
         )

@@ -10,7 +10,7 @@ class UnifiedScreenshotManager {
 
     var screenshots: [CapturedScreenshot] = []
     var analysisStats: AnalysisStats = AnalysisStats()
-    private let maxScreenshots: Int = 200
+    private let maxScreenshots: Int = AutomationSettings.defaultMaxScreenshotRetention
     private let visionCrop = VisionTextCropService.shared
     private let dedup = ScreenshotDedupService.shared
     private let logger = DebugLogger.shared
