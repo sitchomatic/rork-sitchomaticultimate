@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import SwiftUI
 
 /// Central source of truth for all developer and automation settings.
@@ -64,6 +65,7 @@ final class CentralSettingsService {
             loginAutomationSettings = loaded.normalizedTimeouts()
         }
         PPSRStealthService.shared.applySettings(loginAutomationSettings)
+        TimeoutResolver.invalidateCache()
     }
 
     /// Loads unified session automation settings from UserDefaults.
@@ -154,7 +156,7 @@ final class CentralSettingsService {
 
     // MARK: - Nested Types
 
-    enum SettingsMode: String, CaseIterable, Sendable {
+    @frozen enum SettingsMode: String, CaseIterable, Sendable {
         case login
         case unified
         case dualFind

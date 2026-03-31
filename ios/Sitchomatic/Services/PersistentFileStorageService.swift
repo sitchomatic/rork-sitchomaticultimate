@@ -345,7 +345,7 @@ class PersistentFileStorageService {
 
     // MARK: - Automation Settings
 
-    private func saveAutomationSettings() {
+    @MainActor private func saveAutomationSettings() {
         guard let data = try? JSONEncoder().encode(CentralSettingsService.shared.loginAutomationSettings) else { return }
         let file = configURL.appendingPathComponent("automation_settings.json")
         try? data.write(to: file)
