@@ -100,8 +100,9 @@ class ProxyHealthMonitor {
     private func scheduleHealthCheck() {
         monitorTimer?.cancel()
         monitorTimer = Task { [weak self] in
+            let interval = self?.checkIntervalSeconds ?? 30
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(self?.checkIntervalSeconds ?? 30))
+                try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled else { break }
                 await self?.performHealthCheck()
             }

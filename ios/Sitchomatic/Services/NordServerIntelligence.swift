@@ -91,8 +91,9 @@ class NordServerIntelligence {
     func startMonitoring() {
         stopMonitoring()
         refreshTimer = Task { [weak self] in
+            let interval = self?.refreshInterval ?? 300
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(self?.refreshInterval ?? 300))
+                try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled else { break }
                 await self?.refreshStaleRegions()
             }

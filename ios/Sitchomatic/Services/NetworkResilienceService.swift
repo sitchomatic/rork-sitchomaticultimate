@@ -114,8 +114,9 @@ class NetworkResilienceService {
         Task { await performVerification(expectedProxy: proxy) }
 
         verificationTimer = Task { [weak self] in
+            let interval = self?.verificationIntervalSeconds ?? 30
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(self?.verificationIntervalSeconds ?? 30))
+                try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled else { break }
                 await self?.performVerification(expectedProxy: proxy)
             }
