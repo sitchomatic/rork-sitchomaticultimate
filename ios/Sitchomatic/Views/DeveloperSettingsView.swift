@@ -431,7 +431,7 @@ struct DeveloperSettingsView: View {
                 devRow(
                     icon: "rectangle.stack.fill",
                     title: "Unified Session Settings",
-                    subtitle: "V\(unifiedVM.config.systemVersion) paired testing config",
+                    subtitle: "V\(unifiedVM.config.systemVersion) dual-site session config",
                     color: .cyan
                 )
             }

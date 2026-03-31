@@ -929,7 +929,7 @@ struct UnifiedSessionSettingsView: View {
         case "gray": return .gray
         case "orange": return .orange
         case "blue": return .blue
-        default: return .cyan
+        default: return .accentColor
         }
     }
 }

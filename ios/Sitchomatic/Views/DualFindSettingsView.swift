@@ -903,7 +903,7 @@ struct DualFindSettingsView: View {
             Toggle(isOn: $vm.automationSettings.v42SettlementGateEnabled) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Settlement Gate")
-                    Text("V5.2 human-variance click timing")
+                    Text("Human-variance click timing for anti-detection")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -932,7 +932,7 @@ struct DualFindSettingsView: View {
         case "gray": return .gray
         case "orange": return .orange
         case "blue": return .blue
-        default: return .purple
+        default: return .accentColor
         }
     }
 }
