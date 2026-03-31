@@ -350,27 +350,42 @@ class CapturedScreenshot: Identifiable {
     var outcomeColor: SwiftUI.Color {
         if userOverride != .none { return userOverride.color }
         switch detectedOutcome {
-        case .success: .green
-        case .incorrectPassword, .noAccount: .secondary
-        case .permDisabled: .red
-        case .tempDisabled: .orange
-        case .smsVerification: .purple
-        case .errorBanner: .red
-        case .unknown: .gray
+        case .success:
+            return .green
+        case .incorrectPassword, .noAccount:
+            return .secondary
+        case .permDisabled:
+            return .red
+        case .tempDisabled:
+            return .orange
+        case .smsVerification:
+            return .purple
+        case .errorBanner:
+            return .red
+        case .unknown:
+            return .gray
         }
     }
 
     var outcomeLabel: String {
         if userOverride != .none { return userOverride.displayLabel.uppercased() }
         switch detectedOutcome {
-        case .success: "SUCCESS"
-        case .incorrectPassword: "INCORRECT"
-        case .noAccount: "NO ACC"
-        case .permDisabled: "PERM DISABLED"
-        case .tempDisabled: "TEMP DISABLED"
-        case .smsVerification: "SMS"
-        case .errorBanner: "ERROR"
-        case .unknown: "UNKNOWN"
+        case .success:
+            return "SUCCESS"
+        case .incorrectPassword:
+            return "INCORRECT"
+        case .noAccount:
+            return "NO ACC"
+        case .permDisabled:
+            return "PERM DISABLED"
+        case .tempDisabled:
+            return "TEMP DISABLED"
+        case .smsVerification:
+            return "SMS"
+        case .errorBanner:
+            return "ERROR"
+        case .unknown:
+            return "UNKNOWN"
         }
     }
 

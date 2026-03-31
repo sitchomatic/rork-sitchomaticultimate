@@ -9,9 +9,9 @@ class ScreenshotCaptureService {
     static let shared = ScreenshotCaptureService()
 
     /// iPhone 17 Pro Max full-screen resolution at 3x scale
-    static let proMaxSize = CGSize(width: 1320, height: 2868)
+    nonisolated static let proMaxSize = CGSize(width: 1320, height: 2868)
     /// Default JPEG compression quality (heavy compression, ~50-100KB per screenshot)
-    static let defaultCompressionQuality: CGFloat = 0.15
+    nonisolated static let defaultCompressionQuality: CGFloat = 0.15
 
     private let renderService = RenderStableScreenshotService.shared
     private let logger = DebugLogger.shared
