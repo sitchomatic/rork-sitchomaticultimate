@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 import WebKit
 
-nonisolated enum SuperTestConnectionType: String, CaseIterable, Sendable, Identifiable {
+enum SuperTestConnectionType: String, CaseIterable, Sendable, Identifiable {
     case fingerprint = "Fingerprint"
     case wireproxyWebView = "WireProxy WebView"
     case joeURLs = "Joe URLs"
@@ -45,7 +45,7 @@ nonisolated enum SuperTestConnectionType: String, CaseIterable, Sendable, Identi
     }
 }
 
-nonisolated enum SuperTestPhase: String, Sendable, CaseIterable, Identifiable {
+enum SuperTestPhase: String, Sendable, CaseIterable, Identifiable {
     case idle = "Idle"
     case fingerprint = "Fingerprint Detection"
     case wireproxyWebView = "WireProxy WebView"
@@ -93,7 +93,7 @@ nonisolated enum SuperTestPhase: String, Sendable, CaseIterable, Identifiable {
     }
 }
 
-nonisolated struct SuperTestItemResult: Identifiable, Sendable {
+struct SuperTestItemResult: Identifiable, Sendable {
     let id: UUID
     let name: String
     let category: SuperTestPhase
@@ -113,14 +113,14 @@ nonisolated struct SuperTestItemResult: Identifiable, Sendable {
     }
 }
 
-nonisolated enum DiagnosticSeverity: String, Sendable {
+enum DiagnosticSeverity: String, Sendable {
     case critical
     case warning
     case info
     case success
 }
 
-nonisolated struct DiagnosticFinding: Identifiable, Sendable {
+struct DiagnosticFinding: Identifiable, Sendable {
     let id: UUID
     let severity: DiagnosticSeverity
     let title: String
@@ -140,7 +140,7 @@ nonisolated struct DiagnosticFinding: Identifiable, Sendable {
     }
 }
 
-nonisolated struct SuperTestReport: Sendable {
+struct SuperTestReport: Sendable {
     let results: [SuperTestItemResult]
     let fingerprintScore: Int?
     let fingerprintPassed: Bool

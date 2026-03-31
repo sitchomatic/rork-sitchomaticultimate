@@ -8,7 +8,7 @@ struct TestDebugResultsView: View {
     @State private var showCompareSheet: Bool = false
     @State private var exportText: String = ""
 
-    nonisolated enum ResultsTab: String, CaseIterable, Sendable {
+    enum ResultsTab: String, CaseIterable, Sendable {
         case grid = "Grid"
         case ranked = "Ranked"
         case heatmap = "Heatmap"

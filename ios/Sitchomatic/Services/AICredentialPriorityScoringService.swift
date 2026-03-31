@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct CredentialOutcomeRecord: Codable, Sendable {
+struct CredentialOutcomeRecord: Codable, Sendable {
     let username: String
     let emailDomain: String
     let outcome: String
@@ -11,7 +11,7 @@ nonisolated struct CredentialOutcomeRecord: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct CredentialPriorityProfile: Codable, Sendable {
+struct CredentialPriorityProfile: Codable, Sendable {
     var username: String
     var emailDomain: String
     var totalAttempts: Int = 0
@@ -87,7 +87,7 @@ nonisolated struct CredentialPriorityProfile: Codable, Sendable {
     }
 }
 
-nonisolated struct EmailDomainStats: Codable, Sendable {
+struct EmailDomainStats: Codable, Sendable {
     var domain: String
     var totalCredentials: Int = 0
     var successCount: Int = 0
@@ -106,7 +106,7 @@ nonisolated struct EmailDomainStats: Codable, Sendable {
     }
 }
 
-nonisolated struct CredentialPriorityStore: Codable, Sendable {
+struct CredentialPriorityStore: Codable, Sendable {
     var profiles: [String: CredentialPriorityProfile] = [:]
     var domainStats: [String: EmailDomainStats] = [:]
     var recentOutcomes: [CredentialOutcomeRecord] = []

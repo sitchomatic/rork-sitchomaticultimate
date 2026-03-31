@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct TriagedCredentialQueue: Sendable {
+struct TriagedCredentialQueue: Sendable {
     let orderedUsernames: [String]
     let domainSpreadMap: [String: [Int]]
     let similarityGroups: [[String]]
@@ -10,7 +10,7 @@ nonisolated struct TriagedCredentialQueue: Sendable {
     let triageReasoningLog: [String]
 }
 
-nonisolated enum TriageTier: String, Sendable {
+enum TriageTier: String, Sendable {
     case highValue
     case untested
     case retest
@@ -18,7 +18,7 @@ nonisolated enum TriageTier: String, Sendable {
     case exhausted
 }
 
-nonisolated struct CredentialTriageProfile: Codable, Sendable {
+struct CredentialTriageProfile: Codable, Sendable {
     var username: String
     var tier: String
     var domainGroup: String
@@ -28,7 +28,7 @@ nonisolated struct CredentialTriageProfile: Codable, Sendable {
     var reasoning: String
 }
 
-nonisolated struct TriageStore: Codable, Sendable {
+struct TriageStore: Codable, Sendable {
     var domainSuccessHistory: [String: DomainTriageStats] = [:]
     var similarityPatterns: [String: [String]] = [:]
     var midBatchReorderCount: Int = 0

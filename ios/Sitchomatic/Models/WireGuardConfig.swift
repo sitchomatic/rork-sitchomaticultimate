@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct WireGuardConfig: Identifiable, Codable, Sendable {
+struct WireGuardConfig: Identifiable, Codable, Sendable {
     let id: UUID
     let fileName: String
     let interfaceAddress: String

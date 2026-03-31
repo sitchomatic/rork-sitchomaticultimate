@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-nonisolated struct HandshakeInitiation: Sendable {
+struct HandshakeInitiation: Sendable {
     let senderIndex: UInt32
     let ephemeralPublic: Data
     let encryptedStatic: Data
@@ -10,7 +10,7 @@ nonisolated struct HandshakeInitiation: Sendable {
     let mac2: Data
 }
 
-nonisolated struct HandshakeResponse: Sendable {
+struct HandshakeResponse: Sendable {
     let senderIndex: UInt32
     let receiverIndex: UInt32
     let ephemeralPublic: Data
@@ -19,7 +19,7 @@ nonisolated struct HandshakeResponse: Sendable {
     let mac2: Data
 }
 
-nonisolated struct SessionKeys: Sendable {
+struct SessionKeys: Sendable {
     let senderIndex: UInt32
     let receiverIndex: UInt32
     let sendingKey: Data
@@ -29,7 +29,7 @@ nonisolated struct SessionKeys: Sendable {
     let createdAt: Date = Date()
 }
 
-nonisolated struct NoiseHandshake: Sendable {
+struct NoiseHandshake: Sendable {
 
     static func buildInitiation(
         staticPrivateKey: Curve25519.KeyAgreement.PrivateKey,
@@ -181,7 +181,7 @@ nonisolated struct NoiseHandshake: Sendable {
     }
 }
 
-nonisolated struct HandshakeState: Sendable {
+struct HandshakeState: Sendable {
     let senderIndex: UInt32
     let staticPrivateKey: Curve25519.KeyAgreement.PrivateKey
     let ephemeralPrivateKey: Curve25519.KeyAgreement.PrivateKey

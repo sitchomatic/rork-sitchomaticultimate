@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Swift 6.2 optimized appearance mode with frozen enum for performance
 @frozen
-nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable, Codable {
+enum AppAppearanceMode: String, CaseIterable, Sendable, Codable {
     case system = "System"
     case light = "Light"
     case dark = "Dark"
@@ -28,7 +28,7 @@ nonisolated enum AppAppearanceMode: String, CaseIterable, Sendable, Codable {
 
 /// Swift 6.2 optimized connection status with frozen enum for performance
 @frozen
-nonisolated enum AppConnectionStatus: String, Sendable, Codable {
+enum AppConnectionStatus: String, Sendable, Codable {
     case disconnected = "Disconnected"
     case connecting = "Connecting"
     case connected = "Connected"

@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct IPv4Header: Sendable {
+struct IPv4Header: Sendable {
     let version: UInt8
     let ihl: UInt8
     let dscp: UInt8
@@ -28,7 +28,7 @@ nonisolated struct IPv4Header: Sendable {
     var isUDP: Bool { protocolNumber == 17 }
 }
 
-nonisolated struct IPv4Packet: Sendable {
+struct IPv4Packet: Sendable {
     let header: IPv4Header
     let payload: Data
 

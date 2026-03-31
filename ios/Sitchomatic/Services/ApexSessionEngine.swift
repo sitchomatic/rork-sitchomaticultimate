@@ -3069,7 +3069,7 @@ class SessionActivityMonitor {
         return activity.secondsSinceLastActivity
     }
 
-    nonisolated enum IdleCheckResult: Sendable {
+    enum IdleCheckResult: Sendable {
         case active
         case idle(secondsIdle: TimeInterval)
         case noSession

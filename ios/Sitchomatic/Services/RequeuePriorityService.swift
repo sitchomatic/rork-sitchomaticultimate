@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum RequeuePriority: Int, Comparable, Sendable {
+enum RequeuePriority: Int, Comparable, Sendable {
     case high = 0
     case medium = 1
     case low = 2
@@ -10,7 +10,7 @@ nonisolated enum RequeuePriority: Int, Comparable, Sendable {
     }
 }
 
-nonisolated struct RequeueEntry: Sendable {
+struct RequeueEntry: Sendable {
     let credentialId: String
     let username: String
     let priority: RequeuePriority

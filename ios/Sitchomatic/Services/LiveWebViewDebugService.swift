@@ -183,7 +183,7 @@ struct LiveConsoleEntry: Identifiable {
     let level: Level
     let message: String
 
-    nonisolated enum Level: String, Sendable {
+    enum Level: String, Sendable {
         case log, warn, error
     }
 }

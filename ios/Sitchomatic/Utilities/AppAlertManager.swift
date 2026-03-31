@@ -3,14 +3,14 @@ import Observation
 import SwiftUI
 
 @frozen
-nonisolated enum AppAlertSeverity: String, Sendable {
+enum AppAlertSeverity: String, Sendable {
     case info
     case warning
     case critical
 }
 
 @frozen
-nonisolated enum AppAlertSource: String, Sendable {
+enum AppAlertSource: String, Sendable {
     case proxy
     case vpn
     case wireProxy

@@ -1,7 +1,7 @@
 import Foundation
 
 @frozen
-nonisolated enum DebugLogCategory: String, CaseIterable, Sendable, Identifiable, Codable {
+enum DebugLogCategory: String, CaseIterable, Sendable, Identifiable, Codable {
     case automation = "Automation"
     case login = "Login"
     case ppsr = "PPSR"
@@ -74,7 +74,7 @@ nonisolated enum DebugLogCategory: String, CaseIterable, Sendable, Identifiable,
 }
 
 @frozen
-nonisolated enum DebugLogLevel: String, CaseIterable, Sendable, Comparable, Codable {
+enum DebugLogLevel: String, CaseIterable, Sendable, Comparable, Codable {
     case trace = "TRACE"
     case debug = "DEBUG"
     case info = "INFO"
@@ -112,7 +112,7 @@ nonisolated enum DebugLogLevel: String, CaseIterable, Sendable, Comparable, Coda
     }
 }
 
-nonisolated struct ErrorHealingEvent: Identifiable, Sendable {
+struct ErrorHealingEvent: Identifiable, Sendable {
     let id: UUID = UUID()
     let timestamp: Date
     let category: DebugLogCategory
@@ -123,7 +123,7 @@ nonisolated struct ErrorHealingEvent: Identifiable, Sendable {
     let durationMs: Int?
 }
 
-nonisolated struct RetryState: Sendable {
+struct RetryState: Sendable {
     var attempts: Int = 0
     var maxAttempts: Int = 3
     var lastAttempt: Date?
@@ -145,7 +145,7 @@ nonisolated struct RetryState: Sendable {
     }
 }
 
-nonisolated struct DebugLogEntry: Identifiable, Sendable, Codable {
+struct DebugLogEntry: Identifiable, Sendable, Codable {
     let id: UUID
     let timestamp: Date
     let category: DebugLogCategory

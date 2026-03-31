@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum NordLynxAPIError: Error, LocalizedError, Sendable {
+enum NordLynxAPIError: Error, LocalizedError, Sendable {
     case invalidURL
     case networkError(Int)
     case connectionFailed(String)
@@ -38,7 +38,7 @@ nonisolated enum NordLynxAPIError: Error, LocalizedError, Sendable {
     }
 }
 
-nonisolated struct NordLynxAPIService: Sendable {
+struct NordLynxAPIService: Sendable {
     private static let baseURL = "https://api.nordvpn.com/v1/servers/recommendations"
     private static let countriesURL = "https://api.nordvpn.com/v1/servers/countries"
     private static let ovpnBaseURL = "https://downloads.nordcdn.com/configs/files"

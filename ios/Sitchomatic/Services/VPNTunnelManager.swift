@@ -3,7 +3,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated enum VPNTunnelStatus: String, Sendable {
+enum VPNTunnelStatus: String, Sendable {
     case disconnected = "Disconnected"
     case connecting = "Connecting"
     case connected = "Connected"
@@ -14,7 +14,7 @@ nonisolated enum VPNTunnelStatus: String, Sendable {
     case error = "Error"
 }
 
-nonisolated struct VPNConnectionStats: Sendable {
+struct VPNConnectionStats: Sendable {
     var totalConnections: Int = 0
     var totalDisconnections: Int = 0
     var totalErrors: Int = 0
@@ -26,14 +26,14 @@ nonisolated struct VPNConnectionStats: Sendable {
     var connectionHistory: [VPNConnectionEvent] = []
 }
 
-nonisolated struct VPNConnectionEvent: Identifiable, Sendable {
+struct VPNConnectionEvent: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let configName: String
     let eventType: EventType
     let detail: String
 
-    nonisolated enum EventType: String, Sendable {
+    enum EventType: String, Sendable {
         case connected = "Connected"
         case disconnected = "Disconnected"
         case error = "Error"

@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct NordLynxZipService: Sendable {
+struct NordLynxZipService: Sendable {
     func createZip(from directoryURL: URL, zipName: String) throws -> URL {
         let tempDir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)

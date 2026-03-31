@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-nonisolated struct BatchPreOptimizationReport: Sendable {
+struct BatchPreOptimizationReport: Sendable {
     let timestamp: Date
     let credentialCount: Int
     let urlCount: Int
@@ -29,7 +29,7 @@ nonisolated struct BatchPreOptimizationReport: Sendable {
     let readinessScore: Double
 }
 
-nonisolated enum BatchReadiness: String, Sendable {
+enum BatchReadiness: String, Sendable {
     case optimal
     case good
     case acceptable
@@ -37,7 +37,7 @@ nonisolated enum BatchReadiness: String, Sendable {
     case risky
 }
 
-nonisolated struct TimeOfDayPattern: Codable, Sendable {
+struct TimeOfDayPattern: Codable, Sendable {
     var hourBuckets: [Int: HourBucket] = [:]
 
     struct HourBucket: Codable, Sendable {
@@ -66,7 +66,7 @@ nonisolated struct TimeOfDayPattern: Codable, Sendable {
     }
 }
 
-nonisolated struct PreOptimizerStore: Codable, Sendable {
+struct PreOptimizerStore: Codable, Sendable {
     var timePatterns: TimeOfDayPattern = TimeOfDayPattern()
     var hostPerformanceHistory: [String: HostPerformanceSnapshot] = [:]
     var totalBatchesAnalyzed: Int = 0

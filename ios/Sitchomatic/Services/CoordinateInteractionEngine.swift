@@ -6,7 +6,7 @@ class CoordinateInteractionEngine {
 
     private let logger = DebugLogger.shared
 
-    nonisolated struct ElementRect: Sendable {
+    struct ElementRect: Sendable {
         let x: Double
         let y: Double
         let width: Double
@@ -19,7 +19,7 @@ class CoordinateInteractionEngine {
         var isValid: Bool { width > 0 && height > 0 && visible }
     }
 
-    nonisolated struct ClickResult: Sendable {
+    struct ClickResult: Sendable {
         let success: Bool
         let method: String
         let coordinates: (x: Double, y: Double)?
@@ -205,7 +205,7 @@ class CoordinateInteractionEngine {
         return false
     }
 
-    nonisolated struct TripleClickResult: Sendable {
+    struct TripleClickResult: Sendable {
         let success: Bool
         let clicksCompleted: Int
         let method: String

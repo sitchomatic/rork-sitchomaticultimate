@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct CrashReport: Codable, Sendable {
+struct CrashReport: Codable, Sendable {
     let signal: String
     let memoryMB: Int
     let timestamp: TimeInterval

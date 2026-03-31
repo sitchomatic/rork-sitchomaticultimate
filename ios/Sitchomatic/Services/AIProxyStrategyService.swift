@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct ProxyHostOutcome: Codable, Sendable {
+struct ProxyHostOutcome: Codable, Sendable {
     let proxyId: String
     let host: String
     let target: String
@@ -11,7 +11,7 @@ nonisolated struct ProxyHostOutcome: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct ProxyHostProfile: Codable, Sendable {
+struct ProxyHostProfile: Codable, Sendable {
     var proxyId: String
     var host: String
     var successCount: Int = 0
@@ -71,7 +71,7 @@ nonisolated struct ProxyHostProfile: Codable, Sendable {
     }
 }
 
-nonisolated struct ProxyStrategyStore: Codable, Sendable {
+struct ProxyStrategyStore: Codable, Sendable {
     var profiles: [String: ProxyHostProfile] = [:]
     var recentOutcomes: [ProxyHostOutcome] = []
     var hostPreferences: [String: [String]] = [:]

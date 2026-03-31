@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct HostKeywordProfile: Codable, Sendable {
+struct HostKeywordProfile: Codable, Sendable {
     var successKeywords: [String: Int] = [:]
     var failKeywords: [String: Int] = [:]
     var disabledKeywords: [String: Int] = [:]
@@ -9,14 +9,14 @@ nonisolated struct HostKeywordProfile: Codable, Sendable {
     var lastUpdated: Date = .distantPast
 }
 
-nonisolated struct AIClassificationResult: Codable, Sendable {
+struct AIClassificationResult: Codable, Sendable {
     let outcome: String
     let confidence: Double
     let reasoning: String
     let newKeywords: [String]?
 }
 
-nonisolated struct ConfidenceFeedbackRecord: Codable, Sendable {
+struct ConfidenceFeedbackRecord: Codable, Sendable {
     let host: String
     let predictedOutcome: String
     let actualOutcome: String
@@ -25,7 +25,7 @@ nonisolated struct ConfidenceFeedbackRecord: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct AIConfidenceStore: Codable, Sendable {
+struct AIConfidenceStore: Codable, Sendable {
     var hostProfiles: [String: HostKeywordProfile] = [:]
     var feedbackHistory: [ConfidenceFeedbackRecord] = []
     var aiCallCount: Int = 0

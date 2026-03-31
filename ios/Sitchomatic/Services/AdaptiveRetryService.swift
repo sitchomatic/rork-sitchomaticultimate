@@ -30,7 +30,7 @@ actor AdaptiveRetryService {
         }
     }
 
-    nonisolated enum FailureCategory: String, Sendable {
+    enum FailureCategory: String, Sendable {
         case timeout
         case idleTimeout
         case connectionFailure
@@ -43,7 +43,7 @@ actor AdaptiveRetryService {
         case unknown
     }
 
-    nonisolated struct RetryPolicy: Sendable {
+    struct RetryPolicy: Sendable {
         let maxRetries: Int
         let baseDelayMs: Int
         let backoffMultiplier: Double

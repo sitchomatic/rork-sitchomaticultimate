@@ -2,7 +2,7 @@
 @preconcurrency import Network
 import Observation
 
-nonisolated struct UpstreamHealthStatus: Sendable {
+struct UpstreamHealthStatus: Sendable {
     var isHealthy: Bool = false
     var lastChecked: Date?
     var latencyMs: Int?
@@ -12,7 +12,7 @@ nonisolated struct UpstreamHealthStatus: Sendable {
     var lastFailureReason: String?
 }
 
-nonisolated struct ProxyHealthEvent: Identifiable, Sendable {
+struct ProxyHealthEvent: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let upstream: String

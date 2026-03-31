@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct DebugLoginButtonConfig: Codable, Sendable, Identifiable {
+struct DebugLoginButtonConfig: Codable, Sendable, Identifiable {
     var id: String = UUID().uuidString
     var urlPattern: String
     var successfulMethod: ClickMethodResult?
@@ -11,7 +11,7 @@ nonisolated struct DebugLoginButtonConfig: Codable, Sendable, Identifiable {
     var userConfirmed: Bool = false
     var notes: String = ""
 
-    nonisolated struct ButtonLocation: Codable, Sendable {
+    struct ButtonLocation: Codable, Sendable {
         var relativeX: Double
         var relativeY: Double
         var absoluteX: Double
@@ -31,7 +31,7 @@ nonisolated struct DebugLoginButtonConfig: Codable, Sendable, Identifiable {
         }
     }
 
-    nonisolated struct ClickMethodResult: Codable, Sendable {
+    struct ClickMethodResult: Codable, Sendable {
         var methodName: String
         var methodIndex: Int
         var jsCode: String
@@ -41,7 +41,7 @@ nonisolated struct DebugLoginButtonConfig: Codable, Sendable, Identifiable {
     }
 }
 
-nonisolated struct DebugClickAttempt: Identifiable, Sendable {
+struct DebugClickAttempt: Identifiable, Sendable {
     let id: String = UUID().uuidString
     let index: Int
     let methodName: String
@@ -54,7 +54,7 @@ nonisolated struct DebugClickAttempt: Identifiable, Sendable {
     var timestamp: Date = Date()
 
     @frozen
-    nonisolated enum AttemptStatus: String, Sendable {
+    enum AttemptStatus: String, Sendable {
         case pending = "Pending"
         case running = "Running"
         case success = "Success"

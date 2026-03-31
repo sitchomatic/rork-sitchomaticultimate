@@ -38,7 +38,7 @@ class IPScoreSession: Identifiable {
         "whatismyipaddress.com",
     ]
 
-    nonisolated enum SessionStatus: String, Sendable {
+    enum SessionStatus: String, Sendable {
         case loading = "Loading"
         case loaded = "Loaded"
         case failed = "Failed"

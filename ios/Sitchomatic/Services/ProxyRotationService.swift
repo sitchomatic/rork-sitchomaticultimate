@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated enum ConnectionMode: String, CaseIterable, Sendable {
+enum ConnectionMode: String, CaseIterable, Sendable {
     case direct = "Direct"
     case dns = "DNS"
     case proxy = "Proxy"
@@ -36,7 +36,7 @@ nonisolated enum ConnectionMode: String, CaseIterable, Sendable {
     }
 }
 
-nonisolated enum NetworkRegion: String, CaseIterable, Codable, Sendable {
+enum NetworkRegion: String, CaseIterable, Codable, Sendable {
     case usa = "USA"
     case au = "AU"
 
@@ -55,7 +55,7 @@ nonisolated enum NetworkRegion: String, CaseIterable, Codable, Sendable {
     }
 }
 
-nonisolated struct ProfileStorageCounts: Sendable {
+struct ProfileStorageCounts: Sendable {
     let wireGuard: Int
     let openVPN: Int
 }
@@ -65,7 +65,7 @@ nonisolated struct ProfileStorageCounts: Sendable {
 class ProxyRotationService {
     static let shared = ProxyRotationService()
 
-    nonisolated enum ProxyTarget: String, Sendable {
+    enum ProxyTarget: String, Sendable {
         case joe
         case ignition
         case ppsr

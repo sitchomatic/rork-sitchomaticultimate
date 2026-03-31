@@ -7,7 +7,7 @@ import SwiftUI
 // UserResultOverride enum is kept here as it's referenced throughout the codebase.
 
 @frozen
-nonisolated enum UserResultOverride: String, Sendable, CaseIterable {
+enum UserResultOverride: String, Sendable, CaseIterable {
     case none
     case success
     case noAcc

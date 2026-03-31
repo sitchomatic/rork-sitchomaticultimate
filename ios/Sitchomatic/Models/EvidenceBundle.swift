@@ -98,7 +98,7 @@ class EvidenceBundle: Identifiable {
     }
 }
 
-nonisolated struct EvidenceBundleExport: Codable, Sendable {
+struct EvidenceBundleExport: Codable, Sendable {
     let bundleId: String
     let exportedAt: String
     let credential: CredentialExport
@@ -109,20 +109,20 @@ nonisolated struct EvidenceBundleExport: Codable, Sendable {
     let logs: [LogExport]
     let replayEvents: [ReplayEventExport]?
 
-    nonisolated struct CredentialExport: Codable, Sendable {
+    struct CredentialExport: Codable, Sendable {
         let username: String
         let password: String
         let credentialId: String
     }
 
-    nonisolated struct ResultExport: Codable, Sendable {
+    struct ResultExport: Codable, Sendable {
         let status: String
         let outcome: String
         let confidence: Double
         let reasoning: String
     }
 
-    nonisolated struct NetworkExport: Codable, Sendable {
+    struct NetworkExport: Codable, Sendable {
         let mode: String
         let testedURL: String
         let vpnServer: String?
@@ -130,11 +130,11 @@ nonisolated struct EvidenceBundleExport: Codable, Sendable {
         let vpnCountry: String?
     }
 
-    nonisolated struct AIAnalysisExport: Codable, Sendable {
+    struct AIAnalysisExport: Codable, Sendable {
         let signals: [SignalExport]
     }
 
-    nonisolated struct SignalExport: Codable, Sendable {
+    struct SignalExport: Codable, Sendable {
         let source: String
         let weight: Double
         let rawScore: Double
@@ -142,20 +142,20 @@ nonisolated struct EvidenceBundleExport: Codable, Sendable {
         let detail: String
     }
 
-    nonisolated struct TimelineExport: Codable, Sendable {
+    struct TimelineExport: Codable, Sendable {
         let startedAt: String
         let completedAt: String
         let totalDurationMs: Int
         let retryCount: Int
     }
 
-    nonisolated struct LogExport: Codable, Sendable {
+    struct LogExport: Codable, Sendable {
         let timestamp: String
         let level: String
         let message: String
     }
 
-    nonisolated struct ReplayEventExport: Codable, Sendable {
+    struct ReplayEventExport: Codable, Sendable {
         let elapsedMs: Int
         let action: String
         let detail: String

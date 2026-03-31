@@ -1,26 +1,26 @@
 import Foundation
 
-nonisolated struct BINAPIResponse: Codable, Sendable {
+struct BINAPIResponse: Codable, Sendable {
     let valid: Bool?
     let card: BINCardInfo?
     let issuer: BINIssuerInfo?
     let country: BINCountryInfo?
 }
 
-nonisolated struct BINCardInfo: Codable, Sendable {
+struct BINCardInfo: Codable, Sendable {
     let bin: String?
     let scheme: String?
     let type: String?
     let category: String?
 }
 
-nonisolated struct BINIssuerInfo: Codable, Sendable {
+struct BINIssuerInfo: Codable, Sendable {
     let name: String?
     let url: String?
     let tel: String?
 }
 
-nonisolated struct BINCountryInfo: Codable, Sendable {
+struct BINCountryInfo: Codable, Sendable {
     let name: String?
     let alpha_2_code: String?
 }

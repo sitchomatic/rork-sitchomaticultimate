@@ -8,7 +8,7 @@ class VisionTextCropService {
 
     private let logger = DebugLogger.shared
 
-    nonisolated struct CropResult: Sendable {
+    struct CropResult: Sendable {
         let croppedImage: UIImage
         let fullImage: UIImage
         let detectedTexts: [DetectedTextBlock]
@@ -17,14 +17,14 @@ class VisionTextCropService {
         let processingTimeMs: Int
     }
 
-    nonisolated struct DetectedTextBlock: Sendable {
+    struct DetectedTextBlock: Sendable {
         let text: String
         let boundingBox: CGRect
         let confidence: Float
         let isCrucial: Bool
     }
 
-    nonisolated struct AnalysisResult: Sendable {
+    struct AnalysisResult: Sendable {
         let allText: String
         let crucialMatches: [String]
         let detectedOutcome: DetectedOutcome
@@ -33,7 +33,7 @@ class VisionTextCropService {
         let processingTimeMs: Int
     }
 
-    nonisolated enum DetectedOutcome: String, Sendable {
+    enum DetectedOutcome: String, Sendable {
         case success
         case incorrectPassword
         case noAccount

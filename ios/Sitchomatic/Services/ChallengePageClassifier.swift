@@ -10,7 +10,7 @@ class ChallengePageClassifier {
     private let logger = DebugLogger.shared
     private let aiSolver = AIChallengePageSolverService.shared
 
-    nonisolated enum ChallengeType: String, Sendable {
+    enum ChallengeType: String, Sendable {
         case none
         case rateLimit
         case captcha
@@ -22,7 +22,7 @@ class ChallengePageClassifier {
         case unknown
     }
 
-    nonisolated struct ClassificationResult: Sendable {
+    struct ClassificationResult: Sendable {
         let type: ChallengeType
         let confidence: Double
         let signals: [String]
@@ -30,7 +30,7 @@ class ChallengePageClassifier {
         let aiBypassRecommendation: AIBypassRecommendation?
     }
 
-    nonisolated enum SuggestedAction: String, Sendable {
+    enum SuggestedAction: String, Sendable {
         case proceed
         case waitAndRetry
         case rotateProxy

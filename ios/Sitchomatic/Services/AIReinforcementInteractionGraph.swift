@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct InteractionAction: Codable, Sendable, Identifiable {
+struct InteractionAction: Codable, Sendable, Identifiable {
     var id: String = UUID().uuidString
     let actionType: String
     let detail: String
@@ -10,7 +10,7 @@ nonisolated struct InteractionAction: Codable, Sendable, Identifiable {
     let timestamp: Date
 }
 
-nonisolated struct InteractionSequence: Codable, Sendable, Identifiable {
+struct InteractionSequence: Codable, Sendable, Identifiable {
     var id: String = UUID().uuidString
     let host: String
     let actions: [InteractionAction]
@@ -24,7 +24,7 @@ nonisolated struct InteractionSequence: Codable, Sendable, Identifiable {
     var reward: Double = 0
 }
 
-nonisolated struct ActionNode: Codable, Sendable {
+struct ActionNode: Codable, Sendable {
     var actionType: String
     var detail: String
     var totalOccurrences: Int = 0
@@ -44,7 +44,7 @@ nonisolated struct ActionNode: Codable, Sendable {
     }
 }
 
-nonisolated struct InteractionRecipe: Codable, Sendable {
+struct InteractionRecipe: Codable, Sendable {
     var host: String
     var recommendedActions: [RecommendedAction]
     var confidence: Double
@@ -55,7 +55,7 @@ nonisolated struct InteractionRecipe: Codable, Sendable {
     var version: Int = 0
 }
 
-nonisolated struct RecommendedAction: Codable, Sendable {
+struct RecommendedAction: Codable, Sendable {
     let actionType: String
     let detail: String
     let recommendedDurationMs: Int
@@ -64,7 +64,7 @@ nonisolated struct RecommendedAction: Codable, Sendable {
     let reward: Double
 }
 
-nonisolated struct InteractionGraphStore: Codable, Sendable {
+struct InteractionGraphStore: Codable, Sendable {
     var hostGraphs: [String: [String: ActionNode]] = [:]
     var sequences: [InteractionSequence] = []
     var recipes: [String: InteractionRecipe] = [:]

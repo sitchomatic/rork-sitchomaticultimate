@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated struct LocalProxyStats: Sendable {
+struct LocalProxyStats: Sendable {
     var activeConnections: Int = 0
     var totalConnections: Int = 0
     var bytesRelayed: UInt64 = 0
@@ -18,7 +18,7 @@ nonisolated struct LocalProxyStats: Sendable {
     var startedAt: Date?
 }
 
-nonisolated struct ActiveConnectionInfo: Identifiable, Sendable {
+struct ActiveConnectionInfo: Identifiable, Sendable {
     let id: UUID
     let targetHost: String
     let targetPort: UInt16
@@ -26,14 +26,14 @@ nonisolated struct ActiveConnectionInfo: Identifiable, Sendable {
     var bytesRelayed: UInt64
     var state: ConnectionState
 
-    nonisolated enum ConnectionState: String, Sendable {
+    enum ConnectionState: String, Sendable {
         case handshaking = "Handshaking"
         case relaying = "Relaying"
         case closing = "Closing"
     }
 }
 
-nonisolated enum ConnectionErrorType: Sendable {
+enum ConnectionErrorType: Sendable {
     case none
     case connection
     case handshake

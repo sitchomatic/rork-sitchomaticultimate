@@ -2,14 +2,14 @@ import Foundation
 @preconcurrency import WebKit
 import UIKit
 
-nonisolated enum AutomationTaskType: String, Sendable {
+enum AutomationTaskType: String, Sendable {
     case loginTest = "Login Test"
     case ppsrCheck = "PPSR Check"
     case flowPlayback = "Flow Playback"
     case visionCalibration = "Vision Calibration"
 }
 
-nonisolated enum AutomationTaskStatus: String, Sendable {
+enum AutomationTaskStatus: String, Sendable {
     case queued
     case running
     case completed
@@ -18,7 +18,7 @@ nonisolated enum AutomationTaskStatus: String, Sendable {
     case retrying
 }
 
-nonisolated struct AutomationTaskResult: Sendable {
+struct AutomationTaskResult: Sendable {
     let taskId: String
     let taskType: AutomationTaskType
     let status: AutomationTaskStatus

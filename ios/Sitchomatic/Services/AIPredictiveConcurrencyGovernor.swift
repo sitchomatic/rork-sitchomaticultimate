@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-nonisolated struct GovernorSnapshot: Sendable {
+struct GovernorSnapshot: Sendable {
     let timestamp: Date
     let memoryMB: Int
     let memoryGrowthRate: Double
@@ -13,7 +13,7 @@ nonisolated struct GovernorSnapshot: Sendable {
     let reasoning: String
 }
 
-nonisolated struct GovernorAdjustment: Codable, Sendable {
+struct GovernorAdjustment: Codable, Sendable {
     let id: String
     let timestamp: Date
     let fromConcurrency: Int
@@ -26,7 +26,7 @@ nonisolated struct GovernorAdjustment: Codable, Sendable {
     let wasAI: Bool
 }
 
-nonisolated struct GovernorStore: Codable, Sendable {
+struct GovernorStore: Codable, Sendable {
     var adjustments: [GovernorAdjustment] = []
     var totalAdjustments: Int = 0
     var totalAIAnalyses: Int = 0

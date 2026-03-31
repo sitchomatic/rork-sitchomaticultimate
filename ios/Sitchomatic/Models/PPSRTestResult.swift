@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct PPSRTestResult: Identifiable, Sendable {
+struct PPSRTestResult: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let success: Bool

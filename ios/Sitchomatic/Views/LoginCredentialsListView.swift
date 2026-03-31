@@ -19,7 +19,7 @@ struct LoginCredentialsListView: View {
     @State private var bulkImportResult: String? = nil
     @State private var viewMode: ViewMode = .list
 
-    nonisolated enum SortOption: String, CaseIterable, Identifiable, Sendable {
+    enum SortOption: String, CaseIterable, Identifiable, Sendable {
         case dateAdded = "Date Added"
         case lastTest = "Last Test"
         case successRate = "Success Rate"

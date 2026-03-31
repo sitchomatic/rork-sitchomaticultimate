@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import Vision
 
-nonisolated enum CheckpointState: String, Codable, Sendable, CaseIterable {
+enum CheckpointState: String, Codable, Sendable, CaseIterable {
     case loginPage
     case loginSubmitted
     case postLoginRedirect
@@ -16,14 +16,14 @@ nonisolated enum CheckpointState: String, Codable, Sendable, CaseIterable {
     case unknown
 }
 
-nonisolated enum VerificationVerdict: String, Codable, Sendable {
+enum VerificationVerdict: String, Codable, Sendable {
     case confirmed
     case mismatch
     case uncertain
     case stale
 }
 
-nonisolated struct CheckpointInput: Sendable {
+struct CheckpointInput: Sendable {
     let flowName: String
     let expectedState: CheckpointState
     let pageText: String?
@@ -34,7 +34,7 @@ nonisolated struct CheckpointInput: Sendable {
     let sessionId: String
 }
 
-nonisolated struct CheckpointResult: Sendable {
+struct CheckpointResult: Sendable {
     let verdict: VerificationVerdict
     let actualState: CheckpointState
     let confidence: Double
@@ -44,7 +44,7 @@ nonisolated struct CheckpointResult: Sendable {
     let timestamp: Date
 }
 
-nonisolated struct CheckpointAuditEntry: Codable, Sendable {
+struct CheckpointAuditEntry: Codable, Sendable {
     let id: String
     let flowName: String
     let expectedState: String
@@ -56,7 +56,7 @@ nonisolated struct CheckpointAuditEntry: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct CheckpointStore: Codable, Sendable {
+struct CheckpointStore: Codable, Sendable {
     var auditLog: [CheckpointAuditEntry] = []
     var verdictCounts: [String: Int] = [:]
     var flowAccuracy: [String: FlowAccuracyProfile] = [:]
@@ -64,7 +64,7 @@ nonisolated struct CheckpointStore: Codable, Sendable {
     var stateKeywordMap: [String: [String]] = [:]
 }
 
-nonisolated struct FlowAccuracyProfile: Codable, Sendable {
+struct FlowAccuracyProfile: Codable, Sendable {
     var totalChecks: Int = 0
     var confirmedCount: Int = 0
     var mismatchCount: Int = 0

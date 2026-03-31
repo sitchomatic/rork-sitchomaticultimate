@@ -15,7 +15,7 @@ class NetworkRepairService {
 
     private let logger = DebugLogger.shared
 
-    nonisolated enum RepairPhase: String, Sendable {
+    enum RepairPhase: String, Sendable {
         case idle = "Idle"
         case stoppingBatches = "Stopping Active Batches"
         case tearingDownSessions = "Tearing Down Sessions"
@@ -51,7 +51,7 @@ class NetworkRepairService {
         }
     }
 
-    nonisolated struct RepairLogEntry: Identifiable, Sendable {
+    struct RepairLogEntry: Identifiable, Sendable {
         let id: UUID = UUID()
         let timestamp: Date = Date()
         let phase: RepairPhase
@@ -59,7 +59,7 @@ class NetworkRepairService {
         let success: Bool
     }
 
-    nonisolated struct RepairResult: Sendable {
+    struct RepairResult: Sendable {
         let timestamp: Date
         let totalDurationMs: Int
         let phasesCompleted: Int

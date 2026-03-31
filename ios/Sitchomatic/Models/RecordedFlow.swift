@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct RecordedFlow: Codable, Sendable, Identifiable {
+struct RecordedFlow: Codable, Sendable, Identifiable {
     let id: String
     var name: String
     let url: String
@@ -10,7 +10,7 @@ nonisolated struct RecordedFlow: Codable, Sendable, Identifiable {
     var totalDurationMs: Double
     var actionCount: Int
 
-    nonisolated struct TextboxMapping: Codable, Sendable, Identifiable {
+    struct TextboxMapping: Codable, Sendable, Identifiable {
         let id: String
         let label: String
         let selector: String

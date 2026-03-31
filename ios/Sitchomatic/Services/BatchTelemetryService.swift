@@ -140,7 +140,7 @@ class BatchTelemetryService {
         )
     }
 
-    nonisolated enum Trend: String, Sendable {
+    enum Trend: String, Sendable {
         case improving
         case stable
         case declining

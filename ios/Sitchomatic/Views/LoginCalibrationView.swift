@@ -386,7 +386,7 @@ class CalibrationWebViewCoordinator: NSObject, WKNavigationDelegate, WKScriptMes
     var calibrationStep: Binding<CalibrationStep>?
     private var pageLoadContinuation: CheckedContinuation<Bool, Never>?
 
-    nonisolated enum CalibrationStep: String {
+    enum CalibrationStep: String {
         case loading, autoProbing, tapEmail, tapPassword, tapButton, testFill, complete, failed
     }
 

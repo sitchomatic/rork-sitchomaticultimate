@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-nonisolated struct NordVPNServer: Codable, Sendable {
+struct NordVPNServer: Codable, Sendable {
     let id: Int
     let hostname: String
     let station: String
@@ -39,37 +39,37 @@ nonisolated struct NordVPNServer: Codable, Sendable {
     }
 }
 
-nonisolated struct NordLocation: Codable, Sendable {
+struct NordLocation: Codable, Sendable {
     let country: NordCountry?
 }
 
-nonisolated struct NordCountry: Codable, Sendable {
+struct NordCountry: Codable, Sendable {
     let name: String?
     let city: NordCity?
 }
 
-nonisolated struct NordCity: Codable, Sendable {
+struct NordCity: Codable, Sendable {
     let name: String?
 }
 
-nonisolated struct NordTechnology: Codable, Sendable {
+struct NordTechnology: Codable, Sendable {
     let id: Int?
     let identifier: String?
     let metadata: [NordMetadata]?
 }
 
-nonisolated struct NordMetadata: Codable, Sendable {
+struct NordMetadata: Codable, Sendable {
     let name: String?
     let value: String?
 }
 
-nonisolated struct NordCredentials: Codable, Sendable {
+struct NordCredentials: Codable, Sendable {
     let nordlynx_private_key: String?
     let username: String?
     let password: String?
 }
 
-nonisolated enum NordKeyProfile: String, CaseIterable, Codable, Sendable {
+enum NordKeyProfile: String, CaseIterable, Codable, Sendable {
     case nick = "Nick"
     case poli = "Poli"
 
@@ -223,7 +223,7 @@ class NordVPNService {
         code == 429 || code == 502 || code == 503 || code == 504
     }
 
-    nonisolated enum TokenTestResult: Sendable {
+    enum TokenTestResult: Sendable {
         case success(privateKeyPrefix: String)
         case failed(reason: String)
         case expired
@@ -933,7 +933,7 @@ class NordVPNService {
     }
 }
 
-nonisolated enum NordOVPNProto: String, Sendable {
+enum NordOVPNProto: String, Sendable {
     case tcp
     case udp
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Resolves proxy targets to their canonical hostnames.
-nonisolated enum TargetHostResolver: Sendable {
+enum TargetHostResolver: Sendable {
     @inlinable
     static func hostname(for target: ProxyRotationService.ProxyTarget) -> String {
         switch target {

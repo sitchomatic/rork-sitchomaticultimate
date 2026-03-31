@@ -1,7 +1,7 @@
 import Foundation
 
 /// Hardcoded default CSS selectors used across all login automation services.
-nonisolated enum LoginSelectorConstants {
+enum LoginSelectorConstants {
     static let email = "#email"
     static let password = "#login-password"
     static let submit = "#login-submit"

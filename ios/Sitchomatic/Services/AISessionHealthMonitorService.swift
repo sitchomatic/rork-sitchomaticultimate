@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct SessionHealthSnapshot: Codable, Sendable {
+struct SessionHealthSnapshot: Codable, Sendable {
     let sessionId: String
     let host: String
     let urlString: String
@@ -18,7 +18,7 @@ nonisolated struct SessionHealthSnapshot: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct HostHealthProfile: Codable, Sendable {
+struct HostHealthProfile: Codable, Sendable {
     var host: String
     var totalSessions: Int = 0
     var successCount: Int = 0
@@ -90,14 +90,14 @@ nonisolated struct HostHealthProfile: Codable, Sendable {
     }
 }
 
-nonisolated enum SessionHealthRisk: String, Codable, Sendable {
+enum SessionHealthRisk: String, Codable, Sendable {
     case low
     case moderate
     case high
     case critical
 }
 
-nonisolated struct SessionHealthPrediction: Sendable {
+struct SessionHealthPrediction: Sendable {
     let risk: SessionHealthRisk
     let failureProbability: Double
     let recommendation: String
@@ -105,7 +105,7 @@ nonisolated struct SessionHealthPrediction: Sendable {
     let suggestedAction: String
 }
 
-nonisolated struct SessionHealthStore: Codable, Sendable {
+struct SessionHealthStore: Codable, Sendable {
     var hostProfiles: [String: HostHealthProfile] = [:]
     var recentSnapshots: [SessionHealthSnapshot] = []
     var globalConsecutiveFailures: Int = 0

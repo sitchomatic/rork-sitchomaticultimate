@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct BatchPreset: Codable, Identifiable, Sendable {
+struct BatchPreset: Codable, Identifiable, Sendable {
     var id: String
     var name: String
     var maxConcurrency: Int

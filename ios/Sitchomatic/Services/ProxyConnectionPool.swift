@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated struct PooledConnectionInfo: Sendable {
+struct PooledConnectionInfo: Sendable {
     let id: UUID
     let targetHost: String
     let targetPort: UInt16

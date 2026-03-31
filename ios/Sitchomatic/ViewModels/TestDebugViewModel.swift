@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 import UIKit
 
-nonisolated enum TestDebugPhase: Sendable {
+enum TestDebugPhase: Sendable {
     case setup
     case running
     case results
@@ -549,13 +549,13 @@ class TestDebugViewModel {
     }
 }
 
-nonisolated struct HeatmapDimension: Identifiable, Sendable {
+struct HeatmapDimension: Identifiable, Sendable {
     let id = UUID()
     let name: String
     let cells: [HeatmapCell]
 }
 
-nonisolated struct HeatmapCell: Identifiable, Sendable {
+struct HeatmapCell: Identifiable, Sendable {
     let id = UUID()
     let label: String
     let successes: Int

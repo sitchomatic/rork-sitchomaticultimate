@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated struct WGEndpointTestResult: Sendable {
+struct WGEndpointTestResult: Sendable {
     let config: String
     let reachable: Bool
     let latencyMs: Int

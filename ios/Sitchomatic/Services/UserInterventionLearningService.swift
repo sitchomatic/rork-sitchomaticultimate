@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct InterventionRecord: Codable, Sendable {
+struct InterventionRecord: Codable, Sendable {
     let host: String
     let pageContentSnippet: String
     let currentURL: String
@@ -10,14 +10,14 @@ nonisolated struct InterventionRecord: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct InterventionPattern: Codable, Sendable {
+struct InterventionPattern: Codable, Sendable {
     var keywords: [String: Int] = [:]
     var urlPatterns: [String: Int] = [:]
     var correctionCount: Int = 0
     var lastUpdated: Date = .distantPast
 }
 
-nonisolated struct InterventionLearningStore: Codable, Sendable {
+struct InterventionLearningStore: Codable, Sendable {
     var records: [InterventionRecord] = []
     var outcomePatterns: [String: InterventionPattern] = [:]
     var autoHealRules: [String: String] = [:]

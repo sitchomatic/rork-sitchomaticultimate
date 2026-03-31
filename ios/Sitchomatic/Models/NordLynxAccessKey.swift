@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct NordLynxAccessKey: Identifiable, Sendable, Equatable, Hashable {
+struct NordLynxAccessKey: Identifiable, Sendable, Equatable, Hashable {
     let id: String
     let name: String
     let key: String

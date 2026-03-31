@@ -9,7 +9,7 @@ class AntiBotDetectionService {
     private let logger = DebugLogger.shared
     private let visionML = VisionMLService.shared
 
-    nonisolated enum InteractionMethod: String, Sendable {
+    enum InteractionMethod: String, Sendable {
         case coordinateTap
         case visionMLTap
         case touchEventDispatch
@@ -512,7 +512,7 @@ class AntiBotDetectionService {
         }
     }
 
-    nonisolated enum FieldType: String, Sendable {
+    enum FieldType: String, Sendable {
         case email
         case password
     }

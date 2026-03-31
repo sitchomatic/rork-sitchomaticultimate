@@ -6,7 +6,7 @@ class SettlementGateEngine {
 
     private let logger = DebugLogger.shared
 
-    nonisolated struct ButtonColorFingerprint: Sendable {
+    struct ButtonColorFingerprint: Sendable {
         let bgColor: String
         let textContent: String
         let opacity: Double
@@ -14,7 +14,7 @@ class SettlementGateEngine {
         let pointerEvents: String
     }
 
-    nonisolated struct SettlementResult: Sendable {
+    struct SettlementResult: Sendable {
         let settled: Bool
         let durationMs: Int
         let sawLoadingState: Bool
@@ -110,7 +110,7 @@ class SettlementGateEngine {
         return .unknown
     }
 
-    nonisolated enum RedirectClassification: Sendable {
+    enum RedirectClassification: Sendable {
         case good(pattern: String)
         case bad(pattern: String)
         case unknown

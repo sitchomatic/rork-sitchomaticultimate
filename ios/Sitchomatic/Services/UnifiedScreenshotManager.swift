@@ -257,7 +257,7 @@ class CapturedScreenshot: Identifiable {
     // Auto-detected result (from PPSRDebugScreenshot)
     var autoDetectedResult: AutoDetectedResult = .unknown
 
-    nonisolated enum AutoDetectedResult: String, Sendable {
+    enum AutoDetectedResult: String, Sendable {
         case success
         case noAcc
         case permDisabled
@@ -494,7 +494,7 @@ typealias UnifiedScreenshot = CapturedScreenshot
 typealias PPSRDebugScreenshot = CapturedScreenshot
 typealias DualFindLiveScreenshot = CapturedScreenshot
 
-nonisolated enum ScreenshotStep: String, Sendable {
+enum ScreenshotStep: String, Sendable {
     case pageLoad = "page_load"
     case fieldsDetected = "fields_detected"
     case preTyping = "pre_typing"

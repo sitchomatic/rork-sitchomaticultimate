@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-nonisolated enum CustomToolType: String, Codable, Sendable, CaseIterable {
+enum CustomToolType: String, Codable, Sendable, CaseIterable {
     case runHealthAnalyzer = "Run Health Analyzer"
     case checkpointVerification = "Checkpoint Verification"
     case batchInsightTuning = "Batch Insight & Tuning"
@@ -31,7 +31,7 @@ nonisolated enum CustomToolType: String, Codable, Sendable, CaseIterable {
     }
 }
 
-nonisolated struct CustomToolExecution: Codable, Sendable, Identifiable {
+struct CustomToolExecution: Codable, Sendable, Identifiable {
     let id: String
     let toolType: String
     let sessionId: String
@@ -43,7 +43,7 @@ nonisolated struct CustomToolExecution: Codable, Sendable, Identifiable {
     let wasApproved: Bool
 }
 
-nonisolated struct CustomToolStats: Sendable {
+struct CustomToolStats: Sendable {
     let totalExecutions: Int
     let avgConfidence: Double
     let toolBreakdown: [String: Int]
@@ -51,7 +51,7 @@ nonisolated struct CustomToolStats: Sendable {
     let isHealthy: Bool
 }
 
-nonisolated struct CoordinatorStore: Codable, Sendable {
+struct CoordinatorStore: Codable, Sendable {
     var executions: [CustomToolExecution] = []
     var toolCallCounts: [String: Int] = [:]
     var totalExecutions: Int = 0

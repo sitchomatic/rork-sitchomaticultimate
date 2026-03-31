@@ -15,12 +15,12 @@ struct UnifiedSessionFeedView: View {
     @State private var showSettingsSheet: Bool = false
     @State private var activeTab: DashboardTab = .sessions
 
-    nonisolated enum DashboardTab: String, CaseIterable, Sendable {
+    enum DashboardTab: String, CaseIterable, Sendable {
         case sessions = "Sessions"
         case screenshots = "Screenshots"
     }
 
-    nonisolated enum SessionFilterOption: String, CaseIterable, Identifiable, Sendable {
+    enum SessionFilterOption: String, CaseIterable, Identifiable, Sendable {
         case all = "All"
         case active = "Active"
         case success = "Success"

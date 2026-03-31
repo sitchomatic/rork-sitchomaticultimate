@@ -24,7 +24,7 @@ class LiveSpeedAdaptationService {
     private let maxMultiplier: Double = 2.5
     private let smoothingFactor: Double = 0.15
 
-    nonisolated struct LatencySample: Sendable {
+    struct LatencySample: Sendable {
         let timestampMs: Int
         let latencyMs: Int
         let success: Bool
@@ -33,7 +33,7 @@ class LiveSpeedAdaptationService {
         let host: String
     }
 
-    nonisolated struct SpeedRecommendation: Sendable {
+    struct SpeedRecommendation: Sendable {
         let multiplier: Double
         let concurrencyDelta: Int
         let reason: String
@@ -43,7 +43,7 @@ class LiveSpeedAdaptationService {
         var isSlowDown: Bool { multiplier > 1.0 }
     }
 
-    nonisolated struct AdaptedDelays: Sendable {
+    struct AdaptedDelays: Sendable {
         let pageStabilizationMs: Int
         let ajaxSettleMs: Int
         let domMutationMs: Int

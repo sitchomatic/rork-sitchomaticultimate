@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-nonisolated enum ViewMode: String, CaseIterable, Sendable {
+enum ViewMode: String, CaseIterable, Sendable {
     case list = "List"
     case tile = "Tile"
 

@@ -1,8 +1,8 @@
 import UIKit
 
 /// Detects white/bright banners in screenshots, used to identify successful login welcome pages.
-nonisolated struct GreenBannerDetector: Sendable {
-    nonisolated struct DetectionResult: Sendable {
+struct GreenBannerDetector: Sendable {
+    struct DetectionResult: Sendable {
         let detected: Bool
         let confidence: Double
         let bannerRect: CGRect?

@@ -1,13 +1,13 @@
 import Foundation
 
-nonisolated struct DiagnosticStep: Identifiable, Sendable {
+struct DiagnosticStep: Identifiable, Sendable {
     let id: UUID
     let name: String
     let status: StepStatus
     let detail: String
     let latencyMs: Int?
 
-    nonisolated enum StepStatus: String, Sendable {
+    enum StepStatus: String, Sendable {
         case pending = "Pending"
         case running = "Running"
         case passed = "Passed"
@@ -24,7 +24,7 @@ nonisolated struct DiagnosticStep: Identifiable, Sendable {
     }
 }
 
-nonisolated struct DiagnosticReport: Sendable {
+struct DiagnosticReport: Sendable {
     let steps: [DiagnosticStep]
     let overallHealthy: Bool
     let recommendation: String

@@ -588,12 +588,12 @@ class PersistentFileStorageService {
 
 // MARK: - File Data Models
 
-nonisolated struct RestoreMarker: Codable, Sendable {
+struct RestoreMarker: Codable, Sendable {
     let appVersion: String
     let restoredAt: Date
 }
 
-nonisolated struct CredentialFileEntry: Codable, Sendable {
+struct CredentialFileEntry: Codable, Sendable {
     let id: String
     let username: String
     let password: String
@@ -606,7 +606,7 @@ nonisolated struct CredentialFileEntry: Codable, Sendable {
     let nextPasswordIndex: Int
 }
 
-nonisolated struct CardFileEntry: Codable, Sendable {
+struct CardFileEntry: Codable, Sendable {
     let id: String
     let number: String
     let brand: String
@@ -616,7 +616,7 @@ nonisolated struct CardFileEntry: Codable, Sendable {
     let successCount: Int
 }
 
-nonisolated struct NetworkFileState: Codable, Sendable {
+struct NetworkFileState: Codable, Sendable {
     var joeURLCount: Int = 0
     var ignitionURLCount: Int = 0
     var joeEnabledURLCount: Int = 0
@@ -638,7 +638,7 @@ nonisolated struct NetworkFileState: Codable, Sendable {
     var savedAt: TimeInterval = 0
 }
 
-nonisolated struct AppStateSnapshot: Codable, Sendable {
+struct AppStateSnapshot: Codable, Sendable {
     var activeAppMode: String = ""
     var hasSelectedMode: Bool = false
     var productMode: String = ""
@@ -648,7 +648,7 @@ nonisolated struct AppStateSnapshot: Codable, Sendable {
     var buildNumber: String = ""
 }
 
-nonisolated struct ScreenshotManifest: Codable, Sendable {
+struct ScreenshotManifest: Codable, Sendable {
     let savedAt: TimeInterval
     let note: String
 }

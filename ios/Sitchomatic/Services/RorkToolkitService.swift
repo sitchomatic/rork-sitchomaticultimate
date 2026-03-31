@@ -47,13 +47,13 @@ final class GrokUsageStats {
 
 // MARK: - Models
 
-nonisolated enum GrokModel: String, Sendable {
+enum GrokModel: String, Sendable {
     case standard = "grok-3-fast"
     case mini = "grok-3-mini-fast"
     case vision = "grok-2-vision-latest"
 }
 
-nonisolated struct GrokVisionAnalysisResult: Sendable {
+struct GrokVisionAnalysisResult: Sendable {
     let loginSuccessful: Bool
     let hasError: Bool
     let errorText: String

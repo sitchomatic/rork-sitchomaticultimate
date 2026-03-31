@@ -3,12 +3,12 @@ import Foundation
 @preconcurrency import Network
 import os
 
-nonisolated enum DNSProtocolType: String, Codable, Sendable, CaseIterable {
+enum DNSProtocolType: String, Codable, Sendable, CaseIterable {
     case doh = "DoH"
     case dot = "DoT"
 }
 
-nonisolated enum DNSRegionPreference: String, Codable, Sendable, CaseIterable {
+enum DNSRegionPreference: String, Codable, Sendable, CaseIterable {
     case australian = "Australian"
     case worldwide = "Worldwide"
     case anycast = "Anycast"
@@ -36,7 +36,7 @@ nonisolated enum DNSRegionPreference: String, Codable, Sendable, CaseIterable {
     }
 }
 
-nonisolated enum DNSRegionTag: String, Codable, Sendable, CaseIterable {
+enum DNSRegionTag: String, Codable, Sendable, CaseIterable {
     case au = "AU"
     case global = "Global"
     case anycast = "Anycast"
@@ -45,7 +45,7 @@ nonisolated enum DNSRegionTag: String, Codable, Sendable, CaseIterable {
     static let allSet: Set<DNSRegionTag> = Set(DNSRegionTag.allCases)
 }
 
-nonisolated struct DNSServerEntry: Sendable {
+struct DNSServerEntry: Sendable {
     let name: String
     let protocolType: DNSProtocolType
     let endpoint: String
@@ -58,7 +58,7 @@ nonisolated struct DNSServerEntry: Sendable {
     }
 }
 
-nonisolated struct ManagedDNSServer: Identifiable, Sendable {
+struct ManagedDNSServer: Identifiable, Sendable {
     let id: UUID = UUID()
     let name: String
     let protocolType: DNSProtocolType
@@ -91,7 +91,7 @@ nonisolated struct ManagedDNSServer: Identifiable, Sendable {
     }
 }
 
-nonisolated struct DoHProvider: Sendable {
+struct DoHProvider: Sendable {
     let name: String
     let url: String
 }
@@ -104,19 +104,19 @@ struct ManagedDoHProvider: Identifiable {
     let isDefault: Bool
 }
 
-nonisolated struct DNSAnswer: Sendable {
+struct DNSAnswer: Sendable {
     let ip: String
     let provider: String
     let latencyMs: Int
     let protocolUsed: DNSProtocolType
 }
 
-nonisolated struct DoHResponse: Codable, Sendable {
+struct DoHResponse: Codable, Sendable {
     let Status: Int?
     let Answer: [DoHAnswerEntry]?
 }
 
-nonisolated struct DoHAnswerEntry: Codable, Sendable {
+struct DoHAnswerEntry: Codable, Sendable {
     let name: String?
     let type: Int?
     let TTL: Int?

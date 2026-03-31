@@ -1,6 +1,6 @@
 import SwiftUI
 
-nonisolated enum NordLynxGenerationState: Sendable, Equatable {
+enum NordLynxGenerationState: Sendable, Equatable {
     case idle
     case loading
     case success(Int)

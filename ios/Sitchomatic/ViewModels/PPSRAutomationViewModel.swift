@@ -4,7 +4,7 @@ import SwiftUI
 import UIKit
 import WebKit
 
-nonisolated struct BatchResult: Sendable {
+struct BatchResult: Sendable {
     let working: Int
     let dead: Int
     let requeued: Int
@@ -84,7 +84,7 @@ class PPSRAutomationViewModel {
         didSet { UserDefaults.standard.set(speedMultiplier.rawValue, forKey: "ppsr_speed_multiplier") }
     }
 
-    nonisolated enum SpeedMultiplier: String, CaseIterable, Identifiable, Sendable {
+    enum SpeedMultiplier: String, CaseIterable, Identifiable, Sendable {
         case half = "0.5×"
         case normal = "1.0×"
         case fast = "1.5×"
@@ -116,7 +116,7 @@ class PPSRAutomationViewModel {
         var blocksImages: Bool { multiplier <= 0.5 }
     }
 
-    nonisolated enum CardSortOption: String, CaseIterable, Identifiable, Sendable {
+    enum CardSortOption: String, CaseIterable, Identifiable, Sendable {
         case dateAdded = "Date Added"
         case lastTest = "Last Test"
         case successRate = "Success Rate"
@@ -138,7 +138,7 @@ class PPSRAutomationViewModel {
     var lastFingerprintScore: FingerprintValidationService.FingerprintScore? { FingerprintValidationService.shared.lastScore }
 
 
-    nonisolated enum ConnectionStatus: String, Sendable {
+    enum ConnectionStatus: String, Sendable {
         case disconnected = "Disconnected"
         case connecting = "Connecting"
         case connected = "Connected"

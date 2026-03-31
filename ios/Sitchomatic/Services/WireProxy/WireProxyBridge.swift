@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated enum WireProxyStatus: String, Sendable {
+enum WireProxyStatus: String, Sendable {
     case stopped = "Stopped"
     case connecting = "Connecting"
     case established = "Established"
@@ -10,7 +10,7 @@ nonisolated enum WireProxyStatus: String, Sendable {
     case failed = "Failed"
 }
 
-nonisolated struct WireProxyStats: Sendable {
+struct WireProxyStats: Sendable {
     var tcpSessionsCreated: Int = 0
     var tcpSessionsActive: Int = 0
     var dnsQueriesTotal: Int = 0
