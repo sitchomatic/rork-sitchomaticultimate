@@ -222,188 +222,37 @@ class DebugLogger {
         persistence.exportDiagnosticReportToFile(content: exportDiagnosticReport(credentials: credentials, automationSettings: automationSettings))
     }
 
-    func exportCompleteLogToFile(credentials: [LoginCredential] = [], automationSettings: AutomationSettings? = nil) -> URL? {
-        persistence.exportCompleteLogToFile(content: exportCompleteLog(credentials: credentials, automationSettings: automationSettings))
+    func exportCompleteLog(credentials: [LoginCredential]? = nil, automationSettings: AutomationSettings? = nil) -> String {
+        let resolvedCreds = credentials ?? LoginPersistenceService.shared.loadCredentials()
+        let resolvedSettings = automationSettings ?? CentralSettingsService.shared.loginAutomationSettings
+        let timestamp = DateFormatters.exportTimestamp.string(from: Date())
+
+        let diagnostic = exportDiagnosticReport(credentials: resolvedCreds, automationSettings: resolvedSettings)
+        let appState = AppDataExportService.shared.exportComprehensiveState()
+        let debugLog = exportFullLog()
+        let fullConfig = AppDataExportService.shared.exportJSON()
+
+        return """
+        === COMPLETE LOG EXPORT ===
+        Generated: \(timestamp)
+        Includes: diagnostic report, app state snapshot, debug log, and full config JSON
+        ========================================
+
+        \(diagnostic)
+
+        === APP STATE SNAPSHOT ===
+        \(appState)
+
+        === DEBUG LOG ===
+        \(debugLog)
+
+        === FULL CONFIG JSON ===
+        \(fullConfig)
+        """
     }
 
-    func exportCompleteLog(credentials: [LoginCredential] = [], automationSettings: AutomationSettings? = nil) -> String {
-        let now = DateFormatters.fullTimestamp.string(from: Date())
-        let centralSettings = CentralSettingsService.shared
-        let loginSettings = centralSettings.loginAutomationSettings
-        let unifiedSettings = centralSettings.unifiedAutomationSettings
-        let dualFindSettings = centralSettings.dualFindAutomationSettings
-
-        var report = """
-        ================================================================
-        COMPLETE LOG — RORK MAX
-        Generated: \(now)
-        ================================================================
-
-        """
-
-        // MARK: System Info
-        report += """
-        ┌──────────────────────────────────────┐
-        │          SYSTEM INFORMATION          │
-        └──────────────────────────────────────┘
-        - iOS Version: \(UIDevice.current.systemVersion)
-        - Device: \(UIDevice.current.model)
-        - App Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")
-        - Build: \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")
-        - Total Log Entries: \(entries.count)
-        - Total Logged (lifetime): \(totalEntriesLogged)
-        - Total Evicted: \(totalEntriesEvicted)
-        - Errors: \(errorCount)
-        - Warnings: \(warningCount)
-        - Critical: \(criticalCount)
-        - Healing Events: \(errorHealingLog.count) (\(String(format: "%.0f%%", healingSuccessRate * 100)) success)
-        - Appearance Mode: \(centralSettings.appearanceMode.rawValue)
-
-        """
-
-        // MARK: Credential Summary
-        report += """
-        ┌──────────────────────────────────────┐
-        │         CREDENTIAL SUMMARY           │
-        └──────────────────────────────────────┘
-        - Total: \(credentials.count)
-        - Working: \(credentials.filter { $0.status == .working }.count)
-        - No Acc: \(credentials.filter { $0.status == .noAcc }.count)
-        - Perm Disabled: \(credentials.filter { $0.status == .permDisabled }.count)
-        - Temp Disabled: \(credentials.filter { $0.status == .tempDisabled }.count)
-        - Unsure: \(credentials.filter { $0.status == .unsure }.count)
-        - Untested: \(credentials.filter { $0.status == .untested }.count)
-
-        """
-
-        // MARK: Debug Login Button Configs
-        report += """
-        ┌──────────────────────────────────────┐
-        │      DEBUG LOGIN BUTTON CONFIGS      │
-        └──────────────────────────────────────┘
-        \(debugButtonConfigSummary())
-
-        """
-
-        // MARK: Calibration Data
-        report += """
-        ┌──────────────────────────────────────┐
-        │          CALIBRATION DATA            │
-        └──────────────────────────────────────┘
-        \(calibrationSummary())
-
-        """
-
-        // MARK: Automation Settings — All Modes
-        func settingsBlock(_ settings: AutomationSettings) -> String {
-            return """
-            - Login Button Mode: \(settings.loginButtonDetectionMode.rawValue)
-            - Click Method: \(settings.loginButtonClickMethod.rawValue)
-            - Max Concurrency: \(settings.maxConcurrency)
-            - Stealth JS: \(settings.stealthJSInjection)
-            - Fingerprint Spoof: \(settings.fingerprintSpoofing)
-            - Session Isolation: \(settings.sessionIsolation.rawValue)
-            - Page Load Timeout: \(Int(settings.pageLoadTimeout))s
-            - Submit Retries: \(settings.submitRetryCount)
-            - Max Submit Cycles: \(settings.maxSubmitCycles)
-            - Pattern Learning: \(settings.patternLearningEnabled)
-            - URL Flow Assignments: \(settings.urlFlowAssignments.count)
-            - Human Mouse Movement: \(settings.humanMouseMovement)
-            - Typing Jitter: \(settings.typingJitterEnabled)
-            - Delay Randomization: \(settings.delayRandomizationEnabled)
-            """
-        }
-
-        report += """
-        ┌──────────────────────────────────────┐
-        │   AUTOMATION SETTINGS — LOGIN MODE   │
-        └──────────────────────────────────────┘
-        \(settingsBlock(loginSettings))
-
-        ┌──────────────────────────────────────┐
-        │  AUTOMATION SETTINGS — UNIFIED MODE  │
-        └──────────────────────────────────────┘
-        \(settingsBlock(unifiedSettings))
-
-        ┌──────────────────────────────────────┐
-        │ AUTOMATION SETTINGS — DUAL FIND MODE │
-        └──────────────────────────────────────┘
-        \(settingsBlock(dualFindSettings))
-
-        """
-
-        if let settings = automationSettings {
-            report += """
-            ┌──────────────────────────────────────┐
-            │  AUTOMATION SETTINGS — CURRENT VIEW  │
-            └──────────────────────────────────────┘
-            \(settingsBlock(settings))
-
-            """
-        }
-
-        // MARK: App Comprehensive State
-        report += """
-        ┌──────────────────────────────────────┐
-        │         APP STATE SNAPSHOT           │
-        └──────────────────────────────────────┘
-        \(AppDataExportService.shared.exportComprehensiveState())
-
-        """
-
-        // MARK: Category & Level Breakdown
-        report += """
-        ┌──────────────────────────────────────┐
-        │     CATEGORY & LEVEL BREAKDOWN       │
-        └──────────────────────────────────────┘
-        CATEGORIES:
-        \(categoryBreakdown.map { "  - \($0.category.rawValue): \($0.count)" }.joined(separator: "\n"))
-
-        LEVELS:
-        \(levelBreakdown.map { "  - \($0.level.rawValue): \($0.count)" }.joined(separator: "\n"))
-
-        """
-
-        // MARK: Error Log
-        report += """
-        ┌──────────────────────────────────────┐
-        │       ERROR LOG (last 100)           │
-        └──────────────────────────────────────┘
-        \(entries.filter { $0.level >= .error }.prefix(100).map(\.exportLine).joined(separator: "\n"))
-
-        """
-
-        // MARK: Warning Log
-        report += """
-        ┌──────────────────────────────────────┐
-        │      WARNING LOG (last 50)           │
-        └──────────────────────────────────────┘
-        \(entries.filter { $0.level == .warning }.prefix(50).map(\.exportLine).joined(separator: "\n"))
-
-        """
-
-        // MARK: Healing Log
-        report += """
-        ┌──────────────────────────────────────┐
-        │           HEALING LOG                │
-        └──────────────────────────────────────┘
-        \(exportHealingLog())
-
-        """
-
-        // MARK: Full Log
-        report += """
-        ┌──────────────────────────────────────┐
-        │       FULL LOG (last 500)            │
-        └──────────────────────────────────────┘
-        \(entries.prefix(500).map(\.exportLine).joined(separator: "\n"))
-
-        ================================================================
-        END OF COMPLETE LOG
-        ================================================================
-        """
-
-        return report
+    func exportCompleteLogToFile(credentials: [LoginCredential]? = nil, automationSettings: AutomationSettings? = nil) -> URL? {
+        persistence.exportCompleteLogToFile(content: exportCompleteLog(credentials: credentials, automationSettings: automationSettings))
     }
 
     func exportFullLog() -> String {

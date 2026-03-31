@@ -45,6 +45,9 @@ final class CentralSettingsService {
         static let unifiedAutomation = "unified_automation_settings_v1"
         static let dualFindAutomation = "dual_find_automation_settings_v1"
         static let appearanceMode = "appearance_mode"
+        static let loginDefaultAutomation = "automation_default_login_v1"
+        static let unifiedDefaultAutomation = "automation_default_unified_v1"
+        static let dualFindDefaultAutomation = "automation_default_dual_find_v1"
     }
 
     // MARK: - Init
@@ -146,11 +149,44 @@ final class CentralSettingsService {
         }
     }
 
+    /// Returns the default automation settings for the specified mode, honoring any saved override.
+    func defaultAutomationSettings(for mode: SettingsMode) -> AutomationSettings {
+        if let override = loadDefaultOverride(for: mode) {
+            return override.normalizedTimeouts()
+        }
+        return AutomationSettings()
+    }
+
+    /// Saves the provided settings as the new defaults for the specified mode.
+    func saveDefaultAutomationSettings(_ settings: AutomationSettings, for mode: SettingsMode) {
+        let normalized = settings.normalizedTimeouts()
+        encodeAndSave(normalized, forKey: defaultKey(for: mode))
+    }
+
+    /// Clears any saved default override for the specified mode.
+    func clearDefaultAutomationSettings(for mode: SettingsMode) {
+        UserDefaults.standard.removeObject(forKey: defaultKey(for: mode))
+    }
+
     // MARK: - Private Helpers
 
     private func encodeAndSave(_ settings: AutomationSettings, forKey key: String) {
         if let data = try? JSONEncoder().encode(settings) {
             UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    private func loadDefaultOverride(for mode: SettingsMode) -> AutomationSettings? {
+        let key = defaultKey(for: mode)
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(AutomationSettings.self, from: data)
+    }
+
+    private func defaultKey(for mode: SettingsMode) -> String {
+        switch mode {
+        case .login: return Keys.loginDefaultAutomation
+        case .unified: return Keys.unifiedDefaultAutomation
+        case .dualFind: return Keys.dualFindDefaultAutomation
         }
     }
 

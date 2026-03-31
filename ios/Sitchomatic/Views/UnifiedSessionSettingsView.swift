@@ -10,8 +10,9 @@ struct UnifiedSessionSettingsView: View {
     @State private var showSavedToast: Bool = false
     @State private var lastSaveTime: Date? = nil
     @State private var autoSaveEnabled: Bool = true
-    @State private var showSettingsImport: Bool = false
-    @State private var showDefaultsSavedToast: Bool = false
+    @State private var showSettingsImportSheet: Bool = false
+    @State private var settingsImportText: String = ""
+    @State private var importError: String?
 
     private let accentColor: Color = .cyan
 
@@ -23,7 +24,7 @@ struct UnifiedSessionSettingsView: View {
         List {
             autoSaveSection
             systemConfigSection
-            settingsOverrideSection
+            settingsTransferSection
             pageLoadingSection
             fieldDetectionSection
             credentialEntrySection
@@ -74,23 +75,6 @@ struct UnifiedSessionSettingsView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .padding(.bottom, 20)
             }
-            if showDefaultsSavedToast {
-                HStack(spacing: 6) {
-                    Image(systemName: "checkmark.seal.fill")
-                    Text("Saved as new defaults")
-                        .font(.subheadline.bold())
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(.blue.gradient, in: Capsule())
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .padding(.bottom, 20)
-            }
-        }
-        .sheet(isPresented: $showSettingsImport) {
-            SettingsImportSheet(vm: vm)
         }
         .sheet(isPresented: $showButtonTextEditor) {
             NavigationStack { KeywordListEditor(title: "Button Text Matches", keywords: $vm.automationSettings.loginButtonTextMatches) }
@@ -115,6 +99,17 @@ struct UnifiedSessionSettingsView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationContentInteraction(.scrolls)
+        }
+        .sheet(isPresented: $showSettingsImportSheet) {
+            settingsImportSheet
+        }
+        .alert("Import Failed", isPresented: Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
         }
     }
 
@@ -288,7 +283,7 @@ struct UnifiedSessionSettingsView: View {
             }
 
             Button {
-                vm.automationSettings = AutomationSettings()
+                vm.automationSettings = CentralSettingsService.shared.defaultAutomationSettings(for: .unified)
                 vm.persistAutomationSettings()
                 vm.log("Reset automation settings to defaults", level: .warning)
             } label: {
@@ -835,35 +830,27 @@ struct UnifiedSessionSettingsView: View {
         }
     }
 
-    // MARK: - Settings Override
+    // MARK: - Settings Transfer
 
-    private var settingsOverrideSection: some View {
+    private var settingsTransferSection: some View {
         Section {
             Button {
-                let settings = vm.automationSettings.normalizedTimeouts()
-                let centralService = CentralSettingsService.shared
-                centralService.persistLoginAutomationSettings(settings)
-                centralService.persistUnifiedAutomationSettings(settings)
-                centralService.persistDualFindAutomationSettings(settings)
-                LoginViewModel.shared.automationSettings = settings
-                DualFindViewModel.shared.automationSettings = settings
-                withAnimation(.spring(duration: 0.3)) { showDefaultsSavedToast = true }
-                Task {
-                    try? await Task.sleep(for: .seconds(1.5))
-                    withAnimation { showDefaultsSavedToast = false }
-                }
+                let normalized = vm.automationSettings.normalizedTimeouts()
+                CentralSettingsService.shared.saveDefaultAutomationSettings(normalized, for: .unified)
+                vm.log("Saved unified defaults", level: .success)
             } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.blue)
-                        .frame(width: 36, height: 36)
-                        .background(.blue.opacity(0.12))
-                        .clipShape(.rect(cornerRadius: 8))
+                HStack(spacing: 10) {
+                    Image(systemName: "star.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(.yellow)
+                        .frame(width: 28)
+                        .padding(8)
+                        .background(Color.yellow.opacity(0.16))
+                        .clipShape(.rect(cornerRadius: 10))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Save as New Defaults")
-                            .font(.subheadline.weight(.bold))
-                        Text("Apply current settings to all modes")
+                            .font(.subheadline.bold())
+                        Text("Reset will use this profile")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -872,25 +859,22 @@ struct UnifiedSessionSettingsView: View {
             }
 
             Button {
-                let json = AppDataExportService.shared.exportJSON()
-                UIPasteboard.general.string = json
-                withAnimation(.spring(duration: 0.3)) { showSavedToast = true }
-                Task {
-                    try? await Task.sleep(for: .seconds(1.2))
-                    withAnimation { showSavedToast = false }
-                }
+                let exported = AutomationSettingsTransfer.exportString(from: vm.automationSettings.normalizedTimeouts())
+                UIPasteboard.general.string = exported
+                vm.log("Exported unified settings", level: .success)
             } label: {
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     Image(systemName: "square.and.arrow.up.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.green)
-                        .frame(width: 36, height: 36)
-                        .background(.green.opacity(0.12))
-                        .clipShape(.rect(cornerRadius: 8))
+                        .font(.body)
+                        .foregroundStyle(.teal)
+                        .frame(width: 28)
+                        .padding(8)
+                        .background(Color.teal.opacity(0.16))
+                        .clipShape(.rect(cornerRadius: 10))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Export All Settings")
-                            .font(.subheadline.weight(.bold))
-                        Text("Copy full backup JSON to clipboard")
+                            .font(.subheadline.bold())
+                        Text("Copy automation JSON")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -899,33 +883,76 @@ struct UnifiedSessionSettingsView: View {
             }
 
             Button {
-                showSettingsImport = true
+                settingsImportText = UIPasteboard.general.string ?? ""
+                showSettingsImportSheet = true
             } label: {
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     Image(systemName: "square.and.arrow.down.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.orange)
-                        .frame(width: 36, height: 36)
-                        .background(.orange.opacity(0.12))
-                        .clipShape(.rect(cornerRadius: 8))
+                        .font(.body)
+                        .foregroundStyle(.green)
+                        .frame(width: 28)
+                        .padding(8)
+                        .background(Color.green.opacity(0.16))
+                        .clipShape(.rect(cornerRadius: 10))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Import Settings")
-                            .font(.subheadline.weight(.bold))
-                        Text("Restore from exported JSON backup")
+                            .font(.subheadline.bold())
+                        Text("Paste JSON to override")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
                 }
             }
         } header: {
-            Label("Settings Override", systemImage: "slider.horizontal.3")
+            Label("Settings Transfer", systemImage: "arrow.left.arrow.right.circle.fill")
         } footer: {
-            Text("Save current settings as defaults across all modes, export everything, or import a previous backup.")
+            Text("Save the current unified profile as the new default or move settings via export/import.")
         }
+    }
+
+    private var settingsImportSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Import Settings JSON") {
+                    TextEditor(text: $settingsImportText)
+                        .font(.system(.callout, design: .monospaced))
+                        .frame(minHeight: 220)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+
+                Section {
+                    Button {
+                        applyImportedSettings()
+                    } label: {
+                        Label("Apply Settings", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                    }
+                    .disabled(settingsImportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .navigationTitle("Import Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showSettingsImportSheet = false }
+                }
+            }
+        }
+    }
+
+    private func applyImportedSettings() {
+        guard let imported = AutomationSettingsTransfer.importSettings(from: settingsImportText) else {
+            importError = "Could not parse automation settings JSON."
+            return
+        }
+        importError = nil
+        vm.automationSettings = imported.normalizedTimeouts()
+        vm.persistAutomationSettings()
+        vm.log("Imported unified settings", level: .success)
+        showSettingsImportSheet = false
+        settingsImportText = ""
     }
 
     // MARK: - Miscellaneous Delay Shortcut
@@ -984,4 +1011,5 @@ struct UnifiedSessionSettingsView: View {
             Text("V4.2 anti-detection: enforces button stability checks, hover dwell, and click jitter before every submit.")
         }
     }
+
 }
