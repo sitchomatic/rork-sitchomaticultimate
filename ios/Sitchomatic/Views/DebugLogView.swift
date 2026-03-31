@@ -64,6 +64,9 @@ struct DebugLogView: View {
                         Label("Export Filtered Log", systemImage: "doc.text.magnifyingglass")
                     }
                     Divider()
+                    Button { exportCompleteLogAsFile() } label: {
+                        Label("Export Complete Log", systemImage: "doc.text.fill")
+                    }
                     Button { exportAsFile() } label: {
                         Label("Export as File", systemImage: "square.and.arrow.up")
                     }
@@ -501,6 +504,12 @@ struct DebugLogView: View {
 
     private func exportDiagnosticAsFile() {
         if let url = logger.exportDiagnosticReportToFile() {
+            shareFileURL = url
+        }
+    }
+
+    private func exportCompleteLogAsFile() {
+        if let url = logger.exportCompleteLogToFile() {
             shareFileURL = url
         }
     }

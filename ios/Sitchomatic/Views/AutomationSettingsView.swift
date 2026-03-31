@@ -13,7 +13,6 @@ struct AutomationSettingsView: View {
     @State private var showButtonTextEditor: Bool = false
     @State private var showMFAKeywordEditor: Bool = false
     @State private var showCaptchaKeywordEditor: Bool = false
-    @State private var showTemplates: Bool = false
     @State private var showCalibrationSheet: Bool = false
     @State private var calibrationURL: String = ""
     @State private var isAutoCalibrating: Bool = false
@@ -25,6 +24,9 @@ struct AutomationSettingsView: View {
     @State private var isTestingVPNConfigs: Bool = false
     @State private var isTestingWGConfigs: Bool = false
     @State private var activeFileImportType: AutomationFileImportType?
+    @State private var showSettingsImport: Bool = false
+    @State private var settingsImportText: String = ""
+    @State private var showDefaultsSavedToast: Bool = false
 
     private let calibrationService = LoginCalibrationService.shared
     private let proxyService = ProxyRotationService.shared
@@ -42,7 +44,7 @@ struct AutomationSettingsView: View {
     var body: some View {
         List {
             autoSaveSection
-            templateQuickSection
+            settingsOverrideSection
             urlCalibrationSection
             pageLoadingSection
             fieldDetectionSection
@@ -96,12 +98,23 @@ struct AutomationSettingsView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .padding(.bottom, 20)
             }
+            if showDefaultsSavedToast {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("Saved as new defaults")
+                        .font(.subheadline.bold())
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.blue.gradient, in: Capsule())
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .padding(.bottom, 20)
+            }
         }
-        .sheet(isPresented: $showTemplates) {
-            NavigationStack { AutomationTemplateView(vm: vm) }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationContentInteraction(.scrolls)
+        .sheet(isPresented: $showSettingsImport) {
+            SettingsImportSheet(vm: vm)
         }
         .sheet(isPresented: $showFlowAssignment) {
             NavigationStack { URLFlowAssignmentView(vm: vm) }
@@ -216,24 +229,83 @@ struct AutomationSettingsView: View {
         }
     }
 
-    // MARK: - Templates
+    // MARK: - Settings Override
 
-    private var templateQuickSection: some View {
+    private var settingsOverrideSection: some View {
         Section {
             Button {
-                showTemplates = true
+                let settings = vm.automationSettings.normalizedTimeouts()
+                let centralService = CentralSettingsService.shared
+                centralService.persistLoginAutomationSettings(settings)
+                centralService.persistUnifiedAutomationSettings(settings)
+                centralService.persistDualFindAutomationSettings(settings)
+                UnifiedSessionViewModel.shared.automationSettings = settings
+                DualFindViewModel.shared.automationSettings = settings
+                withAnimation(.spring(duration: 0.3)) { showDefaultsSavedToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    withAnimation { showDefaultsSavedToast = false }
+                }
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "rectangle.stack.fill")
+                    Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(.purple)
+                        .foregroundStyle(.blue)
                         .frame(width: 36, height: 36)
-                        .background(.purple.opacity(0.12))
+                        .background(.blue.opacity(0.12))
                         .clipShape(.rect(cornerRadius: 8))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Automation Templates")
+                        Text("Save as New Defaults")
                             .font(.subheadline.weight(.bold))
-                        Text("\(AutomationTemplate.builtInTemplates.count) built-in + custom presets")
+                        Text("Apply current settings to all modes")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                let json = AppDataExportService.shared.exportJSON()
+                UIPasteboard.general.string = json
+                withAnimation(.spring(duration: 0.3)) { showSavedToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    withAnimation { showSavedToast = false }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.up.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.green)
+                        .frame(width: 36, height: 36)
+                        .background(.green.opacity(0.12))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export All Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Copy full backup JSON to clipboard")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                showSettingsImport = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.orange)
+                        .frame(width: 36, height: 36)
+                        .background(.orange.opacity(0.12))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Restore from exported JSON backup")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -244,9 +316,9 @@ struct AutomationSettingsView: View {
                 }
             }
         } header: {
-            Label("Quick Apply", systemImage: "bolt.fill")
+            Label("Settings Override", systemImage: "slider.horizontal.3")
         } footer: {
-            Text("Apply a pre-configured template for Vision ML, Coordinate, Stealth, Speed, or Resilient automation.")
+            Text("Save current settings as defaults across all modes, export everything, or import a previous backup.")
         }
     }
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct UnifiedSessionSettingsView: View {
     @Bindable var vm: UnifiedSessionViewModel
@@ -9,6 +10,8 @@ struct UnifiedSessionSettingsView: View {
     @State private var showSavedToast: Bool = false
     @State private var lastSaveTime: Date? = nil
     @State private var autoSaveEnabled: Bool = true
+    @State private var showSettingsImport: Bool = false
+    @State private var showDefaultsSavedToast: Bool = false
 
     private let accentColor: Color = .cyan
 
@@ -20,7 +23,7 @@ struct UnifiedSessionSettingsView: View {
         List {
             autoSaveSection
             systemConfigSection
-            quickTemplateSection
+            settingsOverrideSection
             pageLoadingSection
             fieldDetectionSection
             credentialEntrySection
@@ -71,6 +74,23 @@ struct UnifiedSessionSettingsView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .padding(.bottom, 20)
             }
+            if showDefaultsSavedToast {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("Saved as new defaults")
+                        .font(.subheadline.bold())
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.blue.gradient, in: Capsule())
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .padding(.bottom, 20)
+            }
+        }
+        .sheet(isPresented: $showSettingsImport) {
+            SettingsImportSheet(vm: vm)
         }
         .sheet(isPresented: $showButtonTextEditor) {
             NavigationStack { KeywordListEditor(title: "Button Text Matches", keywords: $vm.automationSettings.loginButtonTextMatches) }
@@ -815,37 +835,96 @@ struct UnifiedSessionSettingsView: View {
         }
     }
 
-    // MARK: - Quick Template
+    // MARK: - Settings Override
 
-    private var quickTemplateSection: some View {
+    private var settingsOverrideSection: some View {
         Section {
-            ForEach(AutomationTemplate.builtInTemplates) { template in
-                Button {
-                    vm.automationSettings = template.settings
-                    vm.persistAutomationSettings()
-                    vm.log("Applied template: \(template.name)", level: .success)
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: template.icon)
-                            .font(.body)
-                            .foregroundStyle(templateColor(template.color))
-                            .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(template.name)
-                                .font(.subheadline.bold())
-                            Text(template.description)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-                        Spacer()
+            Button {
+                let settings = vm.automationSettings.normalizedTimeouts()
+                let centralService = CentralSettingsService.shared
+                centralService.persistLoginAutomationSettings(settings)
+                centralService.persistUnifiedAutomationSettings(settings)
+                centralService.persistDualFindAutomationSettings(settings)
+                LoginViewModel.shared.automationSettings = settings
+                DualFindViewModel.shared.automationSettings = settings
+                withAnimation(.spring(duration: 0.3)) { showDefaultsSavedToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    withAnimation { showDefaultsSavedToast = false }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.blue)
+                        .frame(width: 36, height: 36)
+                        .background(.blue.opacity(0.12))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Save as New Defaults")
+                            .font(.subheadline.weight(.bold))
+                        Text("Apply current settings to all modes")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                }
+            }
+
+            Button {
+                let json = AppDataExportService.shared.exportJSON()
+                UIPasteboard.general.string = json
+                withAnimation(.spring(duration: 0.3)) { showSavedToast = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    withAnimation { showSavedToast = false }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.up.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.green)
+                        .frame(width: 36, height: 36)
+                        .background(.green.opacity(0.12))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export All Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Copy full backup JSON to clipboard")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+
+            Button {
+                showSettingsImport = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.orange)
+                        .frame(width: 36, height: 36)
+                        .background(.orange.opacity(0.12))
+                        .clipShape(.rect(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import Settings")
+                            .font(.subheadline.weight(.bold))
+                        Text("Restore from exported JSON backup")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
         } header: {
-            Label("Quick Templates", systemImage: "bolt.fill")
+            Label("Settings Override", systemImage: "slider.horizontal.3")
         } footer: {
-            Text("One-tap apply a full preset. Overwrites all current settings.")
+            Text("Save current settings as defaults across all modes, export everything, or import a previous backup.")
         }
     }
 
@@ -903,19 +982,6 @@ struct UnifiedSessionSettingsView: View {
             Label("Settlement Gate", systemImage: "bolt.badge.clock")
         } footer: {
             Text("V4.2 anti-detection: enforces button stability checks, hover dwell, and click jitter before every submit.")
-        }
-    }
-
-    private func templateColor(_ name: String) -> Color {
-        switch name {
-        case "purple": return .purple
-        case "red": return .red
-        case "gray": return .gray
-        case "orange": return .orange
-        case "blue": return .blue
-        case "green": return .green
-        case "indigo": return .indigo
-        default: return .accentColor
         }
     }
 }
