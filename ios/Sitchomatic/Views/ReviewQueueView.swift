@@ -284,6 +284,7 @@ struct ReviewItemCardView: View {
         case .unsure: .yellow
         case .connectionFailure: .gray
         case .timeout: .gray
+        case .cancelled: .gray
         case .redBannerError: .red
         case .smsDetected: .cyan
         }
