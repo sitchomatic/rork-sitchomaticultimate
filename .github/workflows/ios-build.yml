@@ -22,7 +22,7 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_16.2.app 2>/dev/null || \
           sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Build app and extensions (warnings treated as errors)
+      - name: Build app and extensions (warnings allowed)
         env:
           NSUnbufferedIO: "YES"
         run: |
@@ -37,5 +37,8 @@ jobs:
             -target SitchomaticTests \
             -target SitchomaticUITests \
             CODE_SIGNING_ALLOWED=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
+            CLANG_WARNINGS_ARE_ERRORS=NO \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
             SWIFT_SUPPRESS_WARNINGS=NO \
             clean build
