@@ -500,57 +500,8 @@ class NetworkSessionFactory {
         return proxyConfig
     }
 
-    nonisolated private func quickSOCKS5Handshake(host: String, port: UInt16) async -> Bool {
-        await withCheckedContinuation { continuation in
-            let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port))
-            let connection = NWConnection(to: endpoint, using: .tcp)
-            let queue = DispatchQueue(label: "preflight-socks5")
-            let guard_ = ContinuationGuard()
-            let timeoutTask = Task.detached(priority: .utility) {
-                do { try await Task.sleep(for: .milliseconds(2500)) } catch { return }
-                if guard_.tryConsume() {
-                    connection.cancel()
-                    continuation.resume(returning: false)
-                }
-            }
-
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready:
-                    let greeting = Data([0x05, 0x01, 0x00])
-                    connection.send(content: greeting, completion: .contentProcessed { sendError in
-                        if sendError != nil {
-                            timeoutTask.cancel()
-                            connection.cancel()
-                            if guard_.tryConsume() {
-                                continuation.resume(returning: false)
-                            }
-                            return
-                        }
-                        connection.receive(minimumIncompleteLength: 2, maximumLength: 2) { data, _, _, recvError in
-                            timeoutTask.cancel()
-                            connection.cancel()
-                            if guard_.tryConsume() {
-                                guard recvError == nil, let data, data.count >= 2, data[0] == 0x05 else {
-                                    continuation.resume(returning: false)
-                                    return
-                                }
-                                continuation.resume(returning: true)
-                            }
-                        }
-                    })
-                case .failed:
-                    timeoutTask.cancel()
-                    connection.cancel()
-                    if guard_.tryConsume() {
-                        continuation.resume(returning: false)
-                    }
-                default:
-                    break
-                }
-            }
-            connection.start(queue: queue)
-        }
+    private func quickSOCKS5Handshake(host: String, port: UInt16) async -> Bool {
+        await performSOCKS5Handshake(host: host, port: port)
     }
 
     private func hostForTarget(_ target: ProxyRotationService.ProxyTarget) -> String {
@@ -611,5 +562,64 @@ class NetworkSessionFactory {
         }
 
         return configs[index]
+    }
+}
+
+// MARK: - Nonisolated SOCKS5 helpers
+
+/// Performs a lightweight SOCKS5 greeting handshake to verify that the proxy at the
+/// given host/port is reachable and speaks the SOCKS5 protocol.  This is a pure
+/// network operation with no dependency on MainActor state, so it is intentionally
+/// defined as a top-level (nonisolated) free function.
+private func performSOCKS5Handshake(host: String, port: UInt16) async -> Bool {
+    await withCheckedContinuation { continuation in
+        let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port))
+        let connection = NWConnection(to: endpoint, using: .tcp)
+        let queue = DispatchQueue(label: "preflight-socks5")
+        let guard_ = ContinuationGuard()
+        let timeoutTask = Task.detached(priority: .utility) {
+            do { try await Task.sleep(for: .milliseconds(2500)) } catch { return }
+            if guard_.tryConsume() {
+                connection.cancel()
+                continuation.resume(returning: false)
+            }
+        }
+
+        connection.stateUpdateHandler = { state in
+            switch state {
+            case .ready:
+                let greeting = Data([0x05, 0x01, 0x00])
+                connection.send(content: greeting, completion: .contentProcessed { sendError in
+                    if sendError != nil {
+                        timeoutTask.cancel()
+                        connection.cancel()
+                        if guard_.tryConsume() {
+                            continuation.resume(returning: false)
+                        }
+                        return
+                    }
+                    connection.receive(minimumIncompleteLength: 2, maximumLength: 2) { data, _, _, recvError in
+                        timeoutTask.cancel()
+                        connection.cancel()
+                        if guard_.tryConsume() {
+                            guard recvError == nil, let data, data.count >= 2, data[0] == 0x05 else {
+                                continuation.resume(returning: false)
+                                return
+                            }
+                            continuation.resume(returning: true)
+                        }
+                    }
+                })
+            case .failed:
+                timeoutTask.cancel()
+                connection.cancel()
+                if guard_.tryConsume() {
+                    continuation.resume(returning: false)
+                }
+            default:
+                break
+            }
+        }
+        connection.start(queue: queue)
     }
 }
