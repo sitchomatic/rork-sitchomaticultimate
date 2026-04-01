@@ -131,7 +131,7 @@ struct TapHeatmapOverlayView: View {
                                         context.draw(
                                             Text(field.label)
                                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                                .foregroundColor(fieldColor(field.elementType)),
+                                                .foregroundStyle(fieldColor(field.elementType)),
                                             at: labelPoint,
                                             anchor: .leading
                                         )
@@ -151,7 +151,7 @@ struct TapHeatmapOverlayView: View {
                                         context.draw(
                                             Text(button.label)
                                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                                .foregroundColor(.red),
+                                                .foregroundStyle(.red),
                                             at: labelPoint,
                                             anchor: .center
                                         )
@@ -212,7 +212,7 @@ struct TapHeatmapOverlayView: View {
                                     context.draw(
                                         Text(tap.label)
                                             .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                            .foregroundColor(color),
+                                            .foregroundStyle(color),
                                         at: labelPoint,
                                         anchor: .leading
                                     )
