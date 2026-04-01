@@ -610,9 +610,8 @@ private func performSOCKS5Handshake(host: String, port: UInt16) async -> Bool {
                         }
                     }
                 })
-            case .failed:
+            case .failed, .cancelled:
                 timeoutTask.cancel()
-                connection.cancel()
                 if guard_.tryConsume() {
                     continuation.resume(returning: false)
                 }
