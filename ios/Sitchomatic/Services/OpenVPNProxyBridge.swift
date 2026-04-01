@@ -2,7 +2,7 @@
 @preconcurrency import Network
 import Observation
 
-nonisolated enum OpenVPNBridgeStatus: String, Sendable {
+enum OpenVPNBridgeStatus: String, Sendable {
     case stopped = "Stopped"
     case connecting = "Connecting"
     case established = "Established"
@@ -10,7 +10,7 @@ nonisolated enum OpenVPNBridgeStatus: String, Sendable {
     case failed = "Failed"
 }
 
-nonisolated struct OpenVPNBridgeStats: Sendable {
+struct OpenVPNBridgeStats: Sendable {
     var connectionsServed: Int = 0
     var connectionsFailed: Int = 0
     var bytesUpstream: UInt64 = 0

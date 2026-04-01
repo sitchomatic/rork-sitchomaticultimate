@@ -2,13 +2,13 @@ import Foundation
 import UIKit
 
 @frozen
-nonisolated enum PasswordSetStatus: String, Codable, Sendable {
+enum PasswordSetStatus: String, Codable, Sendable {
     case queued
     case active
     case done
 }
 
-nonisolated struct DualFindPasswordSet: Codable, Sendable, Identifiable {
+struct DualFindPasswordSet: Codable, Sendable, Identifiable {
     let id: String
     let index: Int
     let passwords: [String]
@@ -35,7 +35,7 @@ nonisolated struct DualFindPasswordSet: Codable, Sendable, Identifiable {
     }
 }
 
-nonisolated struct DualFindResumePoint: Codable, Sendable {
+struct DualFindResumePoint: Codable, Sendable {
     let joeEmailIndex: Int
     let joePasswordIndex: Int
     let ignEmailIndex: Int
@@ -73,7 +73,7 @@ nonisolated struct DualFindResumePoint: Codable, Sendable {
     }
 }
 
-nonisolated struct DualFindHit: Codable, Sendable, Identifiable {
+struct DualFindHit: Codable, Sendable, Identifiable {
     let id: String
     let email: String
     let password: String
@@ -93,7 +93,7 @@ nonisolated struct DualFindHit: Codable, Sendable, Identifiable {
     }
 }
 
-nonisolated struct DualFindSessionInfo: Identifiable, Sendable {
+struct DualFindSessionInfo: Identifiable, Sendable {
     let id: String
     let index: Int
     let platform: String
@@ -111,7 +111,7 @@ nonisolated struct DualFindSessionInfo: Identifiable, Sendable {
     }
 }
 
-nonisolated enum DualFindTestOutcome: Sendable {
+enum DualFindTestOutcome: Sendable {
     case success
     case disabled
     case transient
@@ -121,7 +121,7 @@ nonisolated enum DualFindTestOutcome: Sendable {
 }
 
 @frozen
-nonisolated enum DualFindInterventionAction: String, Codable, Sendable, CaseIterable, Identifiable {
+enum DualFindInterventionAction: String, Codable, Sendable, CaseIterable, Identifiable {
     case markSuccess = "Mark as Success"
     case markNoAccount = "Mark as No Account"
     case markDisabled = "Mark as Disabled"
@@ -176,7 +176,7 @@ nonisolated enum DualFindInterventionAction: String, Codable, Sendable, CaseIter
     }
 }
 
-nonisolated struct DualFindInterventionRequest: Identifiable, Sendable {
+struct DualFindInterventionRequest: Identifiable, Sendable {
     let id: String = UUID().uuidString
     let sessionLabel: String
     let email: String
@@ -191,7 +191,7 @@ nonisolated struct DualFindInterventionRequest: Identifiable, Sendable {
 }
 
 @frozen
-nonisolated enum DualFindScreenshotCount: Int, CaseIterable, Sendable {
+enum DualFindScreenshotCount: Int, CaseIterable, Sendable {
     case zero = 0
     case one = 1
     case three = 3
@@ -211,7 +211,7 @@ nonisolated enum DualFindScreenshotCount: Int, CaseIterable, Sendable {
 // The DualFindLiveScreenshot typealias is declared there.
 
 @frozen
-nonisolated enum DualFindSessionCount: Int, CaseIterable, Sendable {
+enum DualFindSessionCount: Int, CaseIterable, Sendable {
     case one = 1
     case two = 2
     case three = 3

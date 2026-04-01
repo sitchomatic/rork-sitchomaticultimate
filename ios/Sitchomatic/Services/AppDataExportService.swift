@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
+struct ComprehensiveExportConfig: Codable, Sendable {
     var version: String = "2.0"
     var exportedAt: String = ""
 
@@ -49,19 +49,19 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
     var nordVPNPrivateKey: String?
     var tempDisabledBgCheckEnabled: Bool?
 
-    nonisolated struct ExportURL: Codable, Sendable {
+    struct ExportURL: Codable, Sendable {
         let url: String
         let enabled: Bool
     }
 
-    nonisolated struct ExportProxy: Codable, Sendable {
+    struct ExportProxy: Codable, Sendable {
         let host: String
         let port: Int
         let username: String?
         let password: String?
     }
 
-    nonisolated struct ExportVPN: Codable, Sendable {
+    struct ExportVPN: Codable, Sendable {
         let fileName: String
         let remoteHost: String
         let remotePort: Int
@@ -70,30 +70,30 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         let enabled: Bool
     }
 
-    nonisolated struct ExportWG: Codable, Sendable {
+    struct ExportWG: Codable, Sendable {
         let fileName: String
         let rawContent: String
         let enabled: Bool
     }
 
-    nonisolated struct ExportDNS: Codable, Sendable {
+    struct ExportDNS: Codable, Sendable {
         let name: String
         let url: String
         let enabled: Bool
     }
 
-    nonisolated struct ExportBlacklist: Codable, Sendable {
+    struct ExportBlacklist: Codable, Sendable {
         let email: String
         let reason: String
     }
 
-    nonisolated struct ExportConnectionModes: Codable, Sendable {
+    struct ExportConnectionModes: Codable, Sendable {
         var joe: String = "DNS"
         var ignition: String = "DNS"
         var ppsr: String = "DNS"
     }
 
-    nonisolated struct ExportIPRoutingSettings: Codable, Sendable {
+    struct ExportIPRoutingSettings: Codable, Sendable {
         var mode: String = "App-Wide United IP"
         var rotationInterval: String = "Every Batch"
         var rotateOnBatchStart: Bool = false
@@ -104,12 +104,12 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         var maxFailuresBeforeRotation: Int = 3
     }
 
-    nonisolated struct ExportSettings: Codable, Sendable {
+    struct ExportSettings: Codable, Sendable {
         var autoExcludeBlacklist: Bool = true
         var autoBlacklistNoAcc: Bool = false
     }
 
-    nonisolated struct ExportCredential: Codable, Sendable {
+    struct ExportCredential: Codable, Sendable {
         let id: String
         let username: String
         let password: String
@@ -121,7 +121,7 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         let testResults: [ExportLoginTestResult]
     }
 
-    nonisolated struct ExportLoginTestResult: Codable, Sendable {
+    struct ExportLoginTestResult: Codable, Sendable {
         let timestamp: TimeInterval
         let success: Bool
         let duration: TimeInterval
@@ -129,7 +129,7 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         let responseDetail: String?
     }
 
-    nonisolated struct ExportCard: Codable, Sendable {
+    struct ExportCard: Codable, Sendable {
         let id: String
         let number: String
         let expiryMonth: String
@@ -142,7 +142,7 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         let binData: ExportBINData?
     }
 
-    nonisolated struct ExportCardTestResult: Codable, Sendable {
+    struct ExportCardTestResult: Codable, Sendable {
         let timestamp: TimeInterval
         let success: Bool
         let vin: String
@@ -150,7 +150,7 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         let errorMessage: String?
     }
 
-    nonisolated struct ExportBINData: Codable, Sendable {
+    struct ExportBINData: Codable, Sendable {
         let bin: String
         let scheme: String
         let type: String
@@ -161,7 +161,7 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         let isLoaded: Bool
     }
 
-    nonisolated struct ExportLoginAppSettings: Codable, Sendable {
+    struct ExportLoginAppSettings: Codable, Sendable {
         var targetSite: String
         var maxConcurrency: Int
         var debugMode: Bool
@@ -170,7 +170,7 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         var testTimeout: TimeInterval
     }
 
-    nonisolated struct ExportPPSRAppSettings: Codable, Sendable {
+    struct ExportPPSRAppSettings: Codable, Sendable {
         var email: String
         var maxConcurrency: Int
         var debugMode: Bool
@@ -181,12 +181,12 @@ nonisolated struct ComprehensiveExportConfig: Codable, Sendable {
         var cropRect: ExportRect?
     }
 
-    nonisolated struct ExportDebugButtonConfig: Codable, Sendable {
+    struct ExportDebugButtonConfig: Codable, Sendable {
         let urlPattern: String
         let config: DebugLoginButtonConfig
     }
 
-    nonisolated struct ExportRect: Codable, Sendable {
+    struct ExportRect: Codable, Sendable {
         let x: Double
         let y: Double
         let width: Double

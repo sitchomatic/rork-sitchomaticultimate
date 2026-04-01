@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-nonisolated struct EnrichedReplayStep: Identifiable, Sendable {
+struct EnrichedReplayStep: Identifiable, Sendable {
     let id: String
     let index: Int
     let timestamp: Date
@@ -16,7 +16,7 @@ nonisolated struct EnrichedReplayStep: Identifiable, Sendable {
     let durationMs: Int?
 }
 
-nonisolated struct EnrichedSessionReplay: Identifiable, Sendable {
+struct EnrichedSessionReplay: Identifiable, Sendable {
     let id: String
     let sessionId: String
     let startedAt: Date
@@ -30,7 +30,7 @@ nonisolated struct EnrichedSessionReplay: Identifiable, Sendable {
     let logEntries: [DebugLogEntry]
 }
 
-nonisolated struct TapHeatmapData: Sendable {
+struct TapHeatmapData: Sendable {
     let screenshotImage: UIImage
     let imageSize: CGSize
     let detectedFields: [DetectedElement]
@@ -39,14 +39,14 @@ nonisolated struct TapHeatmapData: Sendable {
     let ocrElements: [OCROverlayElement]
     let saliencyHotspots: [CGRect]
 
-    nonisolated struct DetectedElement: Identifiable, Sendable {
+    struct DetectedElement: Identifiable, Sendable {
         let id: String
         let label: String
         let boundingBox: CGRect
         let confidence: Float
         let elementType: ElementType
 
-        nonisolated enum ElementType: String, Sendable {
+        enum ElementType: String, Sendable {
             case emailField
             case passwordField
             case loginButton
@@ -57,14 +57,14 @@ nonisolated struct TapHeatmapData: Sendable {
         }
     }
 
-    nonisolated struct TapPoint: Identifiable, Sendable {
+    struct TapPoint: Identifiable, Sendable {
         let id: String
         let coordinate: CGPoint
         let label: String
         let wasSuccessful: Bool
     }
 
-    nonisolated struct OCROverlayElement: Identifiable, Sendable {
+    struct OCROverlayElement: Identifiable, Sendable {
         let id: String
         let text: String
         let boundingBox: CGRect

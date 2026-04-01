@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct SessionReplayEvent: Codable, Sendable {
+struct SessionReplayEvent: Codable, Sendable {
     let timestamp: Date
     let elapsedMs: Int
     let action: String
@@ -9,7 +9,7 @@ nonisolated struct SessionReplayEvent: Codable, Sendable {
     let screenshotId: String?
 }
 
-nonisolated struct SessionReplayLog: Codable, Sendable {
+struct SessionReplayLog: Codable, Sendable {
     let sessionId: String
     let startedAt: Date
     let completedAt: Date

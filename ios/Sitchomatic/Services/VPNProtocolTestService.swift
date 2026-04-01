@@ -1,7 +1,7 @@
 import Foundation
 @preconcurrency import Network
 
-nonisolated struct VPNProtocolTestResult: Sendable {
+struct VPNProtocolTestResult: Sendable {
     let reachable: Bool
     let protocolValidated: Bool
     let latencyMs: Int

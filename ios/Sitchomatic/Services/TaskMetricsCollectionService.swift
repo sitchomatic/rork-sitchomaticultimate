@@ -8,7 +8,7 @@ class TaskMetricsCollectionService {
     private var recentMetrics: [NetworkProbeMetrics] = []
     private let maxStoredMetrics: Int = 200
 
-    nonisolated struct NetworkProbeMetrics: Sendable {
+    struct NetworkProbeMetrics: Sendable {
         let url: String
         let timestamp: Date
         let dnsLookupMs: Int?

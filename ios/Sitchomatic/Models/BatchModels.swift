@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct ConcurrentBatchResult<T: Sendable>: Sendable {
+struct ConcurrentBatchResult<T: Sendable>: Sendable {
     let results: [T]
     let totalTimeMs: Int
     let successCount: Int
@@ -8,7 +8,7 @@ nonisolated struct ConcurrentBatchResult<T: Sendable>: Sendable {
     let avgLatencyMs: Int
 }
 
-nonisolated struct BatchLiveStats: Sendable {
+struct BatchLiveStats: Sendable {
     let processed: Int
     let total: Int
     let successCount: Int

@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import WebKit
 
-nonisolated enum CheckOutcome: Sendable, Equatable {
+enum CheckOutcome: Sendable, Equatable {
     case pass
     case failInstitution
     case uncertain

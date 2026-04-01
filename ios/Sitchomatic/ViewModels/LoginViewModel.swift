@@ -76,7 +76,7 @@ class LoginViewModel {
     }
 
 
-    nonisolated enum ConnectionStatus: String, Sendable {
+    enum ConnectionStatus: String, Sendable {
         case disconnected = "Disconnected"
         case connecting = "Connecting"
         case connected = "Connected"
@@ -1167,7 +1167,7 @@ class LoginViewModel {
         return csv
     }
 
-    nonisolated enum CredentialExportFilter: String, CaseIterable, Sendable {
+    enum CredentialExportFilter: String, CaseIterable, Sendable {
         case all = "All"
         case untested = "Untested"
         case working = "Working"

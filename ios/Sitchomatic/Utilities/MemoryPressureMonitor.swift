@@ -12,7 +12,7 @@ final class MemoryPressureMonitor {
     private var monitorTask: Task<Void, Never>?
 
     @frozen
-    nonisolated enum MemoryTier: Int, Sendable, Comparable {
+    enum MemoryTier: Int, Sendable, Comparable {
         case normal = 0
         case elevated = 1
         case warning = 2

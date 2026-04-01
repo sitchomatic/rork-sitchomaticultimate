@@ -2,7 +2,7 @@ import UIKit
 
 /// Detects if a screenshot is effectively blank (single-color) by sampling pixels
 /// and checking color uniformity against a configurable threshold.
-nonisolated enum BlankScreenshotDetector: Sendable {
+enum BlankScreenshotDetector: Sendable {
 
     /// Default uniformity threshold: 97% of sampled pixels must match the dominant color.
     @inlinable

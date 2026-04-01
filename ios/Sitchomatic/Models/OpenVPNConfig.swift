@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct OpenVPNConfig: Identifiable, Codable, Sendable {
+struct OpenVPNConfig: Identifiable, Codable, Sendable {
     let id: UUID
     let fileName: String
     let remoteHost: String

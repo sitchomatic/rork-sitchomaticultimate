@@ -1,7 +1,7 @@
 import Foundation
 
 @frozen
-nonisolated enum RotationInterval: String, CaseIterable, Codable, Sendable {
+enum RotationInterval: String, CaseIterable, Codable, Sendable {
     case everyBatch = "Every Batch"
     case every1Min = "Every 1 Minute"
     case every3Min = "Every 3 Minutes"
@@ -38,7 +38,7 @@ nonisolated enum RotationInterval: String, CaseIterable, Codable, Sendable {
 }
 
 @frozen
-nonisolated enum IPRoutingMode: String, CaseIterable, Codable, Sendable {
+enum IPRoutingMode: String, CaseIterable, Codable, Sendable {
     case separatePerSession = "Separate IP per Session"
     case appWideUnited = "App-Wide United IP"
 
@@ -59,7 +59,7 @@ nonisolated enum IPRoutingMode: String, CaseIterable, Codable, Sendable {
     }
 }
 
-nonisolated struct RotationLogEntry: Identifiable, Sendable {
+struct RotationLogEntry: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let fromLabel: String

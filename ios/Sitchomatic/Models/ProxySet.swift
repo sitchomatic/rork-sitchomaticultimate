@@ -1,7 +1,7 @@
 import Foundation
 
 @frozen
-nonisolated enum ProxySetType: String, CaseIterable, Codable, Sendable {
+enum ProxySetType: String, CaseIterable, Codable, Sendable {
     case socks5 = "SOCKS5 Proxy"
     case wireGuard = "WireGuard Config"
     case openVPN = "OpenVPN Config"
@@ -25,7 +25,7 @@ nonisolated enum ProxySetType: String, CaseIterable, Codable, Sendable {
     var maxItems: Int { 10 }
 }
 
-nonisolated struct ProxySetItem: Identifiable, Codable, Sendable {
+struct ProxySetItem: Identifiable, Codable, Sendable {
     let id: UUID
     var label: String
     var host: String
@@ -74,7 +74,7 @@ nonisolated struct ProxySetItem: Identifiable, Codable, Sendable {
     }
 }
 
-nonisolated struct ProxySet: Identifiable, Codable, Sendable {
+struct ProxySet: Identifiable, Codable, Sendable {
     let id: UUID
     var name: String
     var type: ProxySetType

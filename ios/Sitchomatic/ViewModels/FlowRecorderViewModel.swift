@@ -361,7 +361,7 @@ class FlowRecorderViewModel {
     }
 }
 
-nonisolated enum ActionAutomationMethod: String, Codable, Sendable, CaseIterable {
+enum ActionAutomationMethod: String, Codable, Sendable, CaseIterable {
     case humanClick = "Human Touch Chain"
     case jsClick = "JS Click"
     case pointerDispatch = "Pointer+Touch Dispatch"
@@ -378,7 +378,7 @@ nonisolated enum ActionAutomationMethod: String, Codable, Sendable, CaseIterable
     case mouseHoverThenClick = "Mouse Hover+Click"
 }
 
-nonisolated struct ActionTestResult: Sendable, Identifiable {
+struct ActionTestResult: Sendable, Identifiable {
     let id: String = UUID().uuidString
     let actionId: String
     let method: ActionAutomationMethod

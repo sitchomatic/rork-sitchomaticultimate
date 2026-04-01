@@ -11,13 +11,13 @@ class StrictLoginDetectionEngine {
     private let settlementGate = SettlementGateEngine.shared
     private let coordEngine = CoordinateInteractionEngine.shared
 
-    nonisolated enum DetectionModule: Sendable {
+    enum DetectionModule: Sendable {
         case standard
         case dualFind
         case unifiedSession
     }
 
-    nonisolated struct DetectionContext: Sendable {
+    struct DetectionContext: Sendable {
         let module: DetectionModule
         let sessionId: String
         let pageContent: String
@@ -26,7 +26,7 @@ class StrictLoginDetectionEngine {
         let screenshot: UIImage?
     }
 
-    nonisolated struct DetectionResult: Sendable {
+    struct DetectionResult: Sendable {
         let outcome: LoginOutcome
         let phase: String
         let reason: String

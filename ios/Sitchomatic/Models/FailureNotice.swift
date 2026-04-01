@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct FailureNotice: Identifiable, Sendable {
+struct FailureNotice: Identifiable, Sendable {
     let id: String
     let message: String
     let source: Source

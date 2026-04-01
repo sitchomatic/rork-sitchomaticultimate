@@ -1,8 +1,8 @@
 import ActivityKit
 import Foundation
 
-nonisolated struct CommandCenterActivityAttributes: ActivityAttributes {
-    nonisolated struct ContentState: Codable, Hashable {
+struct CommandCenterActivityAttributes: ActivityAttributes {
+    struct ContentState: Codable, Hashable {
         var completedCount: Int
         var totalCount: Int
         var workingCount: Int

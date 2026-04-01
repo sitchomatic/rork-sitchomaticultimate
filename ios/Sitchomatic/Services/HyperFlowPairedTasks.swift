@@ -163,7 +163,7 @@ public enum HyperFlowTaskFactory {
 
 // MARK: - LoginTargetSite (preserved for backward compatibility)
 
-nonisolated enum LoginTargetSite: String, CaseIterable, Sendable {
+enum LoginTargetSite: String, CaseIterable, Sendable {
     case joefortune = "JoePoint"
     case ignition = "Ignition Lite"
 

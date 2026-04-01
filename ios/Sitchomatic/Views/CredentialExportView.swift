@@ -10,7 +10,7 @@ struct CredentialExportView: View {
     @State private var showFileExporter: Bool = false
     @State private var exportDocument: CardExportDocument?
 
-    nonisolated enum ExportFormat: String, CaseIterable, Sendable {
+    enum ExportFormat: String, CaseIterable, Sendable {
         case text = "Text (email:pass)"
         case csv = "CSV"
     }

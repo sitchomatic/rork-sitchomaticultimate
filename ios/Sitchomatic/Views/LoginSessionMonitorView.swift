@@ -7,7 +7,7 @@ struct LoginSessionMonitorView: View {
     @State private var filterStatus: FilterOption = .all
     @State private var viewMode: ViewMode = .list
 
-    nonisolated enum FilterOption: String, CaseIterable, Identifiable, Sendable {
+    enum FilterOption: String, CaseIterable, Identifiable, Sendable {
         case all = "All"
         case active = "Active"
         case completed = "Passed"

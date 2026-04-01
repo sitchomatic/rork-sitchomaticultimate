@@ -20,7 +20,7 @@ struct UnifiedScreenshotFeedView: View {
         case albums = "Albums"
     }
 
-    nonisolated enum ScreenshotFilterOption: String, CaseIterable, Identifiable, Sendable {
+    enum ScreenshotFilterOption: String, CaseIterable, Identifiable, Sendable {
         case all = "All"
         case crucial = "Crucial"
         case success = "Success"

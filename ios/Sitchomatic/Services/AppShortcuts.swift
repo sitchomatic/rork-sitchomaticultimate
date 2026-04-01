@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-nonisolated struct CheckStatsIntent: AppIntent {
+struct CheckStatsIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Stats"
     static var description: IntentDescription = "View current card and credential statistics"
     static var openAppWhenRun: Bool = true
@@ -19,7 +19,7 @@ nonisolated struct CheckStatsIntent: AppIntent {
     }
 }
 
-nonisolated struct OpenPPSRModeIntent: AppIntent {
+struct OpenPPSRModeIntent: AppIntent {
     static var title: LocalizedStringResource = "Open PPSR Mode"
     static var description: IntentDescription = "Open the PPSR card testing mode"
     static var openAppWhenRun: Bool = true
@@ -31,7 +31,7 @@ nonisolated struct OpenPPSRModeIntent: AppIntent {
     }
 }
 
-nonisolated struct OpenLoginTestingIntent: AppIntent {
+struct OpenLoginTestingIntent: AppIntent {
     static var title: LocalizedStringResource = "Open Login Testing"
     static var description: IntentDescription = "Open the unified login testing mode (JoePoint + Ignition)"
     static var openAppWhenRun: Bool = true
@@ -43,7 +43,7 @@ nonisolated struct OpenLoginTestingIntent: AppIntent {
     }
 }
 
-nonisolated struct OpenNordConfigIntent: AppIntent {
+struct OpenNordConfigIntent: AppIntent {
     static var title: LocalizedStringResource = "Open NordLynx Config"
     static var description: IntentDescription = "Open the NordLynx VPN config generator"
     static var openAppWhenRun: Bool = true
@@ -55,7 +55,7 @@ nonisolated struct OpenNordConfigIntent: AppIntent {
     }
 }
 
-nonisolated struct SitchomaticAppShortcuts: AppShortcutsProvider {
+struct SitchomaticAppShortcuts: AppShortcutsProvider {
     @AppShortcutsBuilder
     static var appShortcuts: [AppShortcut] {
         AppShortcut(

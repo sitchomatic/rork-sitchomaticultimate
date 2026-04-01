@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Swift 6.2 optimized concurrency strategy with frozen enum and performance attributes
 @frozen
-nonisolated enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, Identifiable {
+enum ConcurrencyStrategy: String, Codable, CaseIterable, Sendable, Identifiable {
     case rorkAISmart = "rorkAISmart"
     case fullSend = "fullSend"
     case liveUserAdjustable = "liveUserAdjustable"

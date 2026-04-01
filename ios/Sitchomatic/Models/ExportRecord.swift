@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct ExportRecord: Codable, Identifiable, Sendable {
+struct ExportRecord: Codable, Identifiable, Sendable {
     let id: String
     let timestamp: Date
     let format: String

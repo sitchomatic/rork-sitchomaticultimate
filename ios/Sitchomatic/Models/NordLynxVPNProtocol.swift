@@ -1,7 +1,7 @@
 import Foundation
 
 @frozen
-nonisolated enum NordLynxVPNProtocol: String, CaseIterable, Sendable, Identifiable {
+enum NordLynxVPNProtocol: String, CaseIterable, Sendable, Identifiable {
     case wireguardUDP = "wireguard_udp"
     case openvpnUDP = "openvpn_udp"
     case openvpnTCP = "openvpn_tcp"

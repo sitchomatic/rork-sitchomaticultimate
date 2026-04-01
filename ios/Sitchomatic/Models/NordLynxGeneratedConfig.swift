@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct NordLynxGeneratedConfig: Identifiable, Sendable {
+struct NordLynxGeneratedConfig: Identifiable, Sendable {
     let id = UUID()
     let hostname: String
     let stationIP: String

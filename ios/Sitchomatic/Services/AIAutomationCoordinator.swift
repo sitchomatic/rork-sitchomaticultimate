@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import Vision
 
-nonisolated enum AIDecision: String, Sendable {
+enum AIDecision: String, Sendable {
     case proceed
     case retry
     case rotateCard
@@ -16,7 +16,7 @@ nonisolated enum AIDecision: String, Sendable {
     case deepScan
 }
 
-nonisolated struct AIAnalysisResult: Sendable {
+struct AIAnalysisResult: Sendable {
     let decision: AIDecision
     let confidence: Double
     let reasoning: String
@@ -25,7 +25,7 @@ nonisolated struct AIAnalysisResult: Sendable {
     let metadata: [String: String]
 }
 
-nonisolated struct BatchAnalytics: Sendable {
+struct BatchAnalytics: Sendable {
     let totalProcessed: Int
     let successRate: Double
     let avgLatencyMs: Int

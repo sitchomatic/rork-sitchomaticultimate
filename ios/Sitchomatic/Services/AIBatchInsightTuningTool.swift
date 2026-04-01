@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum TuningAction: String, Codable, Sendable, CaseIterable {
+enum TuningAction: String, Codable, Sendable, CaseIterable {
     case increaseConcurrency
     case decreaseConcurrency
     case rotateProxies
@@ -11,13 +11,13 @@ nonisolated enum TuningAction: String, Codable, Sendable, CaseIterable {
     case noChange
 }
 
-nonisolated struct BatchInsightInput: Sendable {
+struct BatchInsightInput: Sendable {
     let batchId: String
     let results: [(cardId: String, outcome: String, latencyMs: Int)]
     let settingsSnapshot: BatchSettingsSnapshot
 }
 
-nonisolated struct BatchSettingsSnapshot: Sendable {
+struct BatchSettingsSnapshot: Sendable {
     let concurrency: Int
     let proxyTarget: String
     let networkMode: String
@@ -27,7 +27,7 @@ nonisolated struct BatchSettingsSnapshot: Sendable {
     let submitRetryCount: Int
 }
 
-nonisolated struct BatchInsightResult: Sendable {
+struct BatchInsightResult: Sendable {
     let summary: String
     let failureClusters: [FailureCluster]
     let tuningRecommendations: [TuningRecommendation]
@@ -36,7 +36,7 @@ nonisolated struct BatchInsightResult: Sendable {
     let timestamp: Date
 }
 
-nonisolated struct FailureCluster: Sendable {
+struct FailureCluster: Sendable {
     let pattern: String
     let count: Int
     let percentage: Double
@@ -44,7 +44,7 @@ nonisolated struct FailureCluster: Sendable {
     let severity: Int
 }
 
-nonisolated struct TuningRecommendation: Sendable {
+struct TuningRecommendation: Sendable {
     let action: TuningAction
     let priority: Int
     let reasoning: String
@@ -52,7 +52,7 @@ nonisolated struct TuningRecommendation: Sendable {
     let parameters: [String: String]
 }
 
-nonisolated struct BatchInsightAuditEntry: Codable, Sendable {
+struct BatchInsightAuditEntry: Codable, Sendable {
     let id: String
     let batchId: String
     let summary: String
@@ -65,7 +65,7 @@ nonisolated struct BatchInsightAuditEntry: Codable, Sendable {
     let totalItems: Int
 }
 
-nonisolated struct BatchInsightStore: Codable, Sendable {
+struct BatchInsightStore: Codable, Sendable {
     var auditLog: [BatchInsightAuditEntry] = []
     var historicalGrades: [String] = []
     var recurringPatterns: [String: Int] = [:]

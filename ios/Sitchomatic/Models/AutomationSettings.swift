@@ -2,7 +2,7 @@ import Foundation
 
 /// High-performance automation settings optimized for Swift 6.2
 /// Uses Sendable for safe concurrent access and frozen for compiler optimizations
-nonisolated struct AutomationSettings: Codable, Sendable {
+struct AutomationSettings: Codable, Sendable {
     // MARK: - Page Loading
     var pageLoadTimeout: TimeInterval = 90 // Per-page-load timeout (single navigation attempt)
     var pageLoadRetries: Int = 3
@@ -305,7 +305,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     // MARK: - Enums
 
     @frozen
-    nonisolated enum UnifiedScreenshotCount: Int, Codable, CaseIterable, Sendable {
+    enum UnifiedScreenshotCount: Int, Codable, CaseIterable, Sendable {
         case zero = 0
         case two = 2
         case three = 3
@@ -343,7 +343,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     @frozen
-    nonisolated enum ScreenshotsPerAttempt: String, Codable, CaseIterable, Sendable {
+    enum ScreenshotsPerAttempt: String, Codable, CaseIterable, Sendable {
         case none = "None"
         case one = "1"
         case three = "3"
@@ -360,14 +360,14 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     @frozen
-    nonisolated enum EvaluationStrictness: String, Codable, CaseIterable, Sendable {
+    enum EvaluationStrictness: String, Codable, CaseIterable, Sendable {
         case lenient = "Lenient"
         case normal = "Normal"
         case strict = "Strict"
     }
 
     @frozen
-    nonisolated enum ButtonDetectionMode: String, Codable, CaseIterable, Sendable {
+    enum ButtonDetectionMode: String, Codable, CaseIterable, Sendable {
         case textMatch = "Text Match"
         case visionML = "Vision ML"
         case hybrid = "Hybrid"
@@ -375,7 +375,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     @frozen
-    nonisolated enum ButtonClickMethod: String, Codable, CaseIterable, Sendable {
+    enum ButtonClickMethod: String, Codable, CaseIterable, Sendable {
         case humanClick = "Human Touch Chain"
         case jsClick = "JS Click"
         case dispatchEvent = "Pointer+Touch Dispatch"
@@ -384,7 +384,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     @frozen
-    nonisolated enum SessionIsolationMode: String, Codable, CaseIterable, Sendable {
+    enum SessionIsolationMode: String, Codable, CaseIterable, Sendable {
         case none = "None"
         case cookies = "Cookies Only"
         case storage = "Storage Only"
@@ -392,7 +392,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 
     @frozen
-    nonisolated enum FieldClearMethod: String, Codable, CaseIterable, Sendable {
+    enum FieldClearMethod: String, Codable, CaseIterable, Sendable {
         case selectAllDelete = "Select All + Delete"
         case tripleClickDelete = "Triple Click + Delete"
         case jsValueClear = "JS Value Clear"
@@ -400,7 +400,7 @@ nonisolated struct AutomationSettings: Codable, Sendable {
     }
 }
 
-nonisolated struct URLFlowAssignment: Codable, Sendable, Identifiable {
+struct URLFlowAssignment: Codable, Sendable, Identifiable {
     var id: String = UUID().uuidString
     var urlPattern: String
     var flowId: String
@@ -412,7 +412,7 @@ nonisolated struct URLFlowAssignment: Codable, Sendable, Identifiable {
     var assignedAt: Date = Date()
 }
 
-nonisolated enum LoginFormPatternList {
+enum LoginFormPatternList {
     static let allNames: [String] = [
         "Tab Navigation",
         "Click-Focus Sequential",

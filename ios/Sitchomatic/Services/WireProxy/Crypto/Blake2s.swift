@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct Blake2s: Sendable {
+struct Blake2s: Sendable {
     static let blockSize = 64
     static let hashSize = 32
 

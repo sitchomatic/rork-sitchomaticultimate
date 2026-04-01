@@ -1,14 +1,14 @@
 import Foundation
 
 /// Swift 6.2 optimized log entry with frozen enum and performance attributes
-nonisolated struct PPSRLogEntry: Identifiable, Sendable, Codable {
+struct PPSRLogEntry: Identifiable, Sendable, Codable {
     let id: UUID
     let timestamp: Date
     let message: String
     let level: Level
 
     @frozen
-    nonisolated enum Level: String, Sendable, Codable {
+    enum Level: String, Sendable, Codable {
         case info = "INFO"
         case success = "OK"
         case warning = "WARN"

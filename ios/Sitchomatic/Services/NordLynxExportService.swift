@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct NordLynxExportService: Sendable {
+struct NordLynxExportService: Sendable {
     private let zipService = NordLynxZipService()
 
     func exportAsIndividualFiles(configs: [NordLynxGeneratedConfig], folderURL: URL) -> [URL] {

@@ -17,7 +17,7 @@ final class AppStabilityCoordinator {
     private(set) var lastHealthReport: HealthReport?
     private var backgroundSaveTask: Task<Void, Never>?
 
-    nonisolated struct HealthReport: Sendable {
+    struct HealthReport: Sendable {
         let timestamp: Date
         let memoryMB: Int
         let memoryGrowthRate: Double

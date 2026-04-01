@@ -1,7 +1,7 @@
 import Foundation
 
 @frozen
-nonisolated enum RecordedActionType: String, Codable, Sendable {
+enum RecordedActionType: String, Codable, Sendable {
     case mouseMove
     case mouseDown
     case mouseUp
@@ -23,14 +23,14 @@ nonisolated enum RecordedActionType: String, Codable, Sendable {
     case pause
 }
 
-nonisolated struct RecordedMousePosition: Codable, Sendable {
+struct RecordedMousePosition: Codable, Sendable {
     let x: Double
     let y: Double
     let viewportX: Double
     let viewportY: Double
 }
 
-nonisolated struct RecordedAction: Codable, Sendable, Identifiable {
+struct RecordedAction: Codable, Sendable, Identifiable {
     let id: String
     let type: RecordedActionType
     let timestampMs: Double

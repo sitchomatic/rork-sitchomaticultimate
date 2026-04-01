@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct FingerprintOutcome: Codable, Sendable {
+struct FingerprintOutcome: Codable, Sendable {
     let profileIndex: Int
     let profileSeed: UInt32
     let host: String
@@ -12,7 +12,7 @@ nonisolated struct FingerprintOutcome: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct FingerprintProfileStats: Codable, Sendable {
+struct FingerprintProfileStats: Codable, Sendable {
     var profileIndex: Int
     var profileSeed: UInt32
     var useCount: Int = 0
@@ -78,7 +78,7 @@ nonisolated struct FingerprintProfileStats: Codable, Sendable {
     }
 }
 
-nonisolated struct HostFingerprintPreference: Codable, Sendable {
+struct HostFingerprintPreference: Codable, Sendable {
     var host: String
     var preferredProfiles: [Int] = []
     var avoidProfiles: [Int] = []
@@ -87,7 +87,7 @@ nonisolated struct HostFingerprintPreference: Codable, Sendable {
     var lastAIAnalysis: Date?
 }
 
-nonisolated struct FingerprintTuningStore: Codable, Sendable {
+struct FingerprintTuningStore: Codable, Sendable {
     var profileStats: [Int: FingerprintProfileStats] = [:]
     var hostPreferences: [String: HostFingerprintPreference] = [:]
     var recentOutcomes: [FingerprintOutcome] = []

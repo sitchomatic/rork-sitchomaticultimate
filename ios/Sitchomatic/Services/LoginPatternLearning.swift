@@ -165,7 +165,7 @@ class LoginPatternLearning {
 
     // MARK: - Data Types
 
-    nonisolated struct PatternStats: Codable, Sendable {
+    struct PatternStats: Codable, Sendable {
         var totalAttempts: Int = 0
         var fillSuccesses: Int = 0
         var submitSuccesses: Int = 0

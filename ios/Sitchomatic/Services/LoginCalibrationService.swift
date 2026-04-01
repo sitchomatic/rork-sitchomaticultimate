@@ -8,7 +8,7 @@ class LoginCalibrationService {
     private let logger = DebugLogger.shared
     private(set) var calibrations: [String: URLCalibration] = [:]
 
-    nonisolated struct ElementMapping: Codable, Sendable {
+    struct ElementMapping: Codable, Sendable {
         var cssSelector: String
         var fallbackSelectors: [String]
         var coordinates: CGPoint?
@@ -30,7 +30,7 @@ class LoginCalibrationService {
         }
     }
 
-    nonisolated struct URLCalibration: Codable, Sendable {
+    struct URLCalibration: Codable, Sendable {
         var urlPattern: String
         var emailField: ElementMapping?
         var passwordField: ElementMapping?

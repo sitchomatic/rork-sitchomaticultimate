@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum TimingCategory: String, Codable, Sendable, CaseIterable {
+enum TimingCategory: String, Codable, Sendable, CaseIterable {
     case keystrokeDelay = "keystroke"
     case interFieldPause = "interField"
     case preSubmitWait = "preSubmit"
@@ -9,7 +9,7 @@ nonisolated enum TimingCategory: String, Codable, Sendable, CaseIterable {
     case preFocusPause = "preFocus"
 }
 
-nonisolated struct TimingBounds: Codable, Sendable {
+struct TimingBounds: Codable, Sendable {
     var minMs: Int
     var maxMs: Int
 
@@ -17,7 +17,7 @@ nonisolated struct TimingBounds: Codable, Sendable {
     var range: Int { maxMs - minMs }
 }
 
-nonisolated struct TimingSample: Codable, Sendable {
+struct TimingSample: Codable, Sendable {
     let category: TimingCategory
     let actualMs: Int
     let fillSuccess: Bool
@@ -27,7 +27,7 @@ nonisolated struct TimingSample: Codable, Sendable {
     let pattern: String
 }
 
-nonisolated struct TimingProfile: Codable, Sendable {
+struct TimingProfile: Codable, Sendable {
     var keystroke: TimingBounds = TimingBounds(minMs: 45, maxMs: 160)
     var interField: TimingBounds = TimingBounds(minMs: 200, maxMs: 600)
     var preSubmit: TimingBounds = TimingBounds(minMs: 300, maxMs: 700)
@@ -66,7 +66,7 @@ nonisolated struct TimingProfile: Codable, Sendable {
     }
 }
 
-nonisolated struct TimingStore: Codable, Sendable {
+struct TimingStore: Codable, Sendable {
     var profiles: [String: TimingProfile] = [:]
     var recentSamples: [String: [TimingSample]] = [:]
 }

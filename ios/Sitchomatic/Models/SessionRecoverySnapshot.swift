@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct SessionRecoverySnapshot: Codable, Identifiable, Sendable {
+struct SessionRecoverySnapshot: Codable, Identifiable, Sendable {
     let id: String
     let credentialId: String
     let username: String
@@ -111,7 +111,7 @@ nonisolated struct SessionRecoverySnapshot: Codable, Identifiable, Sendable {
     }
 }
 
-nonisolated struct SessionRecoveryBatch: Codable, Sendable {
+struct SessionRecoveryBatch: Codable, Sendable {
     let batchId: String
     let startedAt: Date
     let snapshots: [SessionRecoverySnapshot]

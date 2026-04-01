@@ -563,7 +563,7 @@ struct MainMenuView: View {
     }
 }
 
-nonisolated enum ActiveAppMode: String, Sendable {
+enum ActiveAppMode: String, Sendable {
     case unifiedSession
     case ppsr
     case superTest

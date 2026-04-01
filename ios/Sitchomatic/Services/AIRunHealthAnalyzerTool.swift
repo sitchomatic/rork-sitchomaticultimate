@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-nonisolated enum RunHealthDecision: String, Sendable, CaseIterable {
+enum RunHealthDecision: String, Sendable, CaseIterable {
     case retry
     case wait
     case stop
@@ -10,7 +10,7 @@ nonisolated enum RunHealthDecision: String, Sendable, CaseIterable {
     case continueMonitoring
 }
 
-nonisolated struct RunHealthInput: Sendable {
+struct RunHealthInput: Sendable {
     let sessionId: String
     let logs: [String]
     let pageText: String?
@@ -21,7 +21,7 @@ nonisolated struct RunHealthInput: Sendable {
     let elapsedMs: Int
 }
 
-nonisolated struct RunHealthResult: Sendable {
+struct RunHealthResult: Sendable {
     let decision: RunHealthDecision
     let confidence: Double
     let reasoning: String
@@ -31,7 +31,7 @@ nonisolated struct RunHealthResult: Sendable {
     let timestamp: Date
 }
 
-nonisolated struct RunHealthAuditEntry: Codable, Sendable {
+struct RunHealthAuditEntry: Codable, Sendable {
     let id: String
     let sessionId: String
     let decision: String
@@ -43,7 +43,7 @@ nonisolated struct RunHealthAuditEntry: Codable, Sendable {
     let wasApproved: Bool
 }
 
-nonisolated struct RunHealthStore: Codable, Sendable {
+struct RunHealthStore: Codable, Sendable {
     var auditLog: [RunHealthAuditEntry] = []
     var decisionCounts: [String: Int] = [:]
     var hostFailureStreaks: [String: Int] = [:]

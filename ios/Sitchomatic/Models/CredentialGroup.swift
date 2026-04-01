@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @frozen
-nonisolated enum GroupColor: String, CaseIterable, Codable, Sendable {
+enum GroupColor: String, CaseIterable, Codable, Sendable {
     case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink
 
     var color: Color {
@@ -25,7 +25,7 @@ nonisolated enum GroupColor: String, CaseIterable, Codable, Sendable {
 }
 
 @frozen
-nonisolated enum GroupSize: Int, CaseIterable, Sendable {
+enum GroupSize: Int, CaseIterable, Sendable {
     case twenty = 20
     case fifty = 50
     case hundred = 100
@@ -36,7 +36,7 @@ nonisolated enum GroupSize: Int, CaseIterable, Sendable {
     var label: String { "\(rawValue)" }
 }
 
-nonisolated struct CredentialGroup: Identifiable, Codable, Sendable {
+struct CredentialGroup: Identifiable, Codable, Sendable {
     let id: String
     var name: String
     var color: GroupColor

@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct TestSchedule: Codable, Identifiable, Sendable {
+struct TestSchedule: Codable, Identifiable, Sendable {
     let id: String
     var scheduledDate: Date
     var isActive: Bool
@@ -8,7 +8,7 @@ nonisolated struct TestSchedule: Codable, Identifiable, Sendable {
     var createdAt: Date
 
     @frozen
-    nonisolated enum CardFilter: String, Codable, CaseIterable, Sendable {
+    enum CardFilter: String, Codable, CaseIterable, Sendable {
         case allUntested = "All Untested"
         case deadOnly = "Dead Only (Retest)"
         case allNonWorking = "All Non-Working"

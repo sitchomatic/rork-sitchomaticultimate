@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct FingerprintSuccessStats: Codable, Sendable {
+struct FingerprintSuccessStats: Codable, Sendable {
     var profileIndex: Int
     var successCount: Int = 0
     var permBanCount: Int = 0
@@ -35,12 +35,12 @@ nonisolated struct FingerprintSuccessStats: Codable, Sendable {
     }
 }
 
-nonisolated struct FingerprintStatsStore: Codable, Sendable {
+struct FingerprintStatsStore: Codable, Sendable {
     var profiles: [Int: FingerprintSuccessStats] = [:]
     var totalRecorded: Int = 0
 }
 
-nonisolated enum FingerprintSessionOutcome: Sendable {
+enum FingerprintSessionOutcome: Sendable {
     case success
     case permBan
     case tempLock

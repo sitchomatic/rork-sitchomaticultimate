@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct LoginTestResult: Identifiable, Sendable {
+struct LoginTestResult: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let success: Bool

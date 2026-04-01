@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import WebKit
 
-nonisolated enum LoginOutcome: Sendable {
+enum LoginOutcome: Sendable {
     case success
     case permDisabled
     case tempDisabled

@@ -82,7 +82,7 @@ class NetworkResilienceService {
         }
     }
 
-    nonisolated struct VerificationResult: Identifiable, Sendable {
+    struct VerificationResult: Identifiable, Sendable {
         let id: UUID
         let timestamp: Date
         let intendedProxy: String

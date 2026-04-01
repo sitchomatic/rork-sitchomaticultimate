@@ -110,7 +110,7 @@ enum TimeoutResolver {
     }
 
     @frozen
-    nonisolated enum TimeoutReason: Sendable {
+    enum TimeoutReason: Sendable {
         case activeTimeout
         case idleTimeout(secondsIdle: TimeInterval)
         case hardTimeout

@@ -78,7 +78,7 @@ class HybridNetworkingService {
     private let decayIntervalSeconds: TimeInterval = 300
     private let decayFactor: Double = 0.92
 
-    nonisolated enum HybridMethod: String, CaseIterable, Sendable {
+    enum HybridMethod: String, CaseIterable, Sendable {
         case wireProxy = "WireProxy"
         case nodeMaven = "NodeMaven"
         case openVPN = "OpenVPN"
@@ -106,7 +106,7 @@ class HybridNetworkingService {
         }
     }
 
-    nonisolated struct HybridSessionAssignment: Sendable {
+    struct HybridSessionAssignment: Sendable {
         let method: HybridMethod
         let config: ActiveNetworkConfig
         let label: String
@@ -117,7 +117,7 @@ class HybridNetworkingService {
     var isActive: Bool = false
     var methodStats: [HybridMethod: MethodStat] = [:]
 
-    nonisolated struct MethodStat: Sendable {
+    struct MethodStat: Sendable {
         var attempts: Int = 0
         var successes: Int = 0
         var failures: Int = 0

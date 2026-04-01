@@ -3,14 +3,14 @@ import Foundation
 import CryptoKit
 import Observation
 
-nonisolated enum WGMessageType: UInt8, Sendable {
+enum WGMessageType: UInt8, Sendable {
     case handshakeInitiation = 1
     case handshakeResponse = 2
     case cookieReply = 3
     case transportData = 4
 }
 
-nonisolated struct WGTransportPacket: Sendable {
+struct WGTransportPacket: Sendable {
     let receiverIndex: UInt32
     let counter: UInt64
     let encryptedPayload: Data
@@ -62,7 +62,7 @@ nonisolated struct WGTransportPacket: Sendable {
     }
 }
 
-nonisolated enum WGSessionStatus: String, Sendable {
+enum WGSessionStatus: String, Sendable {
     case idle = "Idle"
     case handshaking = "Handshaking"
     case established = "Established"
@@ -70,7 +70,7 @@ nonisolated enum WGSessionStatus: String, Sendable {
     case failed = "Failed"
 }
 
-nonisolated struct WGSessionStats: Sendable {
+struct WGSessionStats: Sendable {
     var packetsSent: UInt64 = 0
     var packetsReceived: UInt64 = 0
     var bytesSent: UInt64 = 0

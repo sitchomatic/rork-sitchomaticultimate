@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct ProxyScore: Sendable {
+struct ProxyScore: Sendable {
     let proxyId: UUID
     var successCount: Int = 0
     var failureCount: Int = 0

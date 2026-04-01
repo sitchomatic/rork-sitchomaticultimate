@@ -17,7 +17,7 @@ class FPLiveTestSession {
     var pageTitle: String = ""
     var errorMessage: String = ""
 
-    nonisolated enum FPLiveStatus: String, Sendable {
+    enum FPLiveStatus: String, Sendable {
         case idle = "Idle"
         case loading = "Loading"
         case loaded = "Loaded"

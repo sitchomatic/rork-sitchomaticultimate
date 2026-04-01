@@ -1,7 +1,7 @@
 import SwiftUI
 
 @frozen
-nonisolated enum ProductMode: String, CaseIterable, Sendable {
+enum ProductMode: String, CaseIterable, Sendable {
     case ppsr = "PPSR CarCheck"
 
     @inlinable

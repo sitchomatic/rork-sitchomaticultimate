@@ -9,7 +9,7 @@ class ConfidenceResultEngine {
     private let logger = DebugLogger.shared
     private let aiAnalyzer = AIConfidenceAnalyzerService.shared
 
-    nonisolated struct ConfidenceResult: Sendable {
+    struct ConfidenceResult: Sendable {
         let outcome: LoginOutcome
         let confidence: Double
         let compositeScore: Double
@@ -17,7 +17,7 @@ class ConfidenceResultEngine {
         let reasoning: String
     }
 
-    nonisolated struct SignalContribution: Sendable {
+    struct SignalContribution: Sendable {
         let source: String
         let weight: Double
         let rawScore: Double

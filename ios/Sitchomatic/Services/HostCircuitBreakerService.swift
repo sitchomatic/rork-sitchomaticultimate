@@ -20,7 +20,7 @@ actor HostCircuitBreakerService {
         .generic: 30
     ]
 
-    nonisolated enum BreakerStatus: String, Sendable {
+    enum BreakerStatus: String, Sendable {
         case closed
         case softBreak
         case open
@@ -50,7 +50,7 @@ actor HostCircuitBreakerService {
         }
     }
 
-    nonisolated enum FailureType: String, Sendable {
+    enum FailureType: String, Sendable {
         case timeout
         case connectionError
         case rateLimited429

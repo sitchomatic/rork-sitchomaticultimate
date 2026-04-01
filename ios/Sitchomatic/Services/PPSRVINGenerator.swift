@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct PPSRVINGenerator: Sendable {
+struct PPSRVINGenerator: Sendable {
     private static let wmis: [String] = [
         "WBA", "WBS", "WB1", "1HG", "JHM", "JMF", "1G1", "2HG",
         "3VW", "SAL", "WDB", "ZAR", "YV1", "KMH", "MNB", "6T1",

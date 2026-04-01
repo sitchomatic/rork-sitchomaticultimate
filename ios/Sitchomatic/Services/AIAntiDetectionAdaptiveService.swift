@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct DetectionEvent: Codable, Sendable {
+struct DetectionEvent: Codable, Sendable {
     let host: String
     let urlString: String
     let eventType: String
@@ -12,7 +12,7 @@ nonisolated struct DetectionEvent: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct DetectionPattern: Codable, Sendable {
+struct DetectionPattern: Codable, Sendable {
     var patternId: String
     var signals: [String]
     var occurrenceCount: Int = 0
@@ -28,7 +28,7 @@ nonisolated struct DetectionPattern: Codable, Sendable {
     }
 }
 
-nonisolated struct AdaptiveStrategy: Codable, Sendable {
+struct AdaptiveStrategy: Codable, Sendable {
     var strategyId: String
     var trigger: String
     var action: String
@@ -44,7 +44,7 @@ nonisolated struct AdaptiveStrategy: Codable, Sendable {
     }
 }
 
-nonisolated struct HostDetectionProfile: Codable, Sendable {
+struct HostDetectionProfile: Codable, Sendable {
     var host: String
     var totalDetections: Int = 0
     var recentDetectionRate: Double = 0
@@ -58,7 +58,7 @@ nonisolated struct HostDetectionProfile: Codable, Sendable {
     var isImproving: Bool { detectionTrend == "improving" }
 }
 
-nonisolated struct AntiDetectionStore: Codable, Sendable {
+struct AntiDetectionStore: Codable, Sendable {
     var recentEvents: [DetectionEvent] = []
     var patterns: [String: DetectionPattern] = [:]
     var strategies: [String: AdaptiveStrategy] = [:]

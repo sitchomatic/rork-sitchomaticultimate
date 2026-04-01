@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Network
 import Observation
 
-nonisolated struct NetworkTruthSnapshot: Identifiable, Sendable {
+struct NetworkTruthSnapshot: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let routeType: String

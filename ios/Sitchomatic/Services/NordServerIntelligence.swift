@@ -2,7 +2,7 @@
 @preconcurrency import Network
 import Observation
 
-nonisolated struct NordServerHealth: Sendable {
+struct NordServerHealth: Sendable {
     let hostname: String
     let station: String
     let load: Int
@@ -41,7 +41,7 @@ nonisolated struct NordServerHealth: Sendable {
     }
 }
 
-nonisolated struct NordRegionPool: Sendable {
+struct NordRegionPool: Sendable {
     let countryId: Int
     let countryCode: String
     var servers: [NordServerHealth]
@@ -532,7 +532,7 @@ class NordServerIntelligence {
         blacklistedCount = regionPools.values.reduce(0) { $0 + $1.servers.filter(\.isBlacklisted).count }
     }
 
-    nonisolated enum NordIntelProtocol: String, Sendable {
+    enum NordIntelProtocol: String, Sendable {
         case wireGuard
         case openVPN
         case socks5

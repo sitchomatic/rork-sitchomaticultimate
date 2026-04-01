@@ -5,7 +5,7 @@ import UIKit
 import FoundationModels
 #endif
 
-nonisolated struct AIAnalysisPPSRResult: Sendable {
+struct AIAnalysisPPSRResult: Sendable {
     let passed: Bool
     let declined: Bool
     let summary: String
@@ -14,7 +14,7 @@ nonisolated struct AIAnalysisPPSRResult: Sendable {
     let suggestedAction: String
 }
 
-nonisolated struct AIAnalysisLoginResult: Sendable {
+struct AIAnalysisLoginResult: Sendable {
     let loginSuccessful: Bool
     let hasError: Bool
     let errorText: String
@@ -23,7 +23,7 @@ nonisolated struct AIAnalysisLoginResult: Sendable {
     let confidence: Int
 }
 
-nonisolated struct AIFieldMappingResult: Sendable {
+struct AIFieldMappingResult: Sendable {
     let emailLabels: [String]
     let passwordLabels: [String]
     let buttonLabels: [String]
@@ -31,7 +31,7 @@ nonisolated struct AIFieldMappingResult: Sendable {
     let confidence: Int
 }
 
-nonisolated struct AIFlowPredictionResult: Sendable {
+struct AIFlowPredictionResult: Sendable {
     let nextAction: String
     let reason: String
     let shouldContinue: Bool

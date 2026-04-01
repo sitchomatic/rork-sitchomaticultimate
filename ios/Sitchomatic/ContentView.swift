@@ -5,7 +5,7 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .dashboard
 
     @frozen
-    nonisolated enum AppTab: String, Sendable, CaseIterable {
+    enum AppTab: String, Sendable, CaseIterable {
         case dashboard, savedCards, workingCards, sessions, settings
     }
 

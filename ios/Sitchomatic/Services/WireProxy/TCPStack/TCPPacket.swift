@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct TCPFlags: OptionSet, Sendable {
+struct TCPFlags: OptionSet, Sendable {
     let rawValue: UInt8
 
     static let fin = TCPFlags(rawValue: 0x01)
@@ -22,7 +22,7 @@ nonisolated struct TCPFlags: OptionSet, Sendable {
     }
 }
 
-nonisolated struct TCPHeader: Sendable {
+struct TCPHeader: Sendable {
     let sourcePort: UInt16
     let destinationPort: UInt16
     let sequenceNumber: UInt32
@@ -36,7 +36,7 @@ nonisolated struct TCPHeader: Sendable {
     var headerLength: Int { Int(dataOffset) * 4 }
 }
 
-nonisolated struct TCPSegment: Sendable {
+struct TCPSegment: Sendable {
     let header: TCPHeader
     let payload: Data
 

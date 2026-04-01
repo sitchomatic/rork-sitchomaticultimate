@@ -2,7 +2,7 @@ import Foundation
 import Observation
 @preconcurrency import Network
 
-nonisolated enum NodeMavenProxyType: String, CaseIterable, Codable, Sendable {
+enum NodeMavenProxyType: String, CaseIterable, Codable, Sendable {
     case residential = "residential"
     case mobile = "mobile"
 
@@ -21,7 +21,7 @@ nonisolated enum NodeMavenProxyType: String, CaseIterable, Codable, Sendable {
     }
 }
 
-nonisolated enum NodeMavenCountry: String, CaseIterable, Codable, Sendable {
+enum NodeMavenCountry: String, CaseIterable, Codable, Sendable {
     case au = "au"
     case us = "us"
     case uk = "uk"
@@ -69,7 +69,7 @@ nonisolated enum NodeMavenCountry: String, CaseIterable, Codable, Sendable {
     }
 }
 
-nonisolated enum NodeMavenFilter: String, CaseIterable, Codable, Sendable {
+enum NodeMavenFilter: String, CaseIterable, Codable, Sendable {
     case low = "low"
     case medium = "medium"
     case high = "high"
@@ -91,7 +91,7 @@ nonisolated enum NodeMavenFilter: String, CaseIterable, Codable, Sendable {
     }
 }
 
-nonisolated enum NodeMavenSessionMode: String, CaseIterable, Codable, Sendable {
+enum NodeMavenSessionMode: String, CaseIterable, Codable, Sendable {
     case rotating = "rotating"
     case sticky = "sticky"
 

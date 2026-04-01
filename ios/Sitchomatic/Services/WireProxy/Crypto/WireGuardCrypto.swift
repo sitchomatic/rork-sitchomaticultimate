@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-nonisolated struct WireGuardCrypto: Sendable {
+struct WireGuardCrypto: Sendable {
 
     static let construction = "Noise_IKpsk2_25519_ChaChaPoly_BLAKE2s"
     static let identifier = "WireGuard v1 zx2c4 Jason@zx2c4.com"

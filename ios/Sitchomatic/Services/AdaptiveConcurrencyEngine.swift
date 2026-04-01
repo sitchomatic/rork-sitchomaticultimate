@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import Observation
 
-nonisolated enum ConcurrencyFactorLevel: String, Codable, Sendable {
+enum ConcurrencyFactorLevel: String, Codable, Sendable {
     case good = "good"
     case warning = "warning"
     case critical = "critical"
@@ -16,7 +16,7 @@ nonisolated enum ConcurrencyFactorLevel: String, Codable, Sendable {
     }
 }
 
-nonisolated struct ConcurrencyFactorScores: Sendable {
+struct ConcurrencyFactorScores: Sendable {
     let memory: ConcurrencyFactorLevel
     let memoryMB: Int
     let network: ConcurrencyFactorLevel
@@ -28,7 +28,7 @@ nonisolated struct ConcurrencyFactorScores: Sendable {
     let isBackground: Bool
 }
 
-nonisolated struct ConcurrencyDecision: Codable, Sendable, Identifiable {
+struct ConcurrencyDecision: Codable, Sendable, Identifiable {
     let id: String
     let timestamp: Date
     let fromConcurrency: Int
@@ -46,14 +46,14 @@ nonisolated struct ConcurrencyDecision: Codable, Sendable, Identifiable {
         return .hold
     }
 
-    nonisolated enum ConcurrencyDirection: String, Codable, Sendable {
+    enum ConcurrencyDirection: String, Codable, Sendable {
         case rampUp
         case rampDown
         case hold
     }
 }
 
-nonisolated struct ConcurrencyHistoryPoint: Sendable {
+struct ConcurrencyHistoryPoint: Sendable {
     let timestamp: Date
     let concurrency: Int
 }

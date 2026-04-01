@@ -18,7 +18,7 @@ class HostFingerprintLearningService {
     private var signatures: [String: PageSignature] = [:]
     private var signaturesLoaded: Bool = false
 
-    nonisolated struct PageSignature: Codable, Sendable {
+    struct PageSignature: Codable, Sendable {
         var host: String = ""
         var domStructureHash: Int = 0
         var formFieldCount: Int = 0

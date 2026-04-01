@@ -12,7 +12,7 @@ class VisionMLService {
     private let ciContext = CIContext()
     private var cachedSaliencyResults: [Int: [CGRect]] = [:]
 
-    nonisolated struct OCRElement: Sendable {
+    struct OCRElement: Sendable {
         let text: String
         let boundingBox: CGRect
         let confidence: Float
@@ -23,7 +23,7 @@ class VisionMLService {
         }
     }
 
-    nonisolated struct UIElementDetection: Sendable {
+    struct UIElementDetection: Sendable {
         let elements: [OCRElement]
         let inputFields: [OCRElement]
         let buttons: [OCRElement]
@@ -32,7 +32,7 @@ class VisionMLService {
         let processingTimeMs: Int
     }
 
-    nonisolated struct LoginFieldDetection: Sendable {
+    struct LoginFieldDetection: Sendable {
         let emailField: FieldHit?
         let passwordField: FieldHit?
         let loginButton: FieldHit?
@@ -56,7 +56,7 @@ class VisionMLService {
         }
     }
 
-    nonisolated struct FieldHit: Sendable {
+    struct FieldHit: Sendable {
         let label: String
         let boundingBox: CGRect
         let pixelCoordinate: CGPoint
@@ -64,7 +64,7 @@ class VisionMLService {
         let nearbyText: String?
     }
 
-    nonisolated struct MaskedRegion: Sendable {
+    struct MaskedRegion: Sendable {
         let instanceIndex: Int
         let boundingBox: CGRect
         let pixelArea: Int
@@ -72,7 +72,7 @@ class VisionMLService {
         let predictedType: String
     }
 
-    nonisolated struct SaliencyResult: Sendable {
+    struct SaliencyResult: Sendable {
         let hotspots: [CGRect]
         let primaryFocus: CGRect?
         let processingTimeMs: Int
@@ -280,7 +280,7 @@ class VisionMLService {
         return nil
     }
 
-    nonisolated enum DisabledDetectionType: String, Sendable {
+    enum DisabledDetectionType: String, Sendable {
         case permDisabled
         case tempDisabled
         case smsDetected

@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @frozen
-nonisolated enum SessionGlobalState: String, Codable, Sendable {
+enum SessionGlobalState: String, Codable, Sendable {
     case active = "ACTIVE"
     case success = "SUCCESS"
     case abortPerm = "ABORT_PERM"
@@ -11,7 +11,7 @@ nonisolated enum SessionGlobalState: String, Codable, Sendable {
 }
 
 @frozen
-nonisolated enum SessionClassification: String, Codable, Sendable {
+enum SessionClassification: String, Codable, Sendable {
     case validAccount = "Valid Account"
     case permanentBan = "Permanent Ban"
     case temporaryLock = "Temporary Lock"
@@ -20,7 +20,7 @@ nonisolated enum SessionClassification: String, Codable, Sendable {
 }
 
 @frozen
-nonisolated enum SiteResult: String, Codable, Sendable, CaseIterable {
+enum SiteResult: String, Codable, Sendable, CaseIterable {
     case success = "Success"
     case noAccount = "No Acc"
     case permDisabled = "Perm Disabled"
@@ -110,19 +110,19 @@ nonisolated enum SiteResult: String, Codable, Sendable, CaseIterable {
 }
 
 @frozen
-nonisolated enum IdentityAction: String, Codable, Sendable {
+enum IdentityAction: String, Codable, Sendable {
     case burn = "BURN"
     case save = "SAVE"
 }
 
-nonisolated struct SiteSelectors: Codable, Sendable {
+struct SiteSelectors: Codable, Sendable {
     let user: String
     let pass: String
     let submit: String
     let error: String
 }
 
-nonisolated struct SiteTarget: Codable, Sendable, Identifiable {
+struct SiteTarget: Codable, Sendable, Identifiable {
     let id: String
     let name: String
     let url: String
@@ -143,14 +143,14 @@ nonisolated struct SiteTarget: Codable, Sendable, Identifiable {
     )
 }
 
-nonisolated struct SessionIdentity: Codable, Sendable {
+struct SessionIdentity: Codable, Sendable {
     let proxyAddress: String
     let userAgent: String
     let viewport: String
     let canvasFingerprint: String
 }
 
-nonisolated struct SiteAttemptResult: Codable, Sendable {
+struct SiteAttemptResult: Codable, Sendable {
     let siteId: String
     let attemptNumber: Int
     let responseText: String
@@ -162,7 +162,7 @@ nonisolated struct SiteAttemptResult: Codable, Sendable {
 }
 
 /// OCR metadata for a single site's evaluation, used by the Debug Results UI.
-nonisolated struct SiteOCRMetadata: Codable, Sendable {
+struct SiteOCRMetadata: Codable, Sendable {
     let siteId: String
     let ocrOutcome: String
     let crucialMatches: [String]
@@ -171,7 +171,7 @@ nonisolated struct SiteOCRMetadata: Codable, Sendable {
     let screenshotTimestamp: Date
 }
 
-nonisolated struct DualSiteSession: Identifiable, Codable, Sendable {
+struct DualSiteSession: Identifiable, Codable, Sendable {
     let id: String
     let credential: SessionCredential
     let identity: SessionIdentity
@@ -271,7 +271,7 @@ nonisolated struct DualSiteSession: Identifiable, Codable, Sendable {
     }
 }
 
-nonisolated struct SessionCredential: Codable, Sendable, Identifiable {
+struct SessionCredential: Codable, Sendable, Identifiable {
     let id: String
     let email: String
     let password: String
@@ -282,7 +282,7 @@ nonisolated struct SessionCredential: Codable, Sendable, Identifiable {
     }
 }
 
-nonisolated struct UnifiedSystemConfig: Codable, Sendable {
+struct UnifiedSystemConfig: Codable, Sendable {
     let systemVersion: String
     let concurrencyLimit: Int
     let maxAttemptsPerSite: Int
@@ -300,7 +300,7 @@ nonisolated struct UnifiedSystemConfig: Codable, Sendable {
     )
 }
 
-nonisolated struct HumanEmulationConfig: Codable, Sendable {
+struct HumanEmulationConfig: Codable, Sendable {
     let typingSpeedMin: Int
     let typingSpeedMax: Int
     let clickJitterPx: Int

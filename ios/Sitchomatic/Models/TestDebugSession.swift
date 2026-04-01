@@ -3,7 +3,7 @@ import Observation
 import UIKit
 
 @frozen
-nonisolated enum TestDebugSite: String, CaseIterable, Sendable {
+enum TestDebugSite: String, CaseIterable, Sendable {
     case joe = "JoePoint"
     case ignition = "Ignition Lite"
 
@@ -30,7 +30,7 @@ nonisolated enum TestDebugSite: String, CaseIterable, Sendable {
 }
 
 @frozen
-nonisolated enum TestDebugSessionCount: Int, CaseIterable, Sendable {
+enum TestDebugSessionCount: Int, CaseIterable, Sendable {
     case twentyFour = 24
     case fortyEight = 48
     case ninetySix = 96
@@ -39,7 +39,7 @@ nonisolated enum TestDebugSessionCount: Int, CaseIterable, Sendable {
 }
 
 @frozen
-nonisolated enum TestDebugVariationMode: String, CaseIterable, Sendable {
+enum TestDebugVariationMode: String, CaseIterable, Sendable {
     case all = "All"
     case network = "Network Focus"
     case automation = "Automation Focus"
@@ -65,7 +65,7 @@ nonisolated enum TestDebugVariationMode: String, CaseIterable, Sendable {
 }
 
 @frozen
-nonisolated enum TestDebugSessionStatus: String, Sendable {
+enum TestDebugSessionStatus: String, Sendable {
     case queued = "Queued"
     case running = "Running"
     case success = "Success"
@@ -141,7 +141,7 @@ class TestDebugSession: Identifiable {
     }
 }
 
-nonisolated struct TestDebugSettingsSnapshot: Sendable {
+struct TestDebugSettingsSnapshot: Sendable {
     let connectionMode: ConnectionMode
     let wireGuardConfigIndex: Int?
     let pattern: String
@@ -222,7 +222,7 @@ nonisolated struct TestDebugSettingsSnapshot: Sendable {
     }
 }
 
-nonisolated struct TestDebugVariationOverrides: Sendable {
+struct TestDebugVariationOverrides: Sendable {
     var pinConnectionMode: ConnectionMode?
     var pinPattern: String?
     var pinStealth: Bool?
@@ -248,7 +248,7 @@ nonisolated struct TestDebugVariationOverrides: Sendable {
     }
 }
 
-nonisolated struct TestDebugCredentialEntry: Sendable {
+struct TestDebugCredentialEntry: Sendable {
     let email: String
     let password: String
 
@@ -258,7 +258,7 @@ nonisolated struct TestDebugCredentialEntry: Sendable {
     }
 }
 
-nonisolated struct TestDebugRunSummary: Sendable, Identifiable {
+struct TestDebugRunSummary: Sendable, Identifiable {
     let id: String
     let date: Date
     let site: String
@@ -272,7 +272,7 @@ nonisolated struct TestDebugRunSummary: Sendable, Identifiable {
     let sessionSummaries: [TestDebugSessionSummary]
 }
 
-nonisolated struct TestDebugSessionSummary: Sendable, Identifiable {
+struct TestDebugSessionSummary: Sendable, Identifiable {
     let id: String
     let index: Int
     let differentiator: String

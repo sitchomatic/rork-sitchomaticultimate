@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import WebKit
 @preconcurrency import Network
 
-nonisolated enum ActiveNetworkConfig: Sendable {
+enum ActiveNetworkConfig: Sendable {
     case direct
     case socks5(ProxyConfig)
     case wireGuardDNS(WireGuardConfig)

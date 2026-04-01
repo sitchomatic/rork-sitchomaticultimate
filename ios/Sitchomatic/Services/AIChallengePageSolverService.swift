@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct ChallengeEncounter: Codable, Sendable {
+struct ChallengeEncounter: Codable, Sendable {
     let host: String
     let challengeType: String
     let signals: [String]
@@ -10,7 +10,7 @@ nonisolated struct ChallengeEncounter: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct HostChallengeProfile: Codable, Sendable {
+struct HostChallengeProfile: Codable, Sendable {
     var encounterCount: Int = 0
     var bypassSuccessRates: [String: BypassStats] = [:]
     var commonSignals: [String: Int] = [:]
@@ -23,7 +23,7 @@ nonisolated struct HostChallengeProfile: Codable, Sendable {
     var cooldownUntil: Date?
 }
 
-nonisolated struct BypassStats: Codable, Sendable {
+struct BypassStats: Codable, Sendable {
     var attempts: Int = 0
     var successes: Int = 0
     var totalLatencyMs: Int = 0
@@ -37,7 +37,7 @@ nonisolated struct BypassStats: Codable, Sendable {
     }
 }
 
-nonisolated struct AIBypassRecommendation: Codable, Sendable {
+struct AIBypassRecommendation: Codable, Sendable {
     let primaryStrategy: String
     let fallbackStrategies: [String]
     let waitTimeMs: Int
@@ -48,7 +48,7 @@ nonisolated struct AIBypassRecommendation: Codable, Sendable {
     let reasoning: String
 }
 
-nonisolated struct AIChallengeStore: Codable, Sendable {
+struct AIChallengeStore: Codable, Sendable {
     var hostProfiles: [String: HostChallengeProfile] = [:]
     var recentEncounters: [ChallengeEncounter] = []
     var aiCallCount: Int = 0

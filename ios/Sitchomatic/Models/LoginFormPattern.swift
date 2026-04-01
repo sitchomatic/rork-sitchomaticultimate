@@ -1,7 +1,7 @@
 import Foundation
 
 @frozen
-nonisolated enum LoginFormPattern: String, CaseIterable, Codable, Sendable {
+enum LoginFormPattern: String, CaseIterable, Codable, Sendable {
     case tabNavigation = "Tab Navigation"
     case clickFocusSequential = "Click-Focus Sequential"
     case execCommandInsert = "ExecCommand Insert"
@@ -42,7 +42,7 @@ nonisolated enum LoginFormPattern: String, CaseIterable, Codable, Sendable {
     }
 }
 
-nonisolated struct HumanPatternResult: Sendable {
+struct HumanPatternResult: Sendable {
     let pattern: LoginFormPattern
     var usernameFilled: Bool = false
     var passwordFilled: Bool = false

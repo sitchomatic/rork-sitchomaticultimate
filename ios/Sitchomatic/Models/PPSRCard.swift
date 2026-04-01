@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 @frozen
-nonisolated enum CardBrand: String, Sendable, Codable {
+enum CardBrand: String, Sendable, Codable {
     case visa = "Visa"
     case mastercard = "Mastercard"
     case amex = "Amex"
@@ -52,7 +52,7 @@ nonisolated enum CardBrand: String, Sendable, Codable {
 }
 
 @frozen
-nonisolated enum CardStatus: String, Sendable, Codable {
+enum CardStatus: String, Sendable, Codable {
     case untested = "Untested"
     case testing = "Testing"
     case working = "Working"
@@ -372,7 +372,7 @@ class PPSRCard: Identifiable {
         return columns
     }
 
-    nonisolated enum CSVColumnMapping: Sendable {
+    enum CSVColumnMapping: Sendable {
         case auto
         case columnsABC
         case columnsCEF

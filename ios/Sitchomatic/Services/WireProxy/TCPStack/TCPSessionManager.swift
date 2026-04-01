@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum TCPSessionState: String, Sendable {
+enum TCPSessionState: String, Sendable {
     case closed
     case synSent
     case established
@@ -11,7 +11,7 @@ nonisolated enum TCPSessionState: String, Sendable {
     case timeWait
 }
 
-nonisolated struct TCPSessionKey: Hashable, Sendable {
+struct TCPSessionKey: Hashable, Sendable {
     let sourceIP: UInt32
     let sourcePort: UInt16
     let destinationIP: UInt32

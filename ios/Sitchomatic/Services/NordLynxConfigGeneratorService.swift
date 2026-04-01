@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct NordLynxConfigGeneratorService: Sendable {
+struct NordLynxConfigGeneratorService: Sendable {
     static let selectedKeyIDStorageKey = "nordlynx_selected_key_id"
     static let customKeyStorageKey = "nordlynx_custom_key"
     static let customKeyNameStorageKey = "nordlynx_custom_key_name"

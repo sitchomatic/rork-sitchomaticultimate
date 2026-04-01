@@ -8,7 +8,7 @@ class PreflightSmokeTestService {
     private let logger = DebugLogger.shared
     private let metricsService = TaskMetricsCollectionService.shared
 
-    nonisolated struct SmokeTestResult: Sendable {
+    struct SmokeTestResult: Sendable {
         let passed: Bool
         let latencyMs: Int
         let httpStatus: Int?
@@ -108,7 +108,7 @@ class PreflightSmokeTestService {
         )
     }
 
-    nonisolated struct MultiURLPreflightResult: Sendable {
+    struct MultiURLPreflightResult: Sendable {
         let healthyURLs: [URL]
         let failedURLs: [(url: URL, reason: String)]
         let totalMs: Int

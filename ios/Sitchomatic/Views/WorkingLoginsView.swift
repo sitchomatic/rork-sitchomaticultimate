@@ -262,7 +262,7 @@ struct WorkingCardRow: View {
     }
 }
 
-nonisolated struct CardExportDocument: FileDocument, Sendable {
+struct CardExportDocument: FileDocument, Sendable {
     static var readableContentTypes: [UTType] { [.plainText] }
     let text: String
 

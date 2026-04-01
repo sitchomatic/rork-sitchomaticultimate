@@ -1122,7 +1122,7 @@ class FlowPlaybackEngine {
     }
 }
 
-nonisolated struct FlowOptimizationSettings: Sendable {
+struct FlowOptimizationSettings: Sendable {
     var stripRedundantMouseMoves: Bool = true
     var mouseMoveSampleRate: Int = 5
     var capMaxDelay: Double = 3000

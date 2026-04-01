@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct URLOutcomeSample: Codable, Sendable {
+struct URLOutcomeSample: Codable, Sendable {
     let urlString: String
     let host: String
     let outcome: String
@@ -11,7 +11,7 @@ nonisolated struct URLOutcomeSample: Codable, Sendable {
     let timestamp: Date
 }
 
-nonisolated struct URLPerformanceProfile: Codable, Sendable {
+struct URLPerformanceProfile: Codable, Sendable {
     var urlString: String
     var host: String
     var successCount: Int = 0
@@ -87,7 +87,7 @@ nonisolated struct URLPerformanceProfile: Codable, Sendable {
     }
 }
 
-nonisolated struct URLOptimizerStore: Codable, Sendable {
+struct URLOptimizerStore: Codable, Sendable {
     var profiles: [String: URLPerformanceProfile] = [:]
     var recentOutcomes: [URLOutcomeSample] = []
     var hostRankings: [String: [String]] = [:]

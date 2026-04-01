@@ -8,7 +8,7 @@ class BlankPageRecoveryService {
 
     private let logger = DebugLogger.shared
 
-    nonisolated enum RecoveryStep: String, Sendable {
+    enum RecoveryStep: String, Sendable {
         case waitAndRecheck = "Wait & Recheck"
         case changeURL = "Change URL"
         case changeDNS = "Change DNS"
@@ -16,7 +16,7 @@ class BlankPageRecoveryService {
         case fullSessionReset = "Full Session Reset"
     }
 
-    nonisolated struct RecoveryResult: Sendable {
+    struct RecoveryResult: Sendable {
         let recovered: Bool
         let stepUsed: RecoveryStep?
         let detail: String
