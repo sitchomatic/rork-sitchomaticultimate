@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		XX4CADC9D57E558B948F4AXX /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = XXEE1CB1627E13D5F0A46EXX /* CoreXLSX */; };
+		XX8C3DABF1E5E4D01A6C7DXX /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = XXF2D9B73F3F94810B9C8AXX /* XMLCoder */; };
 		XX533346A4731D2E3B47FCXX /* SitchomaticWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXA3D412C462DAD7A5CD4DXX /* SitchomaticWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -98,6 +99,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				XX4CADC9D57E558B948F4AXX /* CoreXLSX in Frameworks */,
+				XX8C3DABF1E5E4D01A6C7DXX /* XMLCoder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -170,6 +172,7 @@
 			name = Sitchomatic;
 			packageProductDependencies = (
 				XXEE1CB1627E13D5F0A46EXX /* CoreXLSX */,
+				XXF2D9B73F3F94810B9C8AXX /* XMLCoder */,
 			);
 			productName = Sitchomatic;
 			productReference = 105FC57A2E9EAD3100EA8BCF /* Sitchomatic.app */;
@@ -285,6 +288,7 @@
 			);
 			packageReferences = (
 				XX461D6B922D577012C142XX /* XCRemoteSwiftPackageReference "CoreXLSX" */,
+				XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */,
 			);
 		};
 /* End PBXProject section */
@@ -748,6 +752,14 @@
 				minimumVersion = 0.14.2;
 			};
 		};
+		XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = https://github.com/MaxDesiatov/XMLCoder.git;
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.14.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -755,6 +767,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = XX461D6B922D577012C142XX /* XCRemoteSwiftPackageReference "CoreXLSX" */;
 			productName = CoreXLSX;
+		};
+		XXF2D9B73F3F94810B9C8AXX /* XMLCoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */;
+			productName = XMLCoder;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
