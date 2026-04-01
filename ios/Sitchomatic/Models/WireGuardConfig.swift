@@ -1,6 +1,6 @@
 import Foundation
 
-struct WireGuardConfig: Identifiable, Codable, Sendable {
+nonisolated struct WireGuardConfig: Identifiable, Codable, Sendable {
     let id: UUID
     let fileName: String
     let interfaceAddress: String
@@ -107,7 +107,7 @@ struct WireGuardConfig: Identifiable, Codable, Sendable {
         "\(peerPublicKey)|\(peerEndpoint)"
     }
 
-    nonisolated init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         fileName = try container.decode(String.self, forKey: .fileName)
