@@ -10,7 +10,7 @@ nonisolated struct VPNProtocolTestResult: Sendable {
     let portOpen: Bool
 }
 
-final class VPNProtocolTestService: @unchecked Sendable {
+nonisolated final class VPNProtocolTestService: @unchecked Sendable {
     static let shared = VPNProtocolTestService()
 
     nonisolated func testWireGuardEndpoint(_ config: WireGuardConfig) async -> VPNProtocolTestResult {

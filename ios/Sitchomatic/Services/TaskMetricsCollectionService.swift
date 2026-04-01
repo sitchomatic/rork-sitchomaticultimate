@@ -165,7 +165,7 @@ class TaskMetricsCollectionService {
     }
 }
 
-private final class MetricsDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+nonisolated private final class MetricsDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
     private var _metrics: URLSessionTaskMetrics?
     private let lock = NSLock()
 
