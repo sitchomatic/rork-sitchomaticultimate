@@ -38,7 +38,6 @@ enum ActiveNetworkConfig: Sendable {
     }
 }
 
-@MainActor
 class NetworkSessionFactory {
     static let shared = NetworkSessionFactory()
 
