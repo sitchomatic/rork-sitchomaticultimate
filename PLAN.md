@@ -1,49 +1,25 @@
-# Fix All 4 Build Warnings — 5-Part Plan
+# Update the fingerprint screen link to the current iOS navigation style
 
-## Summary of all warnings found (scan complete)
+**Features**
 
-**Total: 4 warnings across 2 files**
+- Tapping the fingerprint button will still open the same fingerprint test screen.
+- Navigation will use the app’s current modern pattern so the remaining outdated warning is removed.
+- The behavior and layout of the screen will stay the same.
 
----
+**Design**
 
-## Part Breakdown
+- No visual redesign.
+- Keep the existing toolbar button, icon, spacing, and dark appearance unchanged.
+- Only the navigation wiring behind that button will be modernized.
 
-### ✅ Part 1/5 — Scan complete (this reply)
+**Pages / Screens**
 
-Full codebase audited. All deprecated API warnings identified.
+- **IP Score Test**: keeps the fingerprint button in the top bar.
+- **Fingerprint Test**: opens from that button using the updated navigation flow.
 
----
+**Part 3 scope**
 
-### 🔧 Part 2/5 — Fix `TapHeatmapOverlayView.swift` (3 warnings)
-
-- Replace `.foregroundColor(fieldColor(...))` → `.foregroundStyle(fieldColor(...))` on line 134
-- Replace `.foregroundColor(.red)` → `.foregroundStyle(.red)` on line 154
-- Replace `.foregroundColor(color)` → `.foregroundStyle(color)` on line 215
-
----
-
-### 🔧 Part 3/5 — Fix `IPScoreTestView.swift` (1 warning)
-
-- Replace `NavigationLink(destination: FingerprintTestView())` with the modern `NavigationLink(value:)` + `.navigationDestination(for:)` pattern on line 217
-
----
-
-### 🏗️ Part 4/5 — Build verification
-
-- Trigger a clean build and confirm zero warnings remain
-
----
-
-### 🔍 Part 5/5 — Final audit pass
-
-- Re-scan all Swift files post-fix to confirm no regressions or missed warnings
-- Confirm build is clean
-
----
-
-## Features
-
-- Zero deprecated API warnings in the project
-- All SwiftUI modifiers use current iOS 18+ APIs
-- Clean build output with no suppressions needed
+- [x] Replace the old fingerprint button navigation pattern with the newer value-based navigation style.
+- [x] Add the matching destination mapping on the same screen so the route remains explicit and consistent.
+- [x] Leave all other warnings and screens untouched for now.
 

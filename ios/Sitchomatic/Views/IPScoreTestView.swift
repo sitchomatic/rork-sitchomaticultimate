@@ -160,6 +160,10 @@ class IPScoreWebViewDelegate: NSObject, WKNavigationDelegate {
     }
 }
 
+nonisolated enum IPScoreDestination: Hashable, Sendable {
+    case fingerprintTest
+}
+
 struct IPScoreTestView: View {
     @State private var sessions: [IPScoreSession] = []
     @State private var isRunning: Bool = false
@@ -214,7 +218,7 @@ struct IPScoreTestView: View {
                         if !sessions.isEmpty {
                             ViewModeToggle(mode: $viewMode, accentColor: .indigo)
                         }
-                        NavigationLink(destination: FingerprintTestView()) {
+                        NavigationLink(value: IPScoreDestination.fingerprintTest) {
                             Image(systemName: "fingerprint")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.purple)
@@ -227,6 +231,12 @@ struct IPScoreTestView: View {
                                 .foregroundStyle(.indigo)
                         }
                     }
+                }
+            }
+            .navigationDestination(for: IPScoreDestination.self) { destination in
+                switch destination {
+                case .fingerprintTest:
+                    FingerprintTestView()
                 }
             }
             .sheet(isPresented: $showNetworkSheet) {
