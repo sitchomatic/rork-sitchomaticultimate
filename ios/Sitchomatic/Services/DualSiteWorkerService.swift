@@ -19,16 +19,6 @@ class DualSiteWorkerService {
     private let settlementGate = SettlementGateEngine.shared
     private let strictDetection = StrictLoginDetectionEngine.shared
 
-    private func gaussianDelay(minSec: Double, maxSec: Double) -> Double {
-        let mean = (minSec + maxSec) / 2.0
-        let stdDev = (maxSec - minSec) / 4.0
-        let u1 = Double.random(in: 0.0001...0.9999)
-        let u2 = Double.random(in: 0.0001...0.9999)
-        let z = sqrt(-2.0 * log(u1)) * cos(2.0 * .pi * u2)
-        let delay = mean + z * stdDev
-        return max(minSec, min(maxSec, delay))
-    }
-
     struct WorkerResult {
         let session: DualSiteSession
         let joeOutcome: LoginOutcome?
@@ -191,6 +181,7 @@ class DualSiteWorkerService {
                     text: email,
                     executeJS: joeExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
@@ -199,6 +190,7 @@ class DualSiteWorkerService {
                     text: password,
                     executeJS: joeExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -212,7 +204,7 @@ class DualSiteWorkerService {
                     executeJS: ignExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin,
                     maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
-                    clearMethod: automationSettings.clearFieldMethod,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
@@ -221,6 +213,7 @@ class DualSiteWorkerService {
                     text: password,
                     executeJS: ignExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 return emailOk && passOk

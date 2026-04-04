@@ -48,12 +48,6 @@ class StrictLoginDetectionEngine {
     ) async -> LoginOutcome? {
         let contentLower = pageContent.lowercased()
 
-        // about:blank / empty page guard
-        if contentLower.isEmpty || contentLower.count < minPageContentLength {
-            logger.log("StrictDetection P1: UNSURE — page content too short (\(contentLower.count) chars), possible blank page", category: .evaluation, level: .warning, sessionId: sessionId)
-            return .unsure
-        }
-
         if contentLower.contains("has been disabled") {
             logger.log("StrictDetection P1: PERM_DISABLED — 'has been disabled' in DOM", category: .evaluation, level: .critical, sessionId: sessionId)
             return .permDisabled
@@ -72,6 +66,13 @@ class StrictLoginDetectionEngine {
                     return .smsDetected
                 }
             }
+        }
+
+        // Blank-page guard: run after high-signal keyword checks so a short disabled/SMS message
+        // is still caught, but before proceeding to OCR/success detection on an unloaded page.
+        if contentLower.isEmpty || contentLower.count < minPageContentLength {
+            logger.log("StrictDetection P1: UNSURE — page content too short (\(contentLower.count) chars), possible blank page", category: .evaluation, level: .warning, sessionId: sessionId)
+            return .unsure
         }
 
         let domHasSuccess = contentLower.contains("recommended for you") || contentLower.contains("last played")
