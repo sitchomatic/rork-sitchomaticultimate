@@ -37,6 +37,14 @@ class StrictLoginDetectionEngine {
         let detectedIncorrect: Bool
     }
 
+    // MARK: - SMS Notification Keywords
+    private static let smsKeywords: [String] = [
+        "sms", "text message", "verification code", "verify your phone",
+        "send code", "sent a code", "enter the code", "phone verification",
+        "mobile verification", "confirm your number", "we sent", "code sent",
+        "enter code", "security code sent", "check your phone"
+    ]
+
     // MARK: - Phase 1: Immediate Overrides
 
     func evaluateImmediateOverrides(
@@ -46,6 +54,12 @@ class StrictLoginDetectionEngine {
     ) async -> LoginOutcome? {
         let contentLower = pageContent.lowercased()
 
+        // about:blank / empty page guard
+        if contentLower.isEmpty || contentLower.count < 80 {
+            logger.log("StrictDetection P1: UNSURE — page content too short (\(contentLower.count) chars), possible blank page", category: .evaluation, level: .warning, sessionId: sessionId)
+            return .unsure
+        }
+
         if contentLower.contains("has been disabled") {
             logger.log("StrictDetection P1: PERM_DISABLED — 'has been disabled' in DOM", category: .evaluation, level: .critical, sessionId: sessionId)
             return .permDisabled
@@ -54,6 +68,14 @@ class StrictLoginDetectionEngine {
         if contentLower.contains("temporarily disabled") {
             logger.log("StrictDetection P1: TEMP_DISABLED — 'temporarily disabled' in DOM", category: .evaluation, level: .critical, sessionId: sessionId)
             return .tempDisabled
+        }
+
+        // SMS detection via DOM keywords
+        for keyword in Self.smsKeywords {
+            if contentLower.contains(keyword) {
+                logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found in DOM", category: .evaluation, level: .warning, sessionId: sessionId)
+                return .smsDetected
+            }
         }
 
         let domHasSuccess = contentLower.contains("recommended for you") || contentLower.contains("last played")
@@ -72,6 +94,13 @@ class StrictLoginDetectionEngine {
                 if ocrLower.contains("temporarily disabled") {
                     logger.log("StrictDetection P1: TEMP_DISABLED — 'temporarily disabled' via OCR", category: .evaluation, level: .critical, sessionId: sessionId)
                     return .tempDisabled
+                }
+                // SMS detection via OCR
+                for keyword in Self.smsKeywords {
+                    if ocrLower.contains(keyword) {
+                        logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found via OCR", category: .evaluation, level: .warning, sessionId: sessionId)
+                        return .smsDetected
+                    }
                 }
             }
         }
@@ -218,6 +247,39 @@ class StrictLoginDetectionEngine {
         module: DetectionModule,
         sessionId: String
     ) async -> DetectionResult {
+        // about:blank URL guard
+        let currentURL = await session.executeJS("window.location.href") ?? ""
+        if currentURL.contains("about:blank") {
+            logger.log("StrictDetection: about:blank URL detected — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .unsure,
+                phase: "P0_blank",
+                reason: "about:blank URL detected — page not loaded",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: false,
+                retryPerformed: false,
+                detectedIncorrect: false
+            )
+        }
+
+        // Cookie-based success detection: presence of session_id cookie
+        let cookieCheckJS = "(function(){ return document.cookie.indexOf('session_id') !== -1 ? 'HAS_SESSION' : 'NO_SESSION'; })()"
+        let cookieResult = await session.executeJS(cookieCheckJS)
+        if cookieResult == "HAS_SESSION" {
+            logger.log("StrictDetection: session_id cookie detected — SUCCESS", category: .evaluation, level: .success, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .success,
+                phase: "P0_cookie",
+                reason: "session_id cookie present",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: false,
+                retryPerformed: false,
+                detectedIncorrect: false
+            )
+        }
+
         let pageContent = (await session.getPageContent() ?? "").lowercased()
         let screenshot = await session.captureScreenshot()
 

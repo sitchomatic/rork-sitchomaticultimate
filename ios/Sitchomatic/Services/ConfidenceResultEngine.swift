@@ -190,7 +190,6 @@ class ConfidenceResultEngine {
         case .connectionFailure: return "connectionFailure"
         case .timeout: return "timeout"
         case .cancelled: return "cancelled"
-        case .redBannerError: return "redBannerError"
         case .smsDetected: return "smsDetected"
         }
     }

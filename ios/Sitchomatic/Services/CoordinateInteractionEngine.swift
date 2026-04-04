@@ -191,14 +191,42 @@ class CoordinateInteractionEngine {
     }
 
     func checkNetworkIdle(executeJS: @escaping (String) async -> String?, timeoutMs: Int = 5000) async -> Bool {
-        let js = """
+        // Inject XHR/fetch request counter if not already installed
+        let injectJS = """
         (function(){
-            return document.readyState === 'complete' ? 'IDLE' : document.readyState;
+            if(typeof window._apexXhrCount==='undefined'){
+                window._apexXhrCount=0;
+                var origOpen=XMLHttpRequest.prototype.open;
+                XMLHttpRequest.prototype.open=function(){
+                    window._apexXhrCount++;
+                    this.addEventListener('loadend',function(){if(window._apexXhrCount>0)window._apexXhrCount--;});
+                    return origOpen.apply(this,arguments);
+                };
+                if(typeof window.fetch==='function'){
+                    var origFetch=window.fetch;
+                    window.fetch=function(){
+                        window._apexXhrCount++;
+                        var p=origFetch.apply(this,arguments);
+                        p.finally(function(){if(window._apexXhrCount>0)window._apexXhrCount--;});
+                        return p;
+                    };
+                }
+            }
+            return 'INIT';
+        })()
+        """
+        _ = await executeJS(injectJS)
+
+        let checkJS = """
+        (function(){
+            if(document.readyState!=='complete')return document.readyState;
+            var pending=window._apexXhrCount||0;
+            return pending===0?'IDLE':'PENDING:'+pending;
         })()
         """
         let start = Date()
         while Date().timeIntervalSince(start) * 1000 < Double(timeoutMs) {
-            let result = await executeJS(js)
+            let result = await executeJS(checkJS)
             if result == "IDLE" { return true }
             try? await Task.sleep(for: .milliseconds(200))
         }

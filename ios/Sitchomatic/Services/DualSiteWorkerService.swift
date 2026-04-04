@@ -191,6 +191,7 @@ class DualSiteWorkerService {
                     executeJS: joeExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin,
                     maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
@@ -200,6 +201,7 @@ class DualSiteWorkerService {
                     executeJS: joeExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin,
                     maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -213,6 +215,7 @@ class DualSiteWorkerService {
                     executeJS: ignExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin,
                     maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
@@ -222,6 +225,7 @@ class DualSiteWorkerService {
                     executeJS: ignExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin,
                     maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -485,7 +489,6 @@ class DualSiteWorkerService {
         case .connectionFailure: "Connection failure"
         case .timeout: "Timed out"
         case .cancelled: "Cancelled"
-        case .redBannerError: "Red banner error"
         case .smsDetected: "SMS notification detected"
         }
     }
