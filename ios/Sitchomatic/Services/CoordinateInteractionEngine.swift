@@ -191,14 +191,35 @@ class CoordinateInteractionEngine {
     }
 
     func checkNetworkIdle(executeJS: @escaping (String) async -> String?, timeoutMs: Int = 5000) async -> Bool {
-        let js = """
+        let installMonitorJS = """
         (function(){
-            return document.readyState === 'complete' ? 'IDLE' : document.readyState;
+            if(!window.__networkIdleMonitor){
+                window.__networkIdleMonitor={pending:0,lastActivity:Date.now()};
+                var m=window.__networkIdleMonitor;
+                var origFetch=window.fetch;
+                window.fetch=function(){m.pending++;m.lastActivity=Date.now();return origFetch.apply(this,arguments).finally(function(){m.pending--;m.lastActivity=Date.now();});};
+                var origOpen=XMLHttpRequest.prototype.open;
+                var origSend=XMLHttpRequest.prototype.send;
+                XMLHttpRequest.prototype.open=function(){this.__monitored=true;return origOpen.apply(this,arguments);};
+                XMLHttpRequest.prototype.send=function(){if(this.__monitored){m.pending++;m.lastActivity=Date.now();this.addEventListener('loadend',function(){m.pending--;m.lastActivity=Date.now();});}return origSend.apply(this,arguments);};
+            }
+            return 'INSTALLED';
+        })()
+        """
+        _ = await executeJS(installMonitorJS)
+
+        let checkJS = """
+        (function(){
+            var ready=document.readyState==='complete';
+            var m=window.__networkIdleMonitor;
+            if(!m)return ready?'IDLE':'LOADING';
+            var idle=m.pending===0&&(Date.now()-m.lastActivity)>200;
+            return(ready&&idle)?'IDLE':'BUSY:'+m.pending;
         })()
         """
         let start = Date()
         while Date().timeIntervalSince(start) * 1000 < Double(timeoutMs) {
-            let result = await executeJS(js)
+            let result = await executeJS(checkJS)
             if result == "IDLE" { return true }
             try? await Task.sleep(for: .milliseconds(200))
         }

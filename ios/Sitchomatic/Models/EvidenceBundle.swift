@@ -85,7 +85,6 @@ class EvidenceBundle: Identifiable {
         case .connectionFailure: "Connection Failure"
         case .timeout: "Timeout"
         case .cancelled: "Cancelled"
-        case .redBannerError: "Red Banner"
         case .smsDetected: "SMS Detected"
         }
     }

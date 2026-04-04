@@ -11,7 +11,6 @@ enum LoginOutcome: Sendable {
     case connectionFailure
     case timeout
     case cancelled
-    case redBannerError
     case smsDetected
 }
 
@@ -251,7 +250,7 @@ class LoginAutomationEngine {
         if automationSettings.aiTelemetryEnabled {
             let aiLatencyMs = attempt.startedAt.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
             let aiIsBlocked = outcome == .connectionFailure
-            let aiIsChallenge = outcome == .redBannerError || outcome == .smsDetected
+            let aiIsChallenge = outcome == .smsDetected
 
             let proxyId = extractProxyId(from: netConfig)
             if let proxyId {
@@ -1171,7 +1170,7 @@ class LoginAutomationEngine {
                 attempt.status = .failed
                 attempt.errorMessage = "Red banner error detected — requeuing to bottom"
                 attempt.completedAt = Date()
-                return (.redBannerError, lastEvaluation, maxSubmitCycles)
+                return (.unsure, lastEvaluation, maxSubmitCycles)
             }
 
             if pollResult.smsNotificationDetected {

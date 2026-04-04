@@ -26,6 +26,7 @@ class HardwareTypingEngine {
         executeJS: @escaping (String) async -> String?,
         minKeystrokeMs: Int = 50,
         maxKeystrokeMs: Int = 150,
+        clearFieldMethod: AutomationSettings.FieldClearMethod = .tripleClickDelete,
         sessionId: String = ""
     ) async -> Bool {
         let focused = await coordEngine.coordinateFocusField(
@@ -41,7 +42,7 @@ class HardwareTypingEngine {
 
         try? await Task.sleep(for: .milliseconds(Int.random(in: 80...220)))
 
-        let cleared = await clearActiveField(executeJS: executeJS)
+        let cleared = await clearActiveField(executeJS: executeJS, method: clearFieldMethod)
         if !cleared {
             logger.log("HWTyping: clear field failed — proceeding anyway", category: .automation, level: .warning, sessionId: sessionId)
         }
@@ -131,19 +132,72 @@ class HardwareTypingEngine {
         return result == "BS"
     }
 
-    private func clearActiveField(executeJS: @escaping (String) async -> String?) async -> Bool {
-        let js = """
-        (function(){
-            var el=document.activeElement;
-            if(!el||!(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))return'NO_ACTIVE';
-            var ns=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');
-            if(ns&&ns.set){ns.set.call(el,'');}else{el.value='';}
-            el.dispatchEvent(new Event('input',{bubbles:true}));
-            return'CLEARED';
-        })()
-        """
-        let result = await executeJS(js)
-        return result == "CLEARED"
+    private func clearActiveField(
+        executeJS: @escaping (String) async -> String?,
+        method: AutomationSettings.FieldClearMethod = .tripleClickDelete
+    ) async -> Bool {
+        switch method {
+        case .tripleClickDelete:
+            let selectAllJS = """
+            (function(){
+                var el=document.activeElement;
+                if(!el||!(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))return'NO_ACTIVE';
+                el.focus();
+                el.setSelectionRange(0, el.value.length);
+                return'SELECTED';
+            })()
+            """
+            let selected = await executeJS(selectAllJS)
+            guard selected == "SELECTED" else { return false }
+            let deleteJS = """
+            (function(){
+                var el=document.activeElement;
+                if(!el)return'NO_ACTIVE';
+                var ns=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');
+                if(ns&&ns.set){ns.set.call(el,'');}else{el.value='';}
+                el.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'deleteContentBackward'}));
+                return'CLEARED';
+            })()
+            """
+            let result = await executeJS(deleteJS)
+            return result == "CLEARED"
+        case .selectAllDelete:
+            let js = """
+            (function(){
+                var el=document.activeElement;
+                if(!el||!(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))return'NO_ACTIVE';
+                el.select();
+                var ns=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');
+                if(ns&&ns.set){ns.set.call(el,'');}else{el.value='';}
+                el.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'deleteContentBackward'}));
+                return'CLEARED';
+            })()
+            """
+            let result = await executeJS(js)
+            return result == "CLEARED"
+        case .jsValueClear:
+            let js = """
+            (function(){
+                var el=document.activeElement;
+                if(!el||!(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))return'NO_ACTIVE';
+                var ns=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');
+                if(ns&&ns.set){ns.set.call(el,'');}else{el.value='';}
+                el.dispatchEvent(new Event('input',{bubbles:true}));
+                return'CLEARED';
+            })()
+            """
+            let result = await executeJS(js)
+            return result == "CLEARED"
+        case .backspaceLoop:
+            let lengthJS = "(function(){var el=document.activeElement;return el?(el.value||'').length.toString():'0';})()"
+            let lenStr = await executeJS(lengthJS) ?? "0"
+            let len = Int(lenStr) ?? 0
+            for _ in 0..<len {
+                _ = await typeBackspace(executeJS: executeJS)
+                try? await Task.sleep(for: .milliseconds(gaussianDelay(minMs: 30, maxMs: 80)))
+            }
+            return true
+        }
     }
 
     private func verifyFieldLength(executeJS: @escaping (String) async -> String?, expectedLength: Int) async -> Bool {

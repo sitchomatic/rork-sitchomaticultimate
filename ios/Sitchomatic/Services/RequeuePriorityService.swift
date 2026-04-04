@@ -49,17 +49,6 @@ actor RequeuePriorityService {
             priority = .medium
             reason = "connection failure"
             suggestProxy = true
-        case .redBannerError:
-            let detCount = (detectionCounts[credentialId] ?? 0) + 1
-            detectionCounts[credentialId] = detCount
-            if detCount >= maxDetectionBeforeDeprioritize {
-                priority = .low
-                reason = "red banner error (\(detCount)x detected — deprioritized, site actively detecting)"
-            } else {
-                priority = .medium
-                reason = "red banner error — proxy+URL rotation+30s cooldown needed"
-            }
-            suggestProxy = true
         case .smsDetected:
             let detCount = (detectionCounts[credentialId] ?? 0) + 1
             detectionCounts[credentialId] = detCount
@@ -96,7 +85,6 @@ actor RequeuePriorityService {
 
     nonisolated func cooldownForOutcome(_ outcome: LoginOutcome) -> TimeInterval {
         switch outcome {
-        case .redBannerError: return 30
         case .smsDetected: return 60
         default: return 0
         }
