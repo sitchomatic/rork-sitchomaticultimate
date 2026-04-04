@@ -147,11 +147,8 @@ class DebugLogger {
             for removalKey in keysToRemove {
                 retryTracker.removeValue(forKey: removalKey)
             }
-            if retryTracker[key] == nil {
-                retryTracker[key] = state
-            }
         }
-        return retryTracker[key] ?? state
+        return state
     }
 
     func recordRetryAttempt(for key: String, error: String?) {
