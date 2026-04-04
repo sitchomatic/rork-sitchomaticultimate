@@ -50,7 +50,7 @@ class EvidenceBundleService {
             exportedAt: iso.string(from: Date()),
             credential: .init(
                 username: bundle.username,
-                password: bundle.password,
+                password: "[REDACTED]",
                 credentialId: bundle.credentialId
             ),
             result: .init(

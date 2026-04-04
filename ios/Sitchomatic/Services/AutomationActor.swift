@@ -227,12 +227,15 @@ class AutomationActor {
 
     private func buildDirectTypeJS(text: String) -> String {
         // Security: Proper JavaScript escaping to prevent injection attacks
-        // Handles backslashes, quotes, newlines, backticks, and template literals
+        // Handles backslashes, quotes, newlines, JS Unicode line terminators,
+        // backticks, and template literal markers before embedding in JS source
         let escaped = text
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "'", with: "\\'")
             .replacingOccurrences(of: "\n", with: "\\n")
             .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+            .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
             .replacingOccurrences(of: "`", with: "\\`")
             .replacingOccurrences(of: "$", with: "\\$")
         return """

@@ -132,16 +132,26 @@ class DebugLogger {
     }
 
     func getRetryState(for key: String, maxAttempts: Int = 3) -> RetryState {
-        if retryTracker[key] == nil { retryTracker[key] = RetryState(maxAttempts: maxAttempts) }
-        // Memory leak prevention: Limit retry tracker to 1000 entries (LRU-style eviction)
+        let state: RetryState
+        if let existingState = retryTracker[key] {
+            state = existingState
+        } else {
+            let newState = RetryState(maxAttempts: maxAttempts)
+            retryTracker[key] = newState
+            state = newState
+        }
+        // Memory leak prevention: Limit retry tracker to 1000 entries by pruning
+        // an arbitrary batch of other keys when the limit is exceeded.
         if retryTracker.count > 1000 {
-            // Remove oldest entries (simple approach: remove first 100 when limit exceeded)
-            let keysToRemove = Array(retryTracker.keys.prefix(100))
-            for key in keysToRemove {
-                retryTracker.removeValue(forKey: key)
+            let keysToRemove = Array(retryTracker.keys.filter { $0 != key }.prefix(100))
+            for removalKey in keysToRemove {
+                retryTracker.removeValue(forKey: removalKey)
+            }
+            if retryTracker[key] == nil {
+                retryTracker[key] = state
             }
         }
-        return retryTracker[key] ?? RetryState(maxAttempts: maxAttempts)
+        return retryTracker[key] ?? state
     }
 
     func recordRetryAttempt(for key: String, error: String?) {

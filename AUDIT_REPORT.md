@@ -344,8 +344,8 @@ let wg = allWG[0]  // Safe
 ## Compliance & Standards
 
 ### Swift Version
-- **Target:** Swift 5.9+ (Xcode 16.2)
-- **Compatibility:** Swift 6 ready (with minor @unchecked Sendable review)
+- **Target:** Swift 6.2 (Xcode 16.2)
+- **Compatibility:** Configured for Swift 6.2 language mode (with minor @unchecked Sendable review remaining)
 
 ### Coding Standards
 - ✅ Swift API Design Guidelines followed
