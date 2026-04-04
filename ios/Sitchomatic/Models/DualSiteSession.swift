@@ -103,7 +103,7 @@ enum SiteResult: String, Codable, Sendable, CaseIterable {
             return .unsure
         case .unsure, .smsDetected:
             return .unsure
-        case .connectionFailure, .timeout:
+        case .connectionFailure, .timeout, .cancelled:
             return .unsure
         }
     }
