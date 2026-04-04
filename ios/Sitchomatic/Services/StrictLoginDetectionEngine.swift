@@ -11,7 +11,6 @@ class StrictLoginDetectionEngine {
     private let settlementGate = SettlementGateEngine.shared
     private let coordEngine = CoordinateInteractionEngine.shared
     private let minPageContentLength = 80
-    private let smsKeywords = AutomationSettings().smsNotificationKeywords
 
     enum DetectionModule: Sendable {
         case standard
@@ -39,28 +38,18 @@ class StrictLoginDetectionEngine {
         let detectedIncorrect: Bool
     }
 
-    // MARK: - SMS Notification Keywords
-    private static let smsKeywords: [String] = [
-        "sms", "text message", "verification code", "verify your phone",
-        "send code", "sent a code", "enter the code", "phone verification",
-        "mobile verification", "confirm your number", "we sent", "code sent",
-        "enter code", "security code sent", "check your phone"
-    ]
-
-    /// Minimum page content character count below which the page is considered blank/unloaded.
-    private static let minimumPageContentLength = 80
-
     // MARK: - Phase 1: Immediate Overrides
 
     func evaluateImmediateOverrides(
         pageContent: String,
         screenshot: UIImage?,
-        sessionId: String
+        sessionId: String,
+        automationSettings: AutomationSettings = AutomationSettings()
     ) async -> LoginOutcome? {
         let contentLower = pageContent.lowercased()
 
         // about:blank / empty page guard
-        if contentLower.isEmpty || contentLower.count < Self.minimumPageContentLength {
+        if contentLower.isEmpty || contentLower.count < minPageContentLength {
             logger.log("StrictDetection P1: UNSURE — page content too short (\(contentLower.count) chars), possible blank page", category: .evaluation, level: .warning, sessionId: sessionId)
             return .unsure
         }
@@ -76,10 +65,12 @@ class StrictLoginDetectionEngine {
         }
 
         // SMS detection via DOM keywords
-        for keyword in Self.smsKeywords {
-            if contentLower.contains(keyword) {
-                logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found in DOM", category: .evaluation, level: .warning, sessionId: sessionId)
-                return .smsDetected
+        if automationSettings.smsDetectionEnabled {
+            for keyword in automationSettings.smsNotificationKeywords {
+                if contentLower.contains(keyword) {
+                    logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found in DOM", category: .evaluation, level: .warning, sessionId: sessionId)
+                    return .smsDetected
+                }
             }
         }
 
@@ -101,10 +92,12 @@ class StrictLoginDetectionEngine {
                     return .tempDisabled
                 }
                 // SMS detection via OCR
-                for keyword in Self.smsKeywords {
-                    if ocrLower.contains(keyword) {
-                        logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found via OCR", category: .evaluation, level: .warning, sessionId: sessionId)
-                        return .smsDetected
+                if automationSettings.smsDetectionEnabled {
+                    for keyword in automationSettings.smsNotificationKeywords {
+                        if ocrLower.contains(keyword) {
+                            logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found via OCR", category: .evaluation, level: .warning, sessionId: sessionId)
+                            return .smsDetected
+                        }
                     }
                 }
             }
@@ -124,14 +117,16 @@ class StrictLoginDetectionEngine {
     func evaluatePostSubmit(
         session: LoginSiteWebSession,
         sessionId: String,
-        buttonCycleCompleted: Bool
+        buttonCycleCompleted: Bool,
+        automationSettings: AutomationSettings = AutomationSettings()
     ) async -> DetectionResult {
         let pageContent = (await session.getPageContent() ?? "").lowercased()
 
         let p1Override = await evaluateImmediateOverrides(
             pageContent: pageContent,
             screenshot: await session.captureScreenshot(),
-            sessionId: sessionId
+            sessionId: sessionId,
+            automationSettings: automationSettings
         )
         if let override = p1Override {
             return DetectionResult(
@@ -184,7 +179,8 @@ class StrictLoginDetectionEngine {
         let retryP1Override = await evaluateImmediateOverrides(
             pageContent: (await session.getPageContent() ?? "").lowercased(),
             screenshot: await session.captureScreenshot(),
-            sessionId: sessionId
+            sessionId: sessionId,
+            automationSettings: automationSettings
         )
         if let override = retryP1Override {
             return DetectionResult(
@@ -251,7 +247,8 @@ class StrictLoginDetectionEngine {
         session: LoginSiteWebSession,
         module: DetectionModule,
         sessionId: String,
-        settlementResult: SettlementGateEngine.SettlementResult? = nil
+        settlementResult: SettlementGateEngine.SettlementResult? = nil,
+        automationSettings: AutomationSettings = AutomationSettings()
     ) async -> DetectionResult {
         let currentURL = await session.getCurrentURL()
         
@@ -293,7 +290,8 @@ class StrictLoginDetectionEngine {
         let p1Override = await evaluateImmediateOverrides(
             pageContent: contentLower,
             screenshot: screenshot,
-            sessionId: sessionId
+            sessionId: sessionId,
+            automationSettings: automationSettings
         )
         if let override = p1Override {
             return DetectionResult(
@@ -330,20 +328,22 @@ class StrictLoginDetectionEngine {
             logger.log("StrictDetection: settlement detected error text — checking DOM", category: .evaluation, level: .info, sessionId: sessionId)
         }
         
-        // SMS detection using smsNotificationKeywords
-        let smsDetected = smsKeywords.contains { contentLower.contains($0.lowercased()) }
-        if smsDetected {
-            logger.log("StrictDetection: SMS/verification keywords detected", category: .evaluation, level: .warning, sessionId: sessionId)
-            return DetectionResult(
-                outcome: .smsDetected,
-                phase: "P2_sms",
-                reason: "SMS notification keywords found in page content",
-                incorrectDetectedViaDOM: false,
-                incorrectDetectedViaOCR: false,
-                buttonCycleCompleted: false,
-                retryPerformed: false,
-                detectedIncorrect: false
-            )
+        // SMS detection using automationSettings.smsNotificationKeywords
+        if automationSettings.smsDetectionEnabled {
+            let smsDetected = automationSettings.smsNotificationKeywords.contains { contentLower.contains($0.lowercased()) }
+            if smsDetected {
+                logger.log("StrictDetection: SMS/verification keywords detected", category: .evaluation, level: .warning, sessionId: sessionId)
+                return DetectionResult(
+                    outcome: .smsDetected,
+                    phase: "P2_sms",
+                    reason: "SMS notification keywords found in page content",
+                    incorrectDetectedViaDOM: false,
+                    incorrectDetectedViaOCR: false,
+                    buttonCycleCompleted: false,
+                    retryPerformed: false,
+                    detectedIncorrect: false
+                )
+            }
         }
 
         if contentLower.contains("incorrect") {
@@ -393,6 +393,7 @@ class StrictLoginDetectionEngine {
         submitSelectors: [String],
         fallbackSelectors: [String],
         sessionId: String,
+        automationSettings: AutomationSettings = AutomationSettings(),
         onLog: ((String, PPSRLogEntry.Level) -> Void)? = nil
     ) async -> DetectionResult {
         let preContent = (await session.getPageContent() ?? "").lowercased()
@@ -401,7 +402,8 @@ class StrictLoginDetectionEngine {
         let p1Override = await evaluateImmediateOverrides(
             pageContent: preContent,
             screenshot: preScreenshot,
-            sessionId: sessionId
+            sessionId: sessionId,
+            automationSettings: automationSettings
         )
         if let override = p1Override {
             onLog?("StrictDetection P1: immediate override → \(override)", override == .success ? .success : .error)

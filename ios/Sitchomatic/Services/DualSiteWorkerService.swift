@@ -473,7 +473,8 @@ class DualSiteWorkerService {
             session: session,
             module: .unifiedSession,
             sessionId: sessionId,
-            settlementResult: settlementResult
+            settlementResult: settlementResult,
+            automationSettings: automationSettings
         )
         logger.log("V4.2 EVAL [\(site)]: \(result.outcome) — \(result.phase): \(result.reason)", category: .evaluation, level: result.outcome == .success ? .success : result.outcome == .unsure ? .warning : .info, sessionId: sessionId)
         return result.outcome
