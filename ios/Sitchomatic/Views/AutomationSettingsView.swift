@@ -1617,7 +1617,6 @@ struct AutomationSettingsView: View {
             Toggle("Requeue on Timeout", isOn: $vm.automationSettings.requeueOnTimeout).tint(accentColor)
             Toggle("Requeue on Connection Failure", isOn: $vm.automationSettings.requeueOnConnectionFailure).tint(accentColor)
             Toggle("Requeue on Unsure", isOn: $vm.automationSettings.requeueOnUnsure).tint(accentColor)
-            Toggle("Requeue on Red Banner", isOn: $vm.automationSettings.requeueOnRedBanner).tint(accentColor)
             Stepper("Max Requeue Count: \(vm.automationSettings.maxRequeueCount)", value: $vm.automationSettings.maxRequeueCount, in: 0...20)
 
             VStack(alignment: .leading, spacing: 4) {

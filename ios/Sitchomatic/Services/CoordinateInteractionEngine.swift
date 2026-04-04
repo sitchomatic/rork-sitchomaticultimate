@@ -191,46 +191,30 @@ class CoordinateInteractionEngine {
     }
 
     func checkNetworkIdle(executeJS: @escaping (String) async -> String?, timeoutMs: Int = 5000) async -> Bool {
-        // Inject XHR/fetch request counter if not already installed
-        let injectJS = """
+        let installMonitorJS = """
         (function(){
-            if(typeof window._apexXhrCount==='undefined'){
-                window._apexXhrCount=0;
+            if(!window.__networkIdleMonitor){
+                window.__networkIdleMonitor={pending:0,lastActivity:Date.now()};
+                var m=window.__networkIdleMonitor;
+                var origFetch=window.fetch;
+                window.fetch=function(){m.pending++;m.lastActivity=Date.now();return origFetch.apply(this,arguments).finally(function(){m.pending--;m.lastActivity=Date.now();});};
                 var origOpen=XMLHttpRequest.prototype.open;
-                XMLHttpRequest.prototype.open=function(){
-                    window._apexXhrCount++;
-                    var dec=function(){if(window._apexXhrCount>0)window._apexXhrCount--;};
-                    this.addEventListener('loadend',dec);
-                    this.addEventListener('error',dec);
-                    this.addEventListener('abort',dec);
-                    return origOpen.apply(this,arguments);
-                };
-                if(typeof window.fetch==='function'){
-                    var origFetch=window.fetch;
-                    window.fetch=function(){
-                        window._apexXhrCount++;
-                        var p;
-                        try{
-                            p=origFetch.apply(this,arguments);
-                        }catch(e){
-                            if(window._apexXhrCount>0)window._apexXhrCount--;
-                            throw e;
-                        }
-                        p.finally(function(){if(window._apexXhrCount>0)window._apexXhrCount--;});
-                        return p;
-                    };
-                }
+                var origSend=XMLHttpRequest.prototype.send;
+                XMLHttpRequest.prototype.open=function(){this.__monitored=true;return origOpen.apply(this,arguments);};
+                XMLHttpRequest.prototype.send=function(){if(this.__monitored){m.pending++;m.lastActivity=Date.now();this.addEventListener('loadend',function(){m.pending--;m.lastActivity=Date.now();});}return origSend.apply(this,arguments);};
             }
-            return 'INIT';
+            return 'INSTALLED';
         })()
         """
-        _ = await executeJS(injectJS)
+        _ = await executeJS(installMonitorJS)
 
         let checkJS = """
         (function(){
-            if(document.readyState!=='complete')return document.readyState;
-            var pending=window._apexXhrCount||0;
-            return pending===0?'IDLE':'PENDING:'+pending;
+            var ready=document.readyState==='complete';
+            var m=window.__networkIdleMonitor;
+            if(!m)return ready?'IDLE':'LOADING';
+            var idle=m.pending===0&&(Date.now()-m.lastActivity)>200;
+            return(ready&&idle)?'IDLE':'BUSY:'+m.pending;
         })()
         """
         let start = Date()

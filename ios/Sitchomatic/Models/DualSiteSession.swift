@@ -307,7 +307,7 @@ struct HumanEmulationConfig: Codable, Sendable {
     let postErrorDelayMax: Int
 
     static let `default` = HumanEmulationConfig(
-        typingSpeedMin: 60,
+        typingSpeedMin: 50,
         typingSpeedMax: 150,
         clickJitterPx: 3,
         postErrorDelayMin: 400,

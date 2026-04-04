@@ -56,7 +56,6 @@ struct AutomationSettings: Codable, Sendable {
     var requeueOnTimeout: Bool = true
     var requeueOnConnectionFailure: Bool = true
     var requeueOnUnsure: Bool = true
-    var requeueOnRedBanner: Bool = true
     var maxRequeueCount: Int = 3
     var minAttemptsBeforeNoAcc: Int = 4
     var cyclePauseMinMs: Int = 500

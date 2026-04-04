@@ -120,9 +120,9 @@ class DualSiteWorkerService {
         _ = await (joeCookieDismiss, ignCookieDismiss)
         onLog("V4.2: Cookie notices auto-dismissed on both sites", .info)
 
-        let initDelay = gaussianDelay(minSec: 0, maxSec: 6.0)
-        onLog("V4.2: Initialization delay \(String(format: "%.1f", initDelay))s", .info)
-        try? await Task.sleep(for: .seconds(initDelay))
+        let initDelay = gaussianDelay(minMs: 0, maxMs: 6000)
+        onLog("V4.2: Initialization delay \(initDelay)ms", .info)
+        try? await Task.sleep(for: .milliseconds(initDelay))
 
         var lastJoeOutcome: LoginOutcome?
         var lastIgnOutcome: LoginOutcome?
@@ -136,30 +136,31 @@ class DualSiteWorkerService {
             onLog("V4.2: Attempt \(attemptNum)/\(config.maxAttemptsPerSite)", .info)
 
             if attemptNum > 1 {
-                if automationSettings.clearCookiesBetweenAttempts || automationSettings.clearLocalStorageBetweenAttempts || automationSettings.clearSessionStorageBetweenAttempts {
-                    async let joeWipe: Void = {
-                        guard joeLoaded else { return }
-                        await joeSession.setUp(wipeAll: true)
-                    }()
-                    async let ignWipe: Void = {
-                        guard ignLoaded else { return }
-                        await ignSession.setUp(wipeAll: true)
-                    }()
-                    _ = await (joeWipe, ignWipe)
-                    onLog("V4.2: Wiped cookies/storage between attempts", .info)
-                }
-
-                let thinkDelay = gaussianDelay(minSec: 2.5, maxSec: 4.0)
+                let thinkDelayMs = gaussianDelay(
+                    minMs: Int(automationSettings.v42InterAttemptDelayMinSec * 1000),
+                    maxMs: Int(automationSettings.v42InterAttemptDelayMaxSec * 1000)
+                )
+                let thinkDelay = Double(thinkDelayMs) / 1000.0
                 onLog("V4.2: Inter-attempt delay \(String(format: "%.1f", thinkDelay))s", .info)
                 try? await Task.sleep(for: .seconds(thinkDelay))
                 guard await earlyStop.isActive else { break }
+
+                if automationSettings.clearCookiesBetweenAttempts {
+                    await joeSession.setUp(wipeAll: true)
+                    await ignSession.setUp(wipeAll: true)
+                    onLog("V4.2: Cleared cookies/storage between attempts", .info)
+
+                    async let joeReload = joeSession.loadPage(timeout: automationSettings.pageLoadTimeout)
+                    async let ignReload = ignSession.loadPage(timeout: automationSettings.pageLoadTimeout)
+                    _ = await (joeReload, ignReload)
+                }
             }
 
             async let joeNetIdle: Bool = self.coordEngine.checkNetworkIdle(executeJS: { js in await joeSession.executeJS(js) }, timeoutMs: 3000)
             async let ignNetIdle: Bool = self.coordEngine.checkNetworkIdle(executeJS: { js in await ignSession.executeJS(js) }, timeoutMs: 3000)
             _ = await (joeNetIdle, ignNetIdle)
 
-            try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
+            try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
 
             async let joePreClickTask = self.settlementGate.capturePreClickFingerprint(
                 executeJS: { js in await joeSession.executeJS(js) },
@@ -189,19 +190,15 @@ class DualSiteWorkerService {
                     fieldSelectors: joeEmailSelectors,
                     text: email,
                     executeJS: joeExecuteJS,
-                    minKeystrokeMs: config.humanEmulation.typingSpeedMin,
-                    maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
-                    clearMethod: automationSettings.clearFieldMethod,
+                    minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
                     sessionId: sessionId
                 )
-                try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
+                try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
                 let passOk = await self.typingEngine.focusAndType(
                     fieldSelectors: joePassSelectors,
                     text: password,
                     executeJS: joeExecuteJS,
-                    minKeystrokeMs: config.humanEmulation.typingSpeedMin,
-                    maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
-                    clearMethod: automationSettings.clearFieldMethod,
+                    minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -223,9 +220,7 @@ class DualSiteWorkerService {
                     fieldSelectors: ignPassSelectors,
                     text: password,
                     executeJS: ignExecuteJS,
-                    minKeystrokeMs: config.humanEmulation.typingSpeedMin,
-                    maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
-                    clearMethod: automationSettings.clearFieldMethod,
+                    minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -236,7 +231,7 @@ class DualSiteWorkerService {
 
             onLog("V4.2: Typing complete — Joe:\(joeTyped) Ign:\(ignTyped)", joeTyped && ignTyped ? .success : .warning)
 
-            try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
+            try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
 
             guard await earlyStop.isActive else { break }
 
@@ -323,21 +318,23 @@ class DualSiteWorkerService {
                 onLog("V4.2: Post-click screenshot captured (priority \(clickPriority), delay \(postClickDelay)ms)", .info)
             }
 
-            try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
+            try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
 
             async let joeOutcomeTask = self.evaluateSiteStrict(
                 session: joeSession,
                 site: "joe",
                 attemptNum: attemptNum,
                 maxAttempts: config.maxAttemptsPerSite,
-                sessionId: sessionId
+                sessionId: sessionId,
+                settlementResult: joeSettleResult
             )
             async let ignOutcomeTask = self.evaluateSiteStrict(
                 session: ignSession,
                 site: "ignition",
                 attemptNum: attemptNum,
                 maxAttempts: config.maxAttemptsPerSite,
-                sessionId: sessionId
+                sessionId: sessionId,
+                settlementResult: ignSettleResult
             )
             let joeOutcome = await joeOutcomeTask
             let ignOutcome = await ignOutcomeTask
@@ -454,17 +451,29 @@ class DualSiteWorkerService {
         return WorkerResult(session: session, joeOutcome: lastJoeOutcome, ignitionOutcome: lastIgnOutcome, pairedOCRStatus: session.pairedOCRStatus)
     }
 
+    private func gaussianDelay(minMs: Int, maxMs: Int) -> Int {
+        let mean = Double(minMs + maxMs) / 2.0
+        let stdDev = Double(maxMs - minMs) / 4.0
+        let u1 = Double.random(in: 0.0001...0.9999)
+        let u2 = Double.random(in: 0.0001...0.9999)
+        let z = sqrt(-2.0 * log(u1)) * cos(2.0 * .pi * u2)
+        let delay = mean + z * stdDev
+        return max(minMs, min(maxMs, Int(delay)))
+    }
+
     private func evaluateSiteStrict(
         session: LoginSiteWebSession,
         site: String,
         attemptNum: Int,
         maxAttempts: Int,
-        sessionId: String
+        sessionId: String,
+        settlementResult: SettlementGateEngine.SettlementResult? = nil
     ) async -> LoginOutcome {
         let result = await strictDetection.evaluateStrict(
             session: session,
             module: .unifiedSession,
-            sessionId: sessionId
+            sessionId: sessionId,
+            settlementResult: settlementResult
         )
         logger.log("V4.2 EVAL [\(site)]: \(result.outcome) — \(result.phase): \(result.reason)", category: .evaluation, level: result.outcome == .success ? .success : result.outcome == .unsure ? .warning : .info, sessionId: sessionId)
         return result.outcome
