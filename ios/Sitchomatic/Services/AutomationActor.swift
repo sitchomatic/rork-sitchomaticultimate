@@ -226,7 +226,15 @@ class AutomationActor {
     }
 
     private func buildDirectTypeJS(text: String) -> String {
-        let escaped = text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+        // Security: Proper JavaScript escaping to prevent injection attacks
+        // Handles backslashes, quotes, newlines, backticks, and template literals
+        let escaped = text
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "`", with: "\\`")
+            .replacingOccurrences(of: "$", with: "\\$")
         return """
         (function(){
             var el = document.activeElement;

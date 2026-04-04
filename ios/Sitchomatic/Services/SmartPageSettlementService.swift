@@ -139,6 +139,13 @@ class SmartPageSettlementService {
         logger.log("PageSettlement: waiting for \(host) (maxTimeout=\(effectiveTimeout)ms, learned=\(learnedAvgMs)ms)", category: .automation, level: .trace, sessionId: sessionId)
 
         while true {
+            // Guard against task cancellation to prevent infinite loops
+            guard !Task.isCancelled else {
+                let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
+                logger.log("PageSettlement: CANCELLED after \(elapsedMs)ms", category: .automation, level: .warning, sessionId: sessionId)
+                return SettlementResult(settled: false, durationMs: elapsedMs, signals: signals, reason: "Task cancelled")
+            }
+
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             if elapsedMs >= effectiveTimeout {
                 let reason = buildTimeoutReason(signals, lastPollResult)

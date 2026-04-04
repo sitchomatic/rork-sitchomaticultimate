@@ -106,6 +106,13 @@ class SmartButtonRecoveryService {
         var sawLoadingState = false
 
         while true {
+            // Guard against task cancellation to prevent infinite loops
+            guard !Task.isCancelled else {
+                let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
+                logger.log("ButtonRecovery: CANCELLED after \(elapsedMs)ms", category: .automation, level: .warning, sessionId: sessionId)
+                return RecoveryResult(recovered: false, durationMs: elapsedMs, reason: "Task cancelled", intermediateStates: intermediateStates)
+            }
+
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             if elapsedMs >= effectiveTimeout {
                 logger.log("ButtonRecovery: TIMEOUT after \(elapsedMs)ms — proceeding anyway", category: .automation, level: .warning, sessionId: sessionId)

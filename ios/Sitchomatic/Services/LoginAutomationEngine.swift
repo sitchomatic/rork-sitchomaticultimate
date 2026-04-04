@@ -1607,6 +1607,13 @@ class LoginAutomationEngine {
         """
 
         while true {
+            // Guard against task cancellation to prevent infinite loops
+            guard !Task.isCancelled else {
+                let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
+                logger.log("ColourReadiness: CANCELLED after \(elapsedMs)ms", category: .automation, level: .warning, sessionId: sessionId)
+                return (false, elapsedMs, "Task cancelled")
+            }
+
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             if elapsedMs >= maxWaitMs {
                 logger.log("ColourReadiness: TIMEOUT after \(elapsedMs)ms — proceeding", category: .automation, level: .warning, sessionId: sessionId)

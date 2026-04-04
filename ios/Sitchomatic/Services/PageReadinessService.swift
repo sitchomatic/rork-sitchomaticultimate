@@ -138,6 +138,13 @@ class PageReadinessService {
         let requiredStableChecks = 3
 
         while true {
+            // Guard against task cancellation to prevent infinite loops
+            guard !Task.isCancelled else {
+                let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
+                logger.log("PageReadiness: CANCELLED after \(elapsedMs)ms", category: .automation, level: .warning, sessionId: sessionId)
+                return ReadinessResult(ready: false, durationMs: elapsedMs, reason: "Task cancelled", jsSettled: lastJsSettled, formReady: lastFormReady, buttonReady: lastBtnReady)
+            }
+
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             if elapsedMs >= maxTimeoutMs {
                 logger.log("PageReadiness: TIMEOUT after \(elapsedMs)ms — proceeding with 1s buffer", category: .automation, level: .warning, sessionId: sessionId)
@@ -269,6 +276,9 @@ class PageReadinessService {
         """
 
         while true {
+            // Guard against task cancellation to prevent infinite loops
+            guard !Task.isCancelled else { return false }
+
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             if elapsedMs >= maxTimeoutMs { return false }
 
@@ -328,6 +338,9 @@ class PageReadinessService {
 
         var stableCount = 0
         while true {
+            // Guard against task cancellation to prevent infinite loops
+            guard !Task.isCancelled else { return false }
+
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             if elapsedMs >= maxTimeoutMs { return false }
 

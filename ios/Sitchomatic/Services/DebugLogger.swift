@@ -133,6 +133,14 @@ class DebugLogger {
 
     func getRetryState(for key: String, maxAttempts: Int = 3) -> RetryState {
         if retryTracker[key] == nil { retryTracker[key] = RetryState(maxAttempts: maxAttempts) }
+        // Memory leak prevention: Limit retry tracker to 1000 entries (LRU-style eviction)
+        if retryTracker.count > 1000 {
+            // Remove oldest entries (simple approach: remove first 100 when limit exceeded)
+            let keysToRemove = Array(retryTracker.keys.prefix(100))
+            for key in keysToRemove {
+                retryTracker.removeValue(forKey: key)
+            }
+        }
         return retryTracker[key] ?? RetryState(maxAttempts: maxAttempts)
     }
 

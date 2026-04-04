@@ -141,10 +141,12 @@ class TunnelDNSResolver {
                     return
                 }
                 for addrData in addresses {
+                    // Safety: Explicit size validation before accessing sockaddr_in structure
                     if addrData.count >= MemoryLayout<sockaddr_in>.size {
                         let result: UInt32? = addrData.withUnsafeBytes { ptr in
                             guard let base = ptr.baseAddress,
                                   base.assumingMemoryBound(to: sockaddr.self).pointee.sa_family == AF_INET else { return nil }
+                            // Safe to cast to sockaddr_in since we verified AF_INET family and size
                             let raw = base.assumingMemoryBound(to: sockaddr_in.self).pointee.sin_addr.s_addr
                             let a = UInt32(raw & 0xFF)
                             let b = UInt32((raw >> 8) & 0xFF)
