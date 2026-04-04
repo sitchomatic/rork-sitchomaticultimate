@@ -61,7 +61,8 @@ class StrictLoginDetectionEngine {
         // SMS detection via DOM keywords
         if automationSettings.smsDetectionEnabled {
             for keyword in automationSettings.smsNotificationKeywords {
-                if contentLower.contains(keyword) {
+                let keywordLower = keyword.lowercased()
+                if contentLower.contains(keywordLower) {
                     logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found in DOM", category: .evaluation, level: .warning, sessionId: sessionId)
                     return .smsDetected
                 }
@@ -95,7 +96,8 @@ class StrictLoginDetectionEngine {
                 // SMS detection via OCR
                 if automationSettings.smsDetectionEnabled {
                     for keyword in automationSettings.smsNotificationKeywords {
-                        if ocrLower.contains(keyword) {
+                        let keywordLower = keyword.lowercased()
+                        if ocrLower.contains(keywordLower) {
                             logger.log("StrictDetection P1: SMS_DETECTED — '\(keyword)' found via OCR", category: .evaluation, level: .warning, sessionId: sessionId)
                             return .smsDetected
                         }
