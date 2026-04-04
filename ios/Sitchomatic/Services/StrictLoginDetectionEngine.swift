@@ -45,6 +45,9 @@ class StrictLoginDetectionEngine {
         "enter code", "security code sent", "check your phone"
     ]
 
+    /// Minimum page content character count below which the page is considered blank/unloaded.
+    private static let minimumPageContentLength = 80
+
     // MARK: - Phase 1: Immediate Overrides
 
     func evaluateImmediateOverrides(
@@ -55,7 +58,7 @@ class StrictLoginDetectionEngine {
         let contentLower = pageContent.lowercased()
 
         // about:blank / empty page guard
-        if contentLower.isEmpty || contentLower.count < 80 {
+        if contentLower.isEmpty || contentLower.count < Self.minimumPageContentLength {
             logger.log("StrictDetection P1: UNSURE — page content too short (\(contentLower.count) chars), possible blank page", category: .evaluation, level: .warning, sessionId: sessionId)
             return .unsure
         }
@@ -264,7 +267,7 @@ class StrictLoginDetectionEngine {
         }
 
         // Cookie-based success detection: presence of session_id cookie
-        let cookieCheckJS = "(function(){ return document.cookie.indexOf('session_id') !== -1 ? 'HAS_SESSION' : 'NO_SESSION'; })()"
+        let cookieCheckJS = "(function(){ return document.cookie.includes('session_id') ? 'HAS_SESSION' : 'NO_SESSION'; })()"
         let cookieResult = await session.executeJS(cookieCheckJS)
         if cookieResult == "HAS_SESSION" {
             logger.log("StrictDetection: session_id cookie detected — SUCCESS", category: .evaluation, level: .success, sessionId: sessionId)

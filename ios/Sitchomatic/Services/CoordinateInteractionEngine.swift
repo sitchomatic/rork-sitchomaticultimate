@@ -199,14 +199,23 @@ class CoordinateInteractionEngine {
                 var origOpen=XMLHttpRequest.prototype.open;
                 XMLHttpRequest.prototype.open=function(){
                     window._apexXhrCount++;
-                    this.addEventListener('loadend',function(){if(window._apexXhrCount>0)window._apexXhrCount--;});
+                    var dec=function(){if(window._apexXhrCount>0)window._apexXhrCount--;};
+                    this.addEventListener('loadend',dec);
+                    this.addEventListener('error',dec);
+                    this.addEventListener('abort',dec);
                     return origOpen.apply(this,arguments);
                 };
                 if(typeof window.fetch==='function'){
                     var origFetch=window.fetch;
                     window.fetch=function(){
                         window._apexXhrCount++;
-                        var p=origFetch.apply(this,arguments);
+                        var p;
+                        try{
+                            p=origFetch.apply(this,arguments);
+                        }catch(e){
+                            if(window._apexXhrCount>0)window._apexXhrCount--;
+                            throw e;
+                        }
                         p.finally(function(){if(window._apexXhrCount>0)window._apexXhrCount--;});
                         return p;
                     };
