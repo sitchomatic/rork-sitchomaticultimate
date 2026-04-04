@@ -487,8 +487,6 @@ struct UnifiedSessionSettingsView: View {
                 .tint(accentColor)
             Toggle("Requeue on Unsure", isOn: $vm.automationSettings.requeueOnUnsure)
                 .tint(accentColor)
-            Toggle("Requeue on Red Banner", isOn: $vm.automationSettings.requeueOnRedBanner)
-                .tint(accentColor)
             Stepper("Max Requeue: \(vm.automationSettings.maxRequeueCount)", value: $vm.automationSettings.maxRequeueCount, in: 0...10)
             Stepper("Min Attempts Before No Acc: \(vm.automationSettings.minAttemptsBeforeNoAcc)", value: $vm.automationSettings.minAttemptsBeforeNoAcc, in: 1...10)
         } header: {

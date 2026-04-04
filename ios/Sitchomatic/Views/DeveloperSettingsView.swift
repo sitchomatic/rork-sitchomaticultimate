@@ -223,7 +223,6 @@ struct DeveloperAutomationSettingsView: View {
             Toggle("Requeue on Timeout", isOn: $settings.requeueOnTimeout)
             Toggle("Requeue on Connection Failure", isOn: $settings.requeueOnConnectionFailure)
             Toggle("Requeue on Unsure", isOn: $settings.requeueOnUnsure)
-            Toggle("Requeue on Red Banner", isOn: $settings.requeueOnRedBanner)
             stepperRow("Max Requeue Count", intValue: $settings.maxRequeueCount, range: 0...10)
             stepperRow("Min Attempts Before NoAcc", intValue: $settings.minAttemptsBeforeNoAcc, range: 1...10)
             stepperRow("Cycle Pause Min", intValue: $settings.cyclePauseMinMs, range: 100...5000, step: 100, unit: "ms")

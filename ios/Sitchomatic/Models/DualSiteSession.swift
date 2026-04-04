@@ -101,9 +101,9 @@ enum SiteResult: String, Codable, Sendable, CaseIterable {
                 return .noAccount
             }
             return .unsure
-        case .unsure, .redBannerError, .smsDetected:
+        case .unsure, .smsDetected:
             return .unsure
-        case .connectionFailure, .timeout:
+        case .connectionFailure, .timeout, .cancelled:
             return .unsure
         }
     }
@@ -119,7 +119,6 @@ struct SiteSelectors: Codable, Sendable {
     let user: String
     let pass: String
     let submit: String
-    let error: String
 }
 
 struct SiteTarget: Codable, Sendable, Identifiable {
@@ -132,14 +131,14 @@ struct SiteTarget: Codable, Sendable, Identifiable {
         id: "joe",
         name: "JoePoint",
         url: "https://joefortunepokies.win/login",
-        selectors: SiteSelectors(user: "#username", pass: "#password", submit: "#loginSubmit", error: ".error-message")
+        selectors: SiteSelectors(user: "#username", pass: "#password", submit: "#loginSubmit")
     )
 
     static let ignition = SiteTarget(
         id: "ignition",
         name: "Ignition Lite",
         url: "https://ignitioncasino.ooo/?overlay=login",
-        selectors: SiteSelectors(user: LoginSelectorConstants.email, pass: LoginSelectorConstants.password, submit: LoginSelectorConstants.submit, error: ".alert-danger")
+        selectors: SiteSelectors(user: LoginSelectorConstants.email, pass: LoginSelectorConstants.password, submit: LoginSelectorConstants.submit)
     )
 }
 
@@ -308,7 +307,7 @@ struct HumanEmulationConfig: Codable, Sendable {
     let postErrorDelayMax: Int
 
     static let `default` = HumanEmulationConfig(
-        typingSpeedMin: 60,
+        typingSpeedMin: 50,
         typingSpeedMax: 150,
         clickJitterPx: 3,
         postErrorDelayMin: 400,

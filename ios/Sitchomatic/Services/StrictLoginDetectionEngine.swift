@@ -10,6 +10,8 @@ class StrictLoginDetectionEngine {
     private let grokService = RorkToolkitService.shared
     private let settlementGate = SettlementGateEngine.shared
     private let coordEngine = CoordinateInteractionEngine.shared
+    private let minPageContentLength = 80
+    private let smsKeywords = AutomationSettings().smsNotificationKeywords
 
     enum DetectionModule: Sendable {
         case standard
@@ -216,13 +218,48 @@ class StrictLoginDetectionEngine {
     func evaluateStrict(
         session: LoginSiteWebSession,
         module: DetectionModule,
-        sessionId: String
+        sessionId: String,
+        settlementResult: SettlementGateEngine.SettlementResult? = nil
     ) async -> DetectionResult {
-        let pageContent = (await session.getPageContent() ?? "").lowercased()
+        let currentURL = await session.getCurrentURL()
+        
+        // about:blank check
+        if currentURL == "about:blank" || currentURL.isEmpty {
+            logger.log("StrictDetection: about:blank or empty URL — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .unsure,
+                phase: "P0_blank",
+                reason: "Page is about:blank or empty URL",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: false,
+                retryPerformed: false,
+                detectedIncorrect: false
+            )
+        }
+        
+        let pageContent = (await session.getPageContent() ?? "")
+        
+        // minimal content length check
+        if pageContent.count < minPageContentLength {
+            logger.log("StrictDetection: page content < \(minPageContentLength) chars (\(pageContent.count)) — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .unsure,
+                phase: "P0_minimal",
+                reason: "Page content too short (\(pageContent.count) chars)",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: false,
+                retryPerformed: false,
+                detectedIncorrect: false
+            )
+        }
+        
+        let contentLower = pageContent.lowercased()
         let screenshot = await session.captureScreenshot()
 
         let p1Override = await evaluateImmediateOverrides(
-            pageContent: pageContent,
+            pageContent: contentLower,
             screenshot: screenshot,
             sessionId: sessionId
         )
@@ -238,8 +275,46 @@ class StrictLoginDetectionEngine {
                 detectedIncorrect: false
             )
         }
+        
+        // Cookie-based success detection
+        let cookieJS = "(function(){return document.cookie || '';})()"
+        let cookieString = (await session.executeJS(cookieJS) ?? "").lowercased()
+        if cookieString.contains("session_id") || cookieString.contains("sessionid") || cookieString.contains("session_token") {
+            logger.log("StrictDetection: session cookie detected — SUCCESS", category: .evaluation, level: .success, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .success,
+                phase: "P2_cookie",
+                reason: "Session cookie detected (session_id/sessionid/session_token)",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: false,
+                retryPerformed: false,
+                detectedIncorrect: false
+            )
+        }
+        
+        // Use settlement result if available
+        if let settlement = settlementResult, settlement.errorTextVisible {
+            logger.log("StrictDetection: settlement detected error text — checking DOM", category: .evaluation, level: .info, sessionId: sessionId)
+        }
+        
+        // SMS detection using smsNotificationKeywords
+        let smsDetected = smsKeywords.contains { contentLower.contains($0.lowercased()) }
+        if smsDetected {
+            logger.log("StrictDetection: SMS/verification keywords detected", category: .evaluation, level: .warning, sessionId: sessionId)
+            return DetectionResult(
+                outcome: .smsDetected,
+                phase: "P2_sms",
+                reason: "SMS notification keywords found in page content",
+                incorrectDetectedViaDOM: false,
+                incorrectDetectedViaOCR: false,
+                buttonCycleCompleted: false,
+                retryPerformed: false,
+                detectedIncorrect: false
+            )
+        }
 
-        if pageContent.contains("incorrect") {
+        if contentLower.contains("incorrect") {
             logger.log("StrictDetection: 'incorrect' found in DOM (post-submit eval)", category: .evaluation, level: .info, sessionId: sessionId)
             return DetectionResult(
                 outcome: .noAcc,
