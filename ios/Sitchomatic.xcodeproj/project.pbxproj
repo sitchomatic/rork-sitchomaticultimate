@@ -752,8 +752,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = https://github.com/CoreOffice/CoreXLSX.git;
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.2;
+				kind = exactVersion;
+				version = 0.14.2;
 			};
 		};
 		XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */ = {
