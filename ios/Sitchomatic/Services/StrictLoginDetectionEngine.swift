@@ -11,6 +11,7 @@ class StrictLoginDetectionEngine {
     private let settlementGate = SettlementGateEngine.shared
     private let coordEngine = CoordinateInteractionEngine.shared
     private let minPageContentLength = 80
+    private let smsKeywords = AutomationSettings().smsNotificationKeywords
 
     enum DetectionModule: Sendable {
         case standard
@@ -298,7 +299,6 @@ class StrictLoginDetectionEngine {
         }
         
         // SMS detection using smsNotificationKeywords
-        let smsKeywords = AutomationSettings().smsNotificationKeywords
         let smsDetected = smsKeywords.contains { contentLower.contains($0.lowercased()) }
         if smsDetected {
             logger.log("StrictDetection: SMS/verification keywords detected", category: .evaluation, level: .warning, sessionId: sessionId)
