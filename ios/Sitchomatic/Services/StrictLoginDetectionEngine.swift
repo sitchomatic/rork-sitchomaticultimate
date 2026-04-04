@@ -10,6 +10,7 @@ class StrictLoginDetectionEngine {
     private let grokService = RorkToolkitService.shared
     private let settlementGate = SettlementGateEngine.shared
     private let coordEngine = CoordinateInteractionEngine.shared
+    private let minPageContentLength = 80
 
     enum DetectionModule: Sendable {
         case standard
@@ -239,8 +240,8 @@ class StrictLoginDetectionEngine {
         let pageContent = (await session.getPageContent() ?? "")
         
         // minimal content length check
-        if pageContent.count < 80 {
-            logger.log("StrictDetection: page content < 80 chars (\(pageContent.count)) — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
+        if pageContent.count < minPageContentLength {
+            logger.log("StrictDetection: page content < \(minPageContentLength) chars (\(pageContent.count)) — unsure", category: .evaluation, level: .warning, sessionId: sessionId)
             return DetectionResult(
                 outcome: .unsure,
                 phase: "P0_minimal",
