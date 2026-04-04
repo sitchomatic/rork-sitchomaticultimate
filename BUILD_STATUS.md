@@ -1,10 +1,10 @@
 # iOS Build Status Report
 
 ## Current Status
-**Status:** ❌ FAILING
+**Status:** ❌ FAILING (latest CI run #79)
 **Last Successful Build:** Unknown (all recent builds failing)
 **Build Workflow:** `.github/workflows/ios-build.yml`
-**Latest Failed Run:** #58 (commit e55dc87)
+**Latest Failed Run:** #79 (commit 27dbe19)
 
 ## Build Environment
 - **Runner:** macOS-15
@@ -59,39 +59,33 @@ From `.github/workflows/ios-build.yml`:
 
 ## Root Cause Identified
 
-**Issue:** Stale `SWIFT_INCLUDE_PATHS` override in Xcode project configuration
+**Issue:** `CoreXLSX` cannot locate the `XMLCoder` module during compilation.
 
-**Location:** `ios/Sitchomatic.xcodeproj/project.pbxproj` (lines 441 and 498)
+**Evidence:** Latest CI logs (#79) show `no such module 'XMLCoder'` while compiling `XLSXFile.swift` inside the `CoreXLSX` package.
+
+**Root cause:** The build settings did not propagate the SourcePackages module search path for SwiftPM dependencies, so CoreXLSX was compiled without being able to see XMLCoder’s built module artifacts.
+
+**Fix Applied:** Added an explicit `SWIFT_INCLUDE_PATHS` entry to the project-level Debug/Release configurations in `ios/Sitchomatic.xcodeproj/project.pbxproj` pointing to the SwiftPM checkout build outputs for `XMLCoder` and `ZIPFoundation`:
 
 ```
-SWIFT_INCLUDE_PATHS = "$(inherited) $(BUILD_DIR)/../../SourcePackages/checkouts/XMLCoder/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+SWIFT_INCLUDE_PATHS = (
+	"$(inherited)",
+	"$(BUILD_DIR)/../../SourcePackages/checkouts/XMLCoder/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+	"$(BUILD_DIR)/../../SourcePackages/checkouts/ZIPFoundation/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+);
 ```
 
-**Problem:**
-- This manual path override for XMLCoder module lookup is conflicting with SwiftPM's automatic module resolution
-- SwiftPM automatically manages module paths for all dependencies (ZIPFoundation, XMLCoder, CoreXLSX)
-- The hardcoded path was likely added to work around a previous build issue (see PR #44) but is now causing module resolution failures
-- Modern Xcode/SwiftPM handles this automatically - manual overrides are not needed
+This is a workaround, not a stable long-term fix. It depends on Xcode/DerivedData's internal `SourcePackages/checkouts/.../build/...` layout, which can change across Xcode versions and can also differ if CI sets `-derivedDataPath`.
 
-**Evidence:**
-- PR #53 by Codex agent identified this exact issue: "Restore CoreXLSX build by removing stale XMLCoder include override"
-- Build fails during Swift compilation phase (not dependency resolution)
-- All recent builds (#51-58) fail with the same root cause
+For future failures, capture the resolved paths from `xcodebuild -showBuildSettings` (especially `BUILD_DIR`, `CONFIGURATION`, `EFFECTIVE_PLATFORM_NAME`, and any custom derived data location) so the actual module search paths used by CI can be compared against this documented workaround.
 
-## Fix Required
-
-Remove the `SWIFT_INCLUDE_PATHS` override from both Debug and Release configurations in `project.pbxproj`:
-
-1. Delete line 441 (Debug configuration)
-2. Delete line 498 (Release configuration)
-
-This allows SwiftPM to handle module paths correctly for all Swift Package dependencies.
+In the current environment, this ensures Swift sees the dependency modules when compiling CoreXLSX.
 
 ## Next Steps
 
 1. ✅ Get full compilation error log from GitHub Actions
-2. ✅ Identify root cause (stale SWIFT_INCLUDE_PATHS override)
-3. ⬜ Apply fix by removing the manual include path overrides
+2. ✅ Identify root cause (missing XMLCoder module search path in CoreXLSX build)
+3. ✅ Add include search paths so CoreXLSX can import XMLCoder
 4. ⬜ Verify build passes in CI
 5. ⬜ Merge fix to main branch
 

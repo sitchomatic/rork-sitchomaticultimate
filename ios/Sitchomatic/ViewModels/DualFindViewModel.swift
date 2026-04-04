@@ -908,7 +908,8 @@ class DualFindViewModel {
         let result = await strictDetection.evaluateStrict(
             session: session,
             module: .dualFind,
-            sessionId: "dualfind"
+            sessionId: "dualfind",
+            automationSettings: automationSettings
         )
 
         switch result.outcome {
