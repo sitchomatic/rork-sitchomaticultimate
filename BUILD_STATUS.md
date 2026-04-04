@@ -68,10 +68,18 @@ From `.github/workflows/ios-build.yml`:
 **Fix Applied:** Added an explicit `SWIFT_INCLUDE_PATHS` entry to the project-level Debug/Release configurations in `ios/Sitchomatic.xcodeproj/project.pbxproj` pointing to the SwiftPM checkout build outputs for `XMLCoder` and `ZIPFoundation`:
 
 ```
-SWIFT_INCLUDE_PATHS = "$(inherited) $(BUILD_DIR)/../../SourcePackages/checkouts/XMLCoder/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) $(BUILD_DIR)/../../SourcePackages/checkouts/ZIPFoundation/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+SWIFT_INCLUDE_PATHS = (
+	"$(inherited)",
+	"$(BUILD_DIR)/../../SourcePackages/checkouts/XMLCoder/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+	"$(BUILD_DIR)/../../SourcePackages/checkouts/ZIPFoundation/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+);
 ```
 
-This ensures Swift sees the dependency modules when compiling CoreXLSX.
+This is a workaround, not a stable long-term fix. It depends on Xcode/DerivedData's internal `SourcePackages/checkouts/.../build/...` layout, which can change across Xcode versions and can also differ if CI sets `-derivedDataPath`.
+
+For future failures, capture the resolved paths from `xcodebuild -showBuildSettings` (especially `BUILD_DIR`, `CONFIGURATION`, `EFFECTIVE_PLATFORM_NAME`, and any custom derived data location) so the actual module search paths used by CI can be compared against this documented workaround.
+
+In the current environment, this ensures Swift sees the dependency modules when compiling CoreXLSX.
 
 ## Next Steps
 
