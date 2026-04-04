@@ -47,9 +47,14 @@ enum BlankScreenshotDetector: Sendable {
         let tolerance: UInt8 = 12
         var dominantCount = 0
 
+        // Safety: Bounds check for each pixel access to prevent buffer overflows
         for i in 0..<totalPixels {
             let offset = i &* bytesPerPixel
-            guard offset &+ 2 < totalBytes else { break }
+            // Explicit bounds check: ensure we can read R, G, B components (offset + 0, 1, 2)
+            guard offset &+ 2 < totalBytes else {
+                // If we hit the bounds early, break to prevent out-of-bounds access
+                break
+            }
             let r = pixelData[offset]
             let g = pixelData[offset &+ 1]
             let b = pixelData[offset &+ 2]

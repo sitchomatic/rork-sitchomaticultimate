@@ -141,11 +141,21 @@ class TunnelDNSResolver {
                     return
                 }
                 for addrData in addresses {
+                    // Safety: Explicit size validation before accessing sockaddr_in structure
                     if addrData.count >= MemoryLayout<sockaddr_in>.size {
                         let result: UInt32? = addrData.withUnsafeBytes { ptr in
-                            guard let base = ptr.baseAddress,
-                                  base.assumingMemoryBound(to: sockaddr.self).pointee.sa_family == AF_INET else { return nil }
-                            let raw = base.assumingMemoryBound(to: sockaddr_in.self).pointee.sin_addr.s_addr
+                            var family: sa_family_t = 0
+                            withUnsafeMutableBytes(of: &family) { familyBytes in
+                                familyBytes.copyBytes(from: UnsafeRawBufferPointer(rebasing: ptr.prefix(MemoryLayout<sa_family_t>.size)))
+                            }
+                            guard family == sa_family_t(AF_INET) else { return nil }
+
+                            var addr = sockaddr_in()
+                            withUnsafeMutableBytes(of: &addr) { addrBytes in
+                                addrBytes.copyBytes(from: UnsafeRawBufferPointer(rebasing: ptr.prefix(MemoryLayout<sockaddr_in>.size)))
+                            }
+
+                            let raw = addr.sin_addr.s_addr
                             let a = UInt32(raw & 0xFF)
                             let b = UInt32((raw >> 8) & 0xFF)
                             let c = UInt32((raw >> 16) & 0xFF)

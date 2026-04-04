@@ -70,7 +70,9 @@ actor IdentityActor {
 
     /// Produces a fresh pseudo-random device-metric façade that
     /// stealth scripts will inject on the next page load.
-    private nonisolated func scrambleDeviceMetrics() {
+    /// Synchronizes UserDefaults access on @MainActor to prevent data races.
+    @MainActor
+    private func scrambleDeviceMetrics() {
         let newUUID = UUID().uuidString
         UserDefaults.standard.set(newUUID, forKey: "apex_scrambled_hw_uuid")
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "apex_uuid_scramble_ts")

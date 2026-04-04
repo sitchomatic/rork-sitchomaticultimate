@@ -50,7 +50,7 @@ class EvidenceBundleService {
             exportedAt: iso.string(from: Date()),
             credential: .init(
                 username: bundle.username,
-                password: bundle.password,
+                password: "[REDACTED]",
                 credentialId: bundle.credentialId
             ),
             result: .init(
@@ -108,7 +108,7 @@ class EvidenceBundleService {
         lines.append("")
         lines.append("▸ CREDENTIAL")
         lines.append("  Username: \(bundle.username)")
-        lines.append("  Password: \(bundle.password)")
+        lines.append("  Password: [REDACTED]")  // Security: Never log passwords in exports
         lines.append("  ID:       \(bundle.credentialId)")
         lines.append("")
         lines.append("▸ RESULT")
