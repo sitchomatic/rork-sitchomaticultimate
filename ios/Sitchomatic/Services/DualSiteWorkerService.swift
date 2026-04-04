@@ -181,6 +181,7 @@ class DualSiteWorkerService {
                     text: email,
                     executeJS: joeExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
@@ -189,6 +190,7 @@ class DualSiteWorkerService {
                     text: password,
                     executeJS: joeExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -200,15 +202,18 @@ class DualSiteWorkerService {
                     fieldSelectors: ignEmailSelectors,
                     text: email,
                     executeJS: ignExecuteJS,
-                    minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    minKeystrokeMs: config.humanEmulation.typingSpeedMin,
+                    maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
-                try? await Task.sleep(for: .milliseconds(Int.random(in: automationSettings.v42HumanVarianceMinMs...automationSettings.v42HumanVarianceMaxMs)))
+                try? await Task.sleep(for: .milliseconds(Int.random(in: config.humanEmulation.postErrorDelayMin...config.humanEmulation.postErrorDelayMax)))
                 let passOk = await self.typingEngine.focusAndType(
                     fieldSelectors: ignPassSelectors,
                     text: password,
                     executeJS: ignExecuteJS,
                     minKeystrokeMs: config.humanEmulation.typingSpeedMin, maxKeystrokeMs: config.humanEmulation.typingSpeedMax,
+                    clearFieldMethod: automationSettings.clearFieldMethod,
                     sessionId: sessionId
                 )
                 return emailOk && passOk
@@ -461,7 +466,8 @@ class DualSiteWorkerService {
             session: session,
             module: .unifiedSession,
             sessionId: sessionId,
-            settlementResult: settlementResult
+            settlementResult: settlementResult,
+            automationSettings: automationSettings
         )
         logger.log("V4.2 EVAL [\(site)]: \(result.outcome) — \(result.phase): \(result.reason)", category: .evaluation, level: result.outcome == .success ? .success : result.outcome == .unsure ? .warning : .info, sessionId: sessionId)
         return result.outcome
