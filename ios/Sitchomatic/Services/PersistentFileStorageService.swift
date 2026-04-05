@@ -616,7 +616,7 @@ struct CardFileEntry: Codable, Sendable {
     let successCount: Int
 }
 
-struct NetworkFileState: Codable, Sendable {
+nonisolated struct NetworkFileState: Codable, Sendable {
     var joeURLCount: Int = 0
     var ignitionURLCount: Int = 0
     var joeEnabledURLCount: Int = 0
@@ -638,7 +638,7 @@ struct NetworkFileState: Codable, Sendable {
     var savedAt: TimeInterval = 0
 }
 
-struct AppStateSnapshot: Codable, Sendable {
+nonisolated struct AppStateSnapshot: Codable, Sendable {
     var activeAppMode: String = ""
     var hasSelectedMode: Bool = false
     var productMode: String = ""
@@ -648,7 +648,7 @@ struct AppStateSnapshot: Codable, Sendable {
     var buildNumber: String = ""
 }
 
-struct ScreenshotManifest: Codable, Sendable {
+nonisolated struct ScreenshotManifest: Codable, Sendable {
     let savedAt: TimeInterval
     let note: String
 }

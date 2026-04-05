@@ -87,7 +87,7 @@ enum DebugLogLevel: String, CaseIterable, Sendable, Comparable, Codable {
         lhs.sortOrder < rhs.sortOrder
     }
 
-    var sortOrder: Int {
+    nonisolated var sortOrder: Int {
         switch self {
         case .trace: 0
         case .debug: 1

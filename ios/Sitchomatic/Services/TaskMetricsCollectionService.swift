@@ -22,7 +22,7 @@ class TaskMetricsCollectionService {
         let errorDomain: String?
         let proxyUsed: String?
 
-        var bottleneck: String {
+        nonisolated var bottleneck: String {
             guard success else { return errorDomain ?? "unknown_error" }
             if let dns = dnsLookupMs, dns > 2000 { return "dns_slow(\(dns)ms)" }
             if let conn = connectMs, conn > 3000 { return "connect_slow(\(conn)ms)" }
