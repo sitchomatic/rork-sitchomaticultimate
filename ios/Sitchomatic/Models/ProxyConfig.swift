@@ -1,6 +1,6 @@
 import Foundation
 
-struct ProxyConfig: Identifiable, Codable, Sendable {
+nonisolated struct ProxyConfig: Identifiable, Codable, Sendable {
     let id: UUID
     let host: String
     let port: Int

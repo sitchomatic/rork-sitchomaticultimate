@@ -55,6 +55,7 @@ struct AutomationSettingsView: View {
             fallbackButtonSection
             patternStrategySection
             submitBehaviorSection
+            submitMethodSection
             timeDelaysSection
             postSubmitEvalSection
             mfaHandlingSection
@@ -1480,6 +1481,34 @@ struct AutomationSettingsView: View {
             }
         } header: {
             Label("Submit Behavior", systemImage: "paperplane.fill")
+        }
+    }
+
+    // MARK: - Submit Method (4th Box)
+
+    private var submitMethodSection: some View {
+        Section {
+            Picker("Sign-in Method", selection: $vm.automationSettings.submitMethod) {
+                ForEach(AutomationSettings.SubmitMethod.allCases) { method in
+                    Text(method.rawValue).tag(method)
+                }
+            }
+
+            Text(vm.automationSettings.submitMethod.description)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            Toggle(isOn: $vm.automationSettings.isGlobalSubmitSync) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Global Sync")
+                    Text("Apply this method to all modes simultaneously").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .tint(accentColor)
+        } header: {
+            Label("Sign-in Method", systemImage: "hand.tap")
+        } footer: {
+            Text("Triple-Click Synced dispatches 3 timed mouse events with cancellation guards between each tap.")
         }
     }
 

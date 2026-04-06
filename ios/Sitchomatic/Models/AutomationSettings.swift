@@ -39,6 +39,10 @@ struct AutomationSettings: Codable, Sendable {
     var preferCalibratedPatternsFirst: Bool = true
     var patternLearningEnabled: Bool = true
 
+    // MARK: - Submit Method
+    var submitMethod: SubmitMethod = .tripleClickSynced
+    var isGlobalSubmitSync: Bool = true
+
     // MARK: - Submit Behavior
     var submitRetryCount: Int = 5
     var waitForResponseSeconds: Double = 90.0 // Post-submit polling timeout (waiting for server response after form submit)
@@ -396,6 +400,27 @@ struct AutomationSettings: Codable, Sendable {
         case tripleClickDelete = "Triple Click + Delete"
         case jsValueClear = "JS Value Clear"
         case backspaceLoop = "Backspace Loop"
+    }
+
+    @frozen
+    enum SubmitMethod: String, Codable, CaseIterable, Identifiable, Sendable {
+        case tripleClickSynced = "Triple-Click Synced"
+        case singleClick = "Single Click"
+        case formSubmitDirect = "Form Submit Direct"
+        case enterKeyPress = "Enter Key Press"
+        case coordinateDispatch = "Coordinate Dispatch"
+
+        var id: String { rawValue }
+
+        var description: String {
+            switch self {
+            case .tripleClickSynced: "3-tap timed sequence with 240/260ms gaps"
+            case .singleClick: "Standard single JS click dispatch"
+            case .formSubmitDirect: "Direct HTMLFormElement.submit() call"
+            case .enterKeyPress: "Simulated Enter key on focused field"
+            case .coordinateDispatch: "Pointer events at element coordinates"
+            }
+        }
     }
 }
 
