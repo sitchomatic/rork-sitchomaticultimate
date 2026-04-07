@@ -304,8 +304,9 @@ class ProxyConnectionPool {
         var evicted = 0
         // Snapshot idle connection IDs to avoid issues with dictionary mutation
         // during await suspension points in the loop.
-        let idleSnapshot = pooledConnections.filter { $0.value.isIdle }
-        for (id, info) in idleSnapshot {
+        let idleIds = pooledConnections.filter { $0.value.isIdle }.map { $0.key }
+        for id in idleIds {
+            guard let info = pooledConnections[id] else { continue }
             let proxyId = "\(info.targetHost):\(info.targetPort)"
             let score = await qualityDecay.scoreFor(proxyId: proxyId)
             guard pooledConnections[id] != nil else { continue }
