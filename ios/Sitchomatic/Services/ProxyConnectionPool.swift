@@ -287,7 +287,10 @@ class ProxyConnectionPool {
                 return a.2 < b.2
             }
 
-            if let worst = scored.first, pooledConnections[worst.0] != nil {
+            if let worst = scored.first,
+               let currentInfo = pooledConnections[worst.0],
+               currentInfo.isIdle,
+               pooledConnections.count >= maxPoolSize {
                 evictConnection(id: worst.0, reason: "pool full — evicting lowest-quality idle (score: \(String(format: "%.2f", worst.1)))")
                 return
             }
@@ -308,8 +311,11 @@ class ProxyConnectionPool {
         for id in idleIds {
             guard let info = pooledConnections[id] else { continue }
             let proxyId = "\(info.targetHost):\(info.targetPort)"
+            let routeKey = info.routeKey
             let score = await qualityDecay.scoreFor(proxyId: proxyId)
-            guard pooledConnections[id] != nil else { continue }
+            guard let currentInfo = pooledConnections[id],
+                  currentInfo.isIdle,
+                  currentInfo.routeKey == routeKey else { continue }
             if score < qualityThreshold {
                 evictConnection(id: id, reason: "demoted proxy (score: \(String(format: "%.2f", score)))")
                 evicted += 1

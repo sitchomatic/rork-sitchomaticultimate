@@ -430,8 +430,11 @@ class UnifiedSessionViewModel {
         saveDebouncerTask = Task {
             try? await Task.sleep(for: .milliseconds(500))
             guard !Task.isCancelled else { return }
-            if let data = try? JSONEncoder().encode(self.sessions) {
+            do {
+                let data = try JSONEncoder().encode(self.sessions)
                 UserDefaults.standard.set(data, forKey: self.persistenceKey)
+            } catch {
+                self.logger.log("UnifiedSession: failed to persist sessions (debounced) — \(error.localizedDescription)", category: .persistence, level: .error)
             }
         }
     }
