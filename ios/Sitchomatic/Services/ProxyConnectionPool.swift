@@ -287,7 +287,7 @@ class ProxyConnectionPool {
                 return a.2 < b.2
             }
 
-            if let worst = scored.first {
+            if let worst = scored.first, pooledConnections[worst.0] != nil {
                 evictConnection(id: worst.0, reason: "pool full — evicting lowest-quality idle (score: \(String(format: "%.2f", worst.1)))")
                 return
             }
@@ -302,9 +302,13 @@ class ProxyConnectionPool {
     func evictDemotedConnections(qualityThreshold: Double = 0.2) async {
         let qualityDecay = ProxyQualityDecayService.shared
         var evicted = 0
-        for (id, info) in pooledConnections where info.isIdle {
+        // Snapshot idle connection IDs to avoid issues with dictionary mutation
+        // during await suspension points in the loop.
+        let idleSnapshot = pooledConnections.filter { $0.value.isIdle }
+        for (id, info) in idleSnapshot {
             let proxyId = "\(info.targetHost):\(info.targetPort)"
             let score = await qualityDecay.scoreFor(proxyId: proxyId)
+            guard pooledConnections[id] != nil else { continue }
             if score < qualityThreshold {
                 evictConnection(id: id, reason: "demoted proxy (score: \(String(format: "%.2f", score)))")
                 evicted += 1

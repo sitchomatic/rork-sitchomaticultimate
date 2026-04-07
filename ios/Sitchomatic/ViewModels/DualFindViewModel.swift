@@ -1248,8 +1248,11 @@ class DualFindViewModel {
             passwordSets: passwordSets,
             autoAdvanceEnabled: autoAdvanceEnabled
         )
-        if let data = try? JSONEncoder().encode(rp) {
+        do {
+            let data = try JSONEncoder().encode(rp)
             UserDefaults.standard.set(data, forKey: persistKey)
+        } catch {
+            logger.log("DualFind: failed to save resume point — \(error.localizedDescription)", category: .persistence, level: .error)
         }
         resumePoint = rp
         hasResumePoint = true
