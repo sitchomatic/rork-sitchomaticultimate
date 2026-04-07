@@ -133,6 +133,10 @@ class ProxyConnectionPool {
         )
         pooledConnections[id] = info
 
+        // Guard against stateUpdateHandler firing multiple times (e.g. .preparing → .ready → .cancelled).
+        // Without this, completion could be invoked more than once for the same connection.
+        let completionCalled = UnsafeSendableBox(false)
+
         if let upstream {
             let proxyEndpoint = NWEndpoint.hostPort(
                 host: NWEndpoint.Host(upstream.host),
@@ -143,10 +147,13 @@ class ProxyConnectionPool {
 
             conn.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor [weak self] in
+                    guard !completionCalled.value else { return }
                     switch state {
                     case .ready:
+                        completionCalled.value = true
                         completion(conn, id)
-                    case .failed:
+                    case .failed, .cancelled:
+                        completionCalled.value = true
                         self?.evictConnection(id: id, reason: "connect failed")
                         completion(nil, nil)
                     default:
@@ -165,10 +172,13 @@ class ProxyConnectionPool {
 
             conn.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor [weak self] in
+                    guard !completionCalled.value else { return }
                     switch state {
                     case .ready:
+                        completionCalled.value = true
                         completion(conn, id)
-                    case .failed:
+                    case .failed, .cancelled:
+                        completionCalled.value = true
                         self?.evictConnection(id: id, reason: "direct connect failed")
                         completion(nil, nil)
                     default:

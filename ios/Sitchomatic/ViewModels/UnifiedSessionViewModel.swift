@@ -439,15 +439,23 @@ class UnifiedSessionViewModel {
     func persistSessionsNow() {
         saveDebouncerTask?.cancel()
         saveDebouncerTask = nil
-        if let data = try? JSONEncoder().encode(sessions) {
+        do {
+            let data = try JSONEncoder().encode(sessions)
             UserDefaults.standard.set(data, forKey: persistenceKey)
+        } catch {
+            logger.log("UnifiedSession: failed to persist sessions — \(error.localizedDescription)", category: .persistence, level: .error)
         }
     }
 
     private func loadPersistedSessions() {
-        guard let data = UserDefaults.standard.data(forKey: persistenceKey),
-              let loaded = try? JSONDecoder().decode([DualSiteSession].self, from: data) else { return }
-        sessions = loaded
+        guard let data = UserDefaults.standard.data(forKey: persistenceKey) else { return }
+        do {
+            let loaded = try JSONDecoder().decode([DualSiteSession].self, from: data)
+            sessions = loaded
+        } catch {
+            logger.log("UnifiedSession: failed to decode persisted sessions — \(error.localizedDescription)", category: .persistence, level: .error)
+            return
+        }
         var resetCount = 0
         for i in sessions.indices where sessions[i].globalState == .active && sessions[i].currentAttempt > 0 {
             sessions[i].globalState = .active

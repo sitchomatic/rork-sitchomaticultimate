@@ -40,10 +40,13 @@ class LoginPersistenceService {
             return dict
         }
 
-        if let data = try? JSONSerialization.data(withJSONObject: encoded) {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: encoded)
             UserDefaults.standard.set(data, forKey: credentialsKey)
             store.set(data, forKey: iCloudCredentialsKey)
             store.synchronize()
+        } catch {
+            DebugLogger.shared.log("LoginPersistence: failed to save credentials — \(error.localizedDescription)", category: .persistence, level: .error)
         }
     }
 
