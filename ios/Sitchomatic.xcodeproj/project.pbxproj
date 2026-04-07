@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		XX4CADC9D57E558B948F4AXX /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = XXEE1CB1627E13D5F0A46EXX /* CoreXLSX */; };
-		XX8C3DABF1E5E4D01A6C7DXX /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = XXF2D9B73F3F94810B9C8AXX /* XMLCoder */; };
-		XXAD21E3C4B5D6F7A8C9D0XX /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = XXD821AFD9247F1E5D6B7CXX /* ZIPFoundation */; };
 		XX533346A4731D2E3B47FCXX /* SitchomaticWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXA3D412C462DAD7A5CD4DXX /* SitchomaticWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -100,8 +98,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				XX4CADC9D57E558B948F4AXX /* CoreXLSX in Frameworks */,
-				XX8C3DABF1E5E4D01A6C7DXX /* XMLCoder in Frameworks */,
-				XXAD21E3C4B5D6F7A8C9D0XX /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -174,8 +170,6 @@
 			name = Sitchomatic;
 			packageProductDependencies = (
 				XXEE1CB1627E13D5F0A46EXX /* CoreXLSX */,
-				XXF2D9B73F3F94810B9C8AXX /* XMLCoder */,
-				XXD821AFD9247F1E5D6B7CXX /* ZIPFoundation */,
 			);
 			productName = Sitchomatic;
 			productReference = 105FC57A2E9EAD3100EA8BCF /* Sitchomatic.app */;
@@ -291,8 +285,6 @@
 			);
 			packageReferences = (
 				XX461D6B922D577012C142XX /* XCRemoteSwiftPackageReference "CoreXLSX" */,
-				XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */,
-				XXB2C3D4E5F60718293A4BXX /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 		};
 /* End PBXProject section */
@@ -438,11 +430,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_INCLUDE_PATHS = (
-					"$(inherited)",
-					"$(BUILD_DIR)/../../SourcePackages/checkouts/XMLCoder/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					"$(BUILD_DIR)/../../SourcePackages/checkouts/ZIPFoundation/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-				);
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -499,11 +486,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = (
-					"$(inherited)",
-					"$(BUILD_DIR)/../../SourcePackages/checkouts/XMLCoder/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					"$(BUILD_DIR)/../../SourcePackages/checkouts/ZIPFoundation/build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-				);
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -766,22 +748,6 @@
 				version = 0.14.2;
 			};
 		};
-		XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = https://github.com/MaxDesiatov/XMLCoder.git;
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.0;
-			};
-		};
-		XXB2C3D4E5F60718293A4BXX /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = https://github.com/weichsel/ZIPFoundation.git;
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.20;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -789,16 +755,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = XX461D6B922D577012C142XX /* XCRemoteSwiftPackageReference "CoreXLSX" */;
 			productName = CoreXLSX;
-		};
-		XXF2D9B73F3F94810B9C8AXX /* XMLCoder */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = XXA5B20F1ADFA48AC91B79XX /* XCRemoteSwiftPackageReference "XMLCoder" */;
-			productName = XMLCoder;
-		};
-		XXD821AFD9247F1E5D6B7CXX /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = XXB2C3D4E5F60718293A4BXX /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
