@@ -57,10 +57,13 @@ class PPSRPersistenceService {
             return dict
         }
 
-        if let data = try? JSONSerialization.data(withJSONObject: encoded) {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: encoded)
             UserDefaults.standard.set(data, forKey: cardsKey)
             store.set(data, forKey: iCloudCardsKey)
             store.synchronize()
+        } catch {
+            DebugLogger.shared.log("PPSRPersistence: failed to save cards — \(error.localizedDescription)", category: .persistence, level: .error)
         }
     }
 

@@ -1248,42 +1248,57 @@ class DualFindViewModel {
             passwordSets: passwordSets,
             autoAdvanceEnabled: autoAdvanceEnabled
         )
-        if let data = try? JSONEncoder().encode(rp) {
+        do {
+            let data = try JSONEncoder().encode(rp)
             UserDefaults.standard.set(data, forKey: persistKey)
+        } catch {
+            logger.log("DualFind: failed to save resume point — \(error.localizedDescription)", category: .persistence, level: .error)
         }
         resumePoint = rp
         hasResumePoint = true
     }
 
     private func loadResumePoint() {
-        guard let data = UserDefaults.standard.data(forKey: persistKey),
-              let rp = try? JSONDecoder().decode(DualFindResumePoint.self, from: data) else {
-            if let data = UserDefaults.standard.data(forKey: "dual_find_resume_v2"),
-               let rp = try? JSONDecoder().decode(DualFindResumePoint.self, from: data) {
+        if let data = UserDefaults.standard.data(forKey: persistKey) {
+            do {
+                let rp = try JSONDecoder().decode(DualFindResumePoint.self, from: data)
+                resumePoint = rp
+                hasResumePoint = true
+                emailInputText = rp.emails.joined(separator: "\n")
+                if !rp.allPasswords.isEmpty {
+                    passwordInputText = rp.allPasswords.joined(separator: "\n")
+                } else {
+                    passwordInputText = rp.passwords.joined(separator: "\n")
+                }
+                if !rp.passwordSets.isEmpty {
+                    passwordSets = rp.passwordSets
+                    currentSetIndex = rp.currentSetIndex
+                    autoAdvanceEnabled = rp.autoAdvanceEnabled
+                }
+                sessionCount = DualFindSessionCount(rawValue: rp.sessionCount) ?? .six
+                return
+            } catch {
+                logger.log("DualFind: failed to decode resume point (v3) — \(error.localizedDescription)", category: .persistence, level: .error)
+            }
+        }
+
+        // Fallback to legacy v2 format
+        if let data = UserDefaults.standard.data(forKey: "dual_find_resume_v2") {
+            do {
+                let rp = try JSONDecoder().decode(DualFindResumePoint.self, from: data)
                 resumePoint = rp
                 hasResumePoint = true
                 emailInputText = rp.emails.joined(separator: "\n")
                 passwordInputText = rp.passwords.joined(separator: "\n")
                 sessionCount = DualFindSessionCount(rawValue: rp.sessionCount) ?? .six
                 return
+            } catch {
+                logger.log("DualFind: failed to decode resume point (v2 fallback) — \(error.localizedDescription)", category: .persistence, level: .error)
             }
-            hasResumePoint = false
-            return
         }
-        resumePoint = rp
-        hasResumePoint = true
-        emailInputText = rp.emails.joined(separator: "\n")
-        if !rp.allPasswords.isEmpty {
-            passwordInputText = rp.allPasswords.joined(separator: "\n")
-        } else {
-            passwordInputText = rp.passwords.joined(separator: "\n")
-        }
-        if !rp.passwordSets.isEmpty {
-            passwordSets = rp.passwordSets
-            currentSetIndex = rp.currentSetIndex
-            autoAdvanceEnabled = rp.autoAdvanceEnabled
-        }
-        sessionCount = DualFindSessionCount(rawValue: rp.sessionCount) ?? .six
+
+        hasResumePoint = false
+        return
     }
 
     func persistDualFindSettings() {

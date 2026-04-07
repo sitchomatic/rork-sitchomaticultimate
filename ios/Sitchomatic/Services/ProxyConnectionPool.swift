@@ -133,6 +133,10 @@ class ProxyConnectionPool {
         )
         pooledConnections[id] = info
 
+        // Guard against stateUpdateHandler firing multiple times (e.g. .preparing → .ready → .cancelled).
+        // Without this, completion could be invoked more than once for the same connection.
+        let completionCalled = UnsafeSendableBox(false)
+
         if let upstream {
             let proxyEndpoint = NWEndpoint.hostPort(
                 host: NWEndpoint.Host(upstream.host),
@@ -143,10 +147,13 @@ class ProxyConnectionPool {
 
             conn.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor [weak self] in
+                    guard !completionCalled.value else { return }
                     switch state {
                     case .ready:
+                        completionCalled.value = true
                         completion(conn, id)
-                    case .failed:
+                    case .failed, .cancelled:
+                        completionCalled.value = true
                         self?.evictConnection(id: id, reason: "connect failed")
                         completion(nil, nil)
                     default:
@@ -165,10 +172,13 @@ class ProxyConnectionPool {
 
             conn.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor [weak self] in
+                    guard !completionCalled.value else { return }
                     switch state {
                     case .ready:
+                        completionCalled.value = true
                         completion(conn, id)
-                    case .failed:
+                    case .failed, .cancelled:
+                        completionCalled.value = true
                         self?.evictConnection(id: id, reason: "direct connect failed")
                         completion(nil, nil)
                     default:
@@ -277,7 +287,10 @@ class ProxyConnectionPool {
                 return a.2 < b.2
             }
 
-            if let worst = scored.first {
+            if let worst = scored.first,
+               let currentInfo = pooledConnections[worst.0],
+               currentInfo.isIdle,
+               pooledConnections.count >= maxPoolSize {
                 evictConnection(id: worst.0, reason: "pool full — evicting lowest-quality idle (score: \(String(format: "%.2f", worst.1)))")
                 return
             }
@@ -292,9 +305,17 @@ class ProxyConnectionPool {
     func evictDemotedConnections(qualityThreshold: Double = 0.2) async {
         let qualityDecay = ProxyQualityDecayService.shared
         var evicted = 0
-        for (id, info) in pooledConnections where info.isIdle {
+        // Snapshot idle connection IDs to avoid issues with dictionary mutation
+        // during await suspension points in the loop.
+        let idleIds = pooledConnections.filter { $0.value.isIdle }.map { $0.key }
+        for id in idleIds {
+            guard let info = pooledConnections[id] else { continue }
             let proxyId = "\(info.targetHost):\(info.targetPort)"
+            let routeKey = info.routeKey
             let score = await qualityDecay.scoreFor(proxyId: proxyId)
+            guard let currentInfo = pooledConnections[id],
+                  currentInfo.isIdle,
+                  currentInfo.routeKey == routeKey else { continue }
             if score < qualityThreshold {
                 evictConnection(id: id, reason: "demoted proxy (score: \(String(format: "%.2f", score)))")
                 evicted += 1
